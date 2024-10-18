@@ -89,5 +89,12 @@ summary_table = pd.merge(summary_table, results_rep2.loc[:, ["Well Position", f"
 summary_table = pd.merge(summary_table, results_rep3.loc[:, ["Well Position", f"{unique_reporters[2]} CT", f"{unique_reporters[2]} Cq Conf"]], on="Well Position")
 print(summary_table)
 
+
+###
+### 4. Function to get PANDAA result
+###
+
+
+
 # call main window
 main_window.mainloop()
