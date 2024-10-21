@@ -84,10 +84,12 @@ for key in fluor_names:
         # close program
         raise SystemExit()
 
-# make table that only contains data for one fluorophore, then rename "CT" and "Cq Conf" columns
+
 for i in range(len(unique_reporters)):
+    # make table that only contains data for one fluorophore, then rename "CT" and "Cq Conf" columns
     results_newfluor = results_table.loc[results_table["Reporter"] == unique_reporters[i]]
     results_newfluor = results_newfluor.rename(columns={"CT": f"{unique_reporters[i]} CT", "Cq Conf": f"{unique_reporters[i]} Cq Conf"})
+    # add this table's data to a new summary table
     if i == 0:
         summary_table = results_newfluor.loc[:, ["Well Position", "Sample Name", "Copies", "Comments", f"{unique_reporters[i]} CT", f"{unique_reporters[i]} Cq Conf"]]
     else:
@@ -128,7 +130,7 @@ summary_table['Result'] = summary_table.apply(getPandaaResult_3fluors, axis=1)
 print(summary_table.loc[:, ["Well Position", "Sample Name", "Result"]])
 
 summary_table.to_csv(path_or_buf=(os.path.splitext(results_file)[0]+"_summary.csv"), columns=["Well Position", "Sample Name", "Result"])
-tk.messagebox.showinfo(title="Success", message=f"Summary results saved in {os.path.splitext(results_file)[0]+'_summary.csv'}")
+tk.messagebox.showinfo(title="Success", message=f"Summary results saved in: {os.path.splitext(results_file)[0]+'_summary.csv'}")
 
 # call main window
 #main_window.mainloop()
