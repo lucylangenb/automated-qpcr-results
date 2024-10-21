@@ -5,6 +5,7 @@
 import pandas as pd #file and data handling
 from tkinter import filedialog
 import tkinter as tk
+import os
 
 ###
 ### User-defined values
@@ -13,25 +14,29 @@ import tkinter as tk
 cq_cutoff = 35
 file_type = "Excel"
 machine_type = "QuantStudio 3/5"
+assay = "PANDAA Ebola + Marburg"
 
-fluor_names = {"CY5": "Internal Control",  
-               "FAM": "EBOV",              
-               "VIC": "MARV"               
-            }
 
-internal_control_fluor = "CY5"
 
 ###
 ### 1. Read file/sheet as pandas dataframe
 ###
 
+# create variables based on assay chosen
+if assay == "PANDAA Ebola + Marburg":
+    fluor_names = {"CY5": "Internal Control",  
+                "FAM": "EBOV",              
+                "VIC": "MARV"               
+                }
+    internal_control_fluor = "CY5"
+
+
 # create root window / main window
-main_window = tk.Tk()
+#main_window = tk.Tk()
 
 # prompt user to select results file
 if file_type == "Excel":
     results_file = filedialog.askopenfilename(title = 'Choose results file', filetypes= [("Excel file","*.xlsx"),("Excel file 97-2003","*.xls")])
-
 
 # see if user successfully selected a results file
 try:
@@ -72,21 +77,22 @@ if unique_reporters[0] != internal_control_fluor:
 
 print(unique_reporters)
 
+# error handling: make sure fluorophores in file match the ones the user is expecting
+for key in fluor_names:
+    if key not in unique_reporters:
+        tk.messagebox.showerror(message='Fluorophores in file do not match those entered by user. Check fluorophore assignment.')
+        # close program
+        raise SystemExit()
+
 # make table that only contains data for one fluorophore, then rename "CT" and "Cq Conf" columns
-results_rep1 = results_table.loc[results_table["Reporter"] == unique_reporters[0]]
-results_rep1 = results_rep1.rename(columns={"CT": f"{unique_reporters[0]} CT", "Cq Conf": f"{unique_reporters[0]} Cq Conf"})
+for i in range(len(unique_reporters)):
+    results_newfluor = results_table.loc[results_table["Reporter"] == unique_reporters[i]]
+    results_newfluor = results_newfluor.rename(columns={"CT": f"{unique_reporters[i]} CT", "Cq Conf": f"{unique_reporters[i]} Cq Conf"})
+    if i == 0:
+        summary_table = results_newfluor.loc[:, ["Well Position", "Sample Name", "Copies", "Comments", f"{unique_reporters[i]} CT", f"{unique_reporters[i]} Cq Conf"]]
+    else:
+        summary_table = pd.merge(summary_table, results_newfluor.loc[:, ["Well Position", f"{unique_reporters[i]} CT", f"{unique_reporters[i]} Cq Conf"]], on="Well Position")
 
-results_rep2 = results_table.loc[results_table["Reporter"] == unique_reporters[1]]
-results_rep2 = results_rep2.rename(columns={"CT": f"{unique_reporters[1]} CT", "Cq Conf": f"{unique_reporters[1]} Cq Conf"})
-
-results_rep3 = results_table.loc[results_table["Reporter"] == unique_reporters[2]]
-results_rep3 = results_rep3.rename(columns={"CT": f"{unique_reporters[2]} CT", "Cq Conf": f"{unique_reporters[2]} Cq Conf"})
-
-
-# combine results into one dataframe
-summary_table = results_rep1.loc[:, ["Well Position", "Sample Name", "Copies", "Comments", f"{unique_reporters[0]} CT", f"{unique_reporters[0]} Cq Conf"]]
-summary_table = pd.merge(summary_table, results_rep2.loc[:, ["Well Position", f"{unique_reporters[1]} CT", f"{unique_reporters[1]} Cq Conf"]], on="Well Position")
-summary_table = pd.merge(summary_table, results_rep3.loc[:, ["Well Position", f"{unique_reporters[2]} CT", f"{unique_reporters[2]} Cq Conf"]], on="Well Position")
 print(summary_table)
 
 
@@ -94,7 +100,37 @@ print(summary_table)
 ### 4. Function to get PANDAA result
 ###
 
+def getPandaaResult_3fluors(row):
 
+    if row[internal_control_fluor + " CT"] >= 30:
+        return "Inconclusive"
+    
+    elif row[unique_reporters[1] + " CT"] < 30:
+        if (row[unique_reporters[2] + " CT"] >= 30) or ((row[unique_reporters[2] + " CT"] < 30) and (row[unique_reporters[2] + " Cq Conf"] <= 0.5)):
+            return f"{fluor_names[unique_reporters[1]]} Positive"
+        else:
+            return "Inconclusive"
+
+    elif row[unique_reporters[2] + " CT"] < 30:
+        if (row[unique_reporters[1] + " CT"] >= 30) or ((row[unique_reporters[1] + " CT"] < 30) and (row[unique_reporters[1] + " Cq Conf"] <= 0.5)):
+            return f"{fluor_names[unique_reporters[2]]} Positive"
+        else:
+            return "Inconclusive"
+        
+    else:
+        return "Negative"
+    
+###
+### 5. Use PANDAA function to get new column in dataframe
+###
+
+summary_table['Result'] = summary_table.apply(getPandaaResult_3fluors, axis=1)
+print(summary_table.loc[:, ["Well Position", "Sample Name", "Result"]])
+
+summary_table.to_csv(path_or_buf=(os.path.splitext(results_file)[0]+"_summary.csv"), columns=["Well Position", "Sample Name", "Result"])
+tk.messagebox.showinfo(title="Success", message=f"Summary results saved in {os.path.splitext(results_file)[0]+'_summary.csv'}")
 
 # call main window
-main_window.mainloop()
+#main_window.mainloop()
+
+
