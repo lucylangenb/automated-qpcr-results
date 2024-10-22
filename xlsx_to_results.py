@@ -20,7 +20,7 @@ assay = "PANDAA LASV"
 
 
 ###
-### 1. Read file/sheet as pandas dataframe
+### 1. Initialization
 ###
 
 # create variables based on assay chosen
@@ -46,6 +46,7 @@ elif assay == "PANDAA LASV":
 unique_reporters = []
 for key in fluor_names:
     unique_reporters.append(key)
+    
 
 ###
 ### 2. Run analysis subprocess based on machine type
