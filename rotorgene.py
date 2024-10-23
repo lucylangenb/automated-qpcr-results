@@ -11,7 +11,7 @@ import tkinter as tk
 ###
 
 cq_cutoff = 35
-file_type = "Excel"
+file_type = "csv"
 machine_type = "QuantStudio 3"
 assay = "PANDAA LASV"
 
@@ -47,22 +47,35 @@ elif assay == "PANDAA LASV":
 ###
 ### 2. Run analysis subprocess based on machine type
 ###
+if file_type == "csv":
+    try:
+        results_filenames = filedialog.askopenfilenames(title = 'Choose results files', filetypes= [("CSV", ".csv")])
+    except:
+        tk.messagebox.showerror(message='File not selected. Make sure file is not open in another program.')
+        # close program
+        raise SystemExit()
 
-unique_reporters = []
-for key in fluor_names:
-    unique_reporters.append(key)
+    first_loop = True
 
-results_files = filedialog.askopenfilenames(title = 'Choose results files', filetypes= [("CSV", ".csv")])
-print(results_files)
+    for filename in results_filenames:
 
-'''
-for i in range(len(unique_reporters)):
-    # make table that only contains data for one fluorophore, then rename "CT" and "Cq Conf" columns
-    results_file = filedialog.askopenfilename(title = f'Choose results file {i+1}', filetypes= [("Excel file","*.xlsx"),("Excel file 97-2003","*.xls")])
-    results_table = pd.read_excel(results_file, skiprows = 27).rename(columns={"Ct": f"{unique_reporters[i]} CT"})
-    # add this table's data to a new summary table
-    if i == 0:
-        summary_table = results_table.loc[:, ["Well Position", "Sample Name", "Copies", "Comments", f"{unique_reporters[i]} CT", f"{unique_reporters[i]} Cq Conf"]]
-    else:
-        summary_table = pd.merge(summary_table, results_table.loc[:, ["Well Position", f"{unique_reporters[i]} CT", f"{unique_reporters[i]} Cq Conf"]], on="Well Position")
-'''
+        results_table = pd.read_csv(filename, skiprows = 27)
+        results_table["Ct"] = results_table["Ct"].fillna(cq_cutoff)
+
+        for fluor in fluor_names:
+            if f"{fluor}.csv" in filename or f"{fluor_names[fluor]}.csv" in filename:
+                results_table = results_table.rename(columns={"No.": "Well Position",
+                                                            "Name": "Sample Name",
+                                                            "Ct": f"{fluor} CT",
+                                                            "Ct Comment": "Comments",
+                                                            "Given Conc (copies/reaction)": "Copies"})
+                if first_loop == True:
+                    summary_table = results_table.loc[:, ["Well Position", "Sample Name", "Copies", "Comments", f"{fluor} CT"]]
+                    first_loop = False
+                    print("First iteration:")
+                    print(summary_table)
+                else:
+                    summary_table = pd.merge(summary_table, results_table.loc[:, ["Well Position", f"{fluor} CT"]], on="Well Position")
+                    print(f"Added data for {fluor}:")
+                    print(summary_table)
+
