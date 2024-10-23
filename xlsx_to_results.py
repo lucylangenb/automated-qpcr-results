@@ -43,9 +43,7 @@ elif assay == "PANDAA LASV":
                    }
     internal_control_fluor = "VIC"
 
-unique_reporters = []
-for key in fluor_names:
-    unique_reporters.append(key)
+unique_reporters = [key for key in fluor_names]
     
 
 ###
