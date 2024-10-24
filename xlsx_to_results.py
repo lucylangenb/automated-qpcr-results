@@ -131,7 +131,13 @@ else: #2 fluors
 
 print(summary_table.loc[:, ["Well Position", "Sample Name", "Result"]])
 
-summary_table.to_csv(path_or_buf=(os.path.splitext(results_file)[0]+"_summary.csv"), columns=["Well Position", "Sample Name", "Result"])
+
+# results file can't be created/written if the user already has it open - catch possible PermissionErrors
+try:
+    summary_table.to_csv(path_or_buf=(os.path.splitext(results_file)[0]+"_summary.csv"), columns=["Well Position", "Sample Name", "Result"])
+except PermissionError:
+    tk.messagebox.showerror(message='Unable to write results file. Make sure results file is closed, then click OK to try again.')
+
 tk.messagebox.showinfo(title="Success", message=f"Summary results saved in: {os.path.splitext(results_file)[0]+'_summary.csv'}")
 
 # call main window
