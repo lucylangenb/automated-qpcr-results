@@ -62,8 +62,6 @@ if file_type == "Excel":
 ### 3. Functions to get PANDAA result
 ###
 
-print(summary_table)
-
 def getPandaaResult_2fluors(row):
 
     if row[unique_reporters[1] + " CT"] < 30:
@@ -77,6 +75,27 @@ def getPandaaResult_2fluors(row):
     
 
 def getPandaaResult_3fluors(row):
+
+    if row[unique_reporters[1] + " CT"] < 30:
+        if (row[unique_reporters[2] + " CT"] >= 30):
+            return f"{fluor_names[unique_reporters[1]]} Positive"
+        else:
+            return "Invalid Result"
+
+    elif row[unique_reporters[2] + " CT"] < 30:
+        if (row[unique_reporters[1] + " CT"] >= 30):
+            return f"{fluor_names[unique_reporters[2]]} Positive"
+        else:
+            return "Invalid Result"
+        
+    elif row[internal_control_fluor + " CT"] < 30:
+        return "Negative"
+      
+    else:
+        return "Invalid Result"
+    
+
+def getPandaaResult_3fluors_cqconf(row):
 
     if row[unique_reporters[1] + " CT"] < 30:
         if (row[unique_reporters[2] + " CT"] >= 30) or ((row[unique_reporters[2] + " CT"] < 30) and (row[unique_reporters[2] + " Cq Conf"] <= 0.5)):
@@ -102,7 +121,10 @@ def getPandaaResult_3fluors(row):
 ###
 
 if assay == "PANDAA Ebola + Marburg": #3 fluors
-    summary_table['Result'] = summary_table.apply(getPandaaResult_3fluors, axis=1)
+    if machine_type == "QuantStudio 3" or machine_type == "QuantStudio 5":
+        summary_table['Result'] = summary_table.apply(getPandaaResult_3fluors_cqconf, axis=1)
+    else:
+        summary_table['Result'] = summary_table.apply(getPandaaResult_3fluors, axis=1)
 
 else: #2 fluors
     summary_table['Result'] = summary_table.apply(getPandaaResult_2fluors, axis=1)

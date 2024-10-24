@@ -85,10 +85,17 @@ def rotorgene(fluor_names, cq_cutoff):
     first_loop = True
     used_filenames = []
 
+    # did the user choose enough files? (Rotor-Gene makes one file for each fluorophore)
+    if len(results_filenames) != len(fluor_names):
+        tk.messagebox.showerror(message=f'Incorrect number of files. Expected {len(fluor_names)} files, but {len(results_filenames)} were selected. Make sure files are not open in other programs.')
+        # close program
+        raise SystemExit()
+
     for filename in results_filenames:
 
         results_table = pd.read_csv(filename, skiprows = 27)
-        
+
+        # see if files chosen are correct - if the file is a valid results file, it will have a column called "Ct"
         try:
             results_table["Ct"] = results_table["Ct"].fillna(cq_cutoff)
         except:
@@ -96,6 +103,7 @@ def rotorgene(fluor_names, cq_cutoff):
             # close program
             raise SystemExit()
 
+        # cycle through all fluors needed for selected assay, match them to names of files selected
         for fluor in fluor_names:
             if f"{fluor}.csv" in filename or f"{fluor_names[fluor]}.csv" in filename:
                 used_filenames.append(filename)
@@ -104,20 +112,17 @@ def rotorgene(fluor_names, cq_cutoff):
                                                             "Ct": f"{fluor} CT",
                                                             "Ct Comment": "Comments",
                                                             "Given Conc (copies/reaction)": "Copies"})
+                # first time loop is run, initialize summary table
                 if first_loop == True:
                     summary_table = results_table.loc[:, ["Well Position", "Sample Name", "Copies", "Comments", f"{fluor} CT"]]
                     first_loop = False
                 else:
                     summary_table = pd.merge(summary_table, results_table.loc[:, ["Well Position", f"{fluor} CT"]], on="Well Position")
 
+    # number of files was determined to be correct, but did every file get used? if not, results are incomplete
     if sorted(results_filenames) != sorted(used_filenames):
-        tk.messagebox.showerror(message='Incorrect files selected. Please try again.')
+        tk.messagebox.showerror(message='Incorrect files selected, or file names have been edited. Please try again.')
         # close program
         raise SystemExit()
 
-    try:
-        return summary_table, results_filenames[0]
-    except:
-        tk.messagebox.showerror(message='File not selected. Make sure file is not open in another program.')
-        # close program
-        raise SystemExit()
+    return summary_table, results_filenames[0]
