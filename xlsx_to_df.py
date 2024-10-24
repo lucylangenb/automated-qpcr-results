@@ -6,7 +6,7 @@ import pandas as pd #file and data handling
 from tkinter import filedialog
 import tkinter as tk
 
-def quantstudio(machine_type, fluor_names, internal_control_fluor, cq_cutoff):
+def quantstudio(machine_type, fluor_names, cq_cutoff):
 
     results_file = filedialog.askopenfilename(title = 'Choose results file', filetypes= [("Excel file","*.xlsx"),("Excel file 97-2003","*.xls")])
 
@@ -33,35 +33,29 @@ def quantstudio(machine_type, fluor_names, internal_control_fluor, cq_cutoff):
         tk.messagebox.showerror(message='Unexpected machine type. Check instrument input setting.')
         # close program
         raise SystemExit()
+
+    # make sure file and fluor_names have the same fluorophores listed
+    if sorted(list(results_table['Reporter'].unique())) != sorted(fluor_names):
+        tk.messagebox.showerror(message='Fluorophores in file do not match expected fluorophores. Check fluorophore and assay assignment.')
+        # close program
+        raise SystemExit()
     
-    # get names of reporters/fluorophores
-    unique_reporters = sorted(list(results_table['Reporter'].unique()))
-
-    # make sure internal control fluorophore is the first fluorophore in the list, then alphabetize rest of list
-    if unique_reporters[0] != internal_control_fluor:
-        unique_reporters[unique_reporters.index(internal_control_fluor)] = unique_reporters[0]
-        unique_reporters[0] = internal_control_fluor
-        unique_reporters[1:] = sorted(unique_reporters[1:])
-
-    #print(unique_reporters)
-
-    # error handling: make sure fluorophores in file match the ones the user is expecting
-    for key in fluor_names:
-        if key not in unique_reporters:
+    first_loop = True
+    for fluor in fluor_names:
+        
+        results_newfluor = results_table.loc[results_table["Reporter"] == fluor]
+        try:
+            results_newfluor = results_newfluor.rename(columns={"CT": f"{fluor} CT", "Cq Conf": f"{fluor} Cq Conf"})
+        except:
             tk.messagebox.showerror(message='Fluorophores in file do not match those entered by user. Check fluorophore assignment.')
             # close program
             raise SystemExit()
 
-
-    for i in range(len(unique_reporters)):
-        # make table that only contains data for one fluorophore, then rename "CT" and "Cq Conf" columns
-        results_newfluor = results_table.loc[results_table["Reporter"] == unique_reporters[i]]
-        results_newfluor = results_newfluor.rename(columns={"CT": f"{unique_reporters[i]} CT", "Cq Conf": f"{unique_reporters[i]} Cq Conf"})
-        # add this table's data to a new summary table
-        if i == 0:
-            summary_table = results_newfluor.loc[:, ["Well Position", "Sample Name", "Copies", "Comments", f"{unique_reporters[i]} CT", f"{unique_reporters[i]} Cq Conf"]]
+        if first_loop == True:
+            summary_table = results_newfluor.loc[:, ["Well Position", "Sample Name", "Copies", "Comments", f"{fluor} CT", f"{fluor} Cq Conf"]]
+            first_loop = False
         else:
-            summary_table = pd.merge(summary_table, results_newfluor.loc[:, ["Well Position", f"{unique_reporters[i]} CT", f"{unique_reporters[i]} Cq Conf"]], on="Well Position")
+            summary_table = pd.merge(summary_table, results_newfluor.loc[:, ["Well Position", f"{fluor} CT", f"{fluor} Cq Conf"]], on="Well Position")
 
     return summary_table, results_file
 

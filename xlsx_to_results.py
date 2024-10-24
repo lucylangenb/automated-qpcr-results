@@ -52,11 +52,11 @@ unique_reporters = [key for key in fluor_names]
 
 if file_type == "Excel":
     if machine_type == "QuantStudio 3" or machine_type == "QuantStudio 5":
-        summary_table, results_file = xlsx_to_df.quantstudio(machine_type, fluor_names, internal_control_fluor, cq_cutoff)
+        summary_table, results_file = xlsx_to_df.quantstudio(machine_type, fluor_names, cq_cutoff)
     elif machine_type == "Rotor-Gene":
         summary_table, results_file = xlsx_to_df.rotorgene(fluor_names, cq_cutoff)
 
-
+print(summary_table)
 
 ###
 ### 3. Functions to get PANDAA result
