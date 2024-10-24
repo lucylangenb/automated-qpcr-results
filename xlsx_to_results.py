@@ -14,7 +14,7 @@ import xlsx_to_df
 
 cq_cutoff = 35
 file_type = "Excel"
-machine_type = "Rotor-Gene"
+machine_type = "QuantStudio 3"
 assay = "PANDAA LASV"
 
 

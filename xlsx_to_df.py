@@ -22,30 +22,18 @@ def quantstudio(machine_type, fluor_names, internal_control_fluor, cq_cutoff):
         tk.messagebox.showerror(message='File not selected. Make sure file is not open in another program.')
         # close program
         raise SystemExit()
-    
-    ###
-    ### 1. Parse data
-    ###
 
-    # print table we imported - make sure machine type selection worked
     try:
-        results_table.loc[:, ["Sample Name", "Target Name", "CT", "Cq Conf"]]
+        # assign "Undetermined" wells a CT value - "CT" column will only exist in correctly formatted results files, so can be used for error checking
+        results_table["CT"] = results_table["CT"].replace(to_replace = "Undetermined", value = cq_cutoff)
+        # create new "Copies" column by parsing "Comments" column (get text before ' '), convert scientific notation to numbers
+        # (note that this needs editing - doesn't seem to be working properly)
+        results_table["Copies"] = results_table["Comments"].str.extract(r'(\w+)\s').apply(pd.to_numeric)
     except:
         tk.messagebox.showerror(message='Unexpected machine type. Check instrument input setting.')
         # close program
         raise SystemExit()
-
-    # assign "Undetermined" wells a CT value
-    results_table["CT"] = results_table["CT"].replace(to_replace = "Undetermined", value = cq_cutoff)
-    # create new "Copies" column by parsing "Comments" column (get text before ' '), convert scientific notation to numbers
-    results_table["Copies"] = results_table["Comments"].str.extract(r'(\w+)\s').apply(pd.to_numeric)
-    #summary_table = results_table.loc[:, ["Well Position", "Sample Name", "Copies", "Reporter", "CT"]]
-
-
-    ###
-    ### 2. Analyze data, summarize in new dataframe (to preserve original dataset)
-    ###
-
+    
     # get names of reporters/fluorophores
     unique_reporters = sorted(list(results_table['Reporter'].unique()))
 
@@ -75,7 +63,6 @@ def quantstudio(machine_type, fluor_names, internal_control_fluor, cq_cutoff):
         else:
             summary_table = pd.merge(summary_table, results_newfluor.loc[:, ["Well Position", f"{unique_reporters[i]} CT", f"{unique_reporters[i]} Cq Conf"]], on="Well Position")
 
-    #print(summary_table)
     return summary_table, results_file
 
 
