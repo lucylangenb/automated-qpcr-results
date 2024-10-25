@@ -14,7 +14,7 @@ import xlsx_to_df
 
 cq_cutoff = 35
 file_type = "Excel"
-machine_type = "QuantStudio 5"
+machine_type = "Mic"
 assay = "PANDAA LASV"
 
 
@@ -55,6 +55,8 @@ if file_type == "Excel":
         summary_table, results_file = xlsx_to_df.quantstudio(machine_type, fluor_names, cq_cutoff)
     elif machine_type == "Rotor-Gene":
         summary_table, results_file = xlsx_to_df.rotorgene(fluor_names, cq_cutoff)
+    elif machine_type == "Mic":
+        summary_table, results_file = xlsx_to_df.mic(fluor_names, cq_cutoff)
 
 print(summary_table)
 
