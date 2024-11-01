@@ -2,7 +2,6 @@
 ### Imports
 ###
 
-from tkinter import filedialog
 import tkinter as tk
 import os
 
@@ -49,6 +48,9 @@ unique_reporters = [key for key in fluor_names]
 ###
 ### 2. Run analysis subprocess based on machine type
 ###
+
+root = tk.Tk()
+root.withdraw()
 
 if file_type == "Excel":
     if machine_type == "QuantStudio 3" or machine_type == "QuantStudio 5":
@@ -140,7 +142,7 @@ try:
 except PermissionError:
     tk.messagebox.showerror(message='Unable to write results file. Make sure results file is closed, then click OK to try again.')
 
-tk.messagebox.showinfo(title="Success", message=f"Summary results saved in: {os.path.splitext(results_file)[0]+'_summary.csv'}")
+tk.messagebox.showinfo(title="Success", message=f"Summary results saved in: {os.path.splitext(results_file)[0]+' - Summary.csv'}")
 
 # call main window
 #main_window.mainloop()
