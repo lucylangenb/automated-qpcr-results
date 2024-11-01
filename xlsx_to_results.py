@@ -49,8 +49,9 @@ unique_reporters = [key for key in fluor_names]
 ### 2. Run analysis subprocess based on machine type
 ###
 
+# tkinter needs root window - but, OK to hide this window immediately
 root = tk.Tk()
-root.withdraw()
+root.withdraw() #hides root
 
 if file_type == "Excel":
     if machine_type == "QuantStudio 3" or machine_type == "QuantStudio 5":
@@ -145,6 +146,10 @@ except PermissionError:
 tk.messagebox.showinfo(title="Success", message=f"Summary results saved in: {os.path.splitext(results_file)[0]+' - Summary.csv'}")
 
 # call main window
-#main_window.mainloop()
+'''
+root.mainloop()
+root.quit()
+root.destroy()
+'''
 
 
