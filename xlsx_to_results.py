@@ -6,6 +6,7 @@ import tkinter as tk
 import os
 
 import xlsx_to_df
+import main_menu
 
 ###
 ### User-defined values
@@ -13,6 +14,8 @@ import xlsx_to_df
 
 cq_cutoff = 35
 file_type = "Excel"
+
+#assay, machine_type = main_menu.ok_click()
 machine_type = "Mic"
 assay = "PANDAA LASV"
 

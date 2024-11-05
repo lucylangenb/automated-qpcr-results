@@ -53,15 +53,12 @@ assays = ['PANDAA LASV',
 assay_var = tk.StringVar()
 assay_var.set(None) #initialize - forces radio buttons to be empty upon loading screen
 
-def show_assay_choice():
-    print(assay_var.get())
-
 for option in assays:
     tk.Radiobutton(assay_type_frame,
                    text = option,
                    padx = 20,
                    variable = assay_var,
-                   command = show_assay_choice,
+                   command = assay_var.get(),
                    value = option).pack(anchor = tk.W)
 
 # instrument choice
@@ -81,22 +78,20 @@ machines = ['QuantStudio 3',
             'QuantStudio 5',
             'Rotor-Gene',
             'Mic']
-machine_var = tk.StringVar(value = 'QuantStudio 5')
-
-def show_machine_choice(option):
-    print(option.get())
+machine_var = tk.StringVar(value = 'QuantStudio 5') # includes initialization
 
 machine_menu = tk.OptionMenu(machine_type_frame,
                              machine_var,
                              *machines,
-                             command = lambda x: show_machine_choice(machine_var)
+                             command = lambda x: machine_var.get()
                              ).pack(anchor = tk.W)
 
 
 # button to continue to file selection after selections have been made
 def ok_click():
-    show_assay_choice()
-    show_machine_choice(machine_var)
+    print(assay_var.get())
+    print(machine_var.get())
+    return assay_var.get(), machine_var.get()
 
 ok_button = tk.Button(root,
                       text = 'Select results file...',
