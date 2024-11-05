@@ -27,6 +27,17 @@ root = tk.Tk()
 root.title('Aldatu Biosciences - qPCR Analysis')
 root.geometry('500x350')
 
+# center root on user's screen
+def center_window(self):
+        self.update_idletasks()
+        width = self.winfo_width()
+        height = self.winfo_height()
+        x = (self.winfo_screenwidth() // 2) - (width // 2)
+        y = (self.winfo_screenheight() // 2) - (height // 2)
+        self.geometry(f'{width}x{height}+{x}+{y}')
+
+center_window(root)
+
 # resize image
 logo = Image.open('aldatulogo.gif')
 logo = logo.resize((logo.width//6, logo.height//6))
