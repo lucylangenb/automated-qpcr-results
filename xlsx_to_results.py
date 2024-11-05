@@ -27,6 +27,9 @@ root = tk.Tk()
 root.title('Aldatu Biosciences - qPCR Analysis')
 root.geometry('500x350')
 
+# destroy root if close button is clicked
+root.protocol('WM_DELETE_WINDOW', root.destroy)
+
 # center root on user's screen
 def center_window(self):
         self.update_idletasks()
