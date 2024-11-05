@@ -9,7 +9,7 @@ from PIL import Image, ImageTk
 # initialize root window
 root = tk.Tk()
 root.title('Aldatu Biosciences - qPCR Analysis')
-root.geometry('600x400')
+root.geometry('500x350')
 
 # resize image
 logo = Image.open('aldatulogo.gif')
@@ -30,8 +30,16 @@ title_label = tk.Label(root,
                               pady = 10)
 
 
+# frame to hold questions
+questions_frame = tk.Frame(root)
+questions_frame.pack(side = 'top')
+
+# frame to hold information about assay type choice
+assay_type_frame = tk.Frame(questions_frame)
+assay_type_frame.pack(side = 'left', padx = 20)
+
 # question title
-assay_type_label = tk.Label(root,
+assay_type_label = tk.Label(assay_type_frame,
                             text = 'Choose assay results to analyze:',
                             font = ('Arial', 10)
                             ).pack(side = 'top',
@@ -39,23 +47,62 @@ assay_type_label = tk.Label(root,
                                    pady = 2)
 
 # buttons
-assay_var = tk.IntVar()
-assay_var.set(1) # initialize choice
-assays = [('PANDAA qDx LASV', 101),
-          ('PANDAA qDx CCHFV', 102),
-          ('PANDAA Ebola + Marburg', 103)]
+assays = ['PANDAA LASV',
+          'PANDAA CCHFV',
+          'PANDAA Ebola + Marburg']
+assay_var = tk.StringVar()
+assay_var.set(None) #initialize - forces radio buttons to be empty upon loading screen
 
 def show_assay_choice():
     print(assay_var.get())
 
-for option, val in assays:
-    tk.Radiobutton(root,
+for option in assays:
+    tk.Radiobutton(assay_type_frame,
                    text = option,
                    padx = 20,
                    variable = assay_var,
                    command = show_assay_choice,
-                   value = val).pack(anchor = tk.W)
+                   value = option).pack(anchor = tk.W)
 
+# instrument choice
+machine_type_frame = tk.Frame(questions_frame)
+machine_type_frame.pack(side = 'right', padx = 20)
+
+# question title for instrument choice
+machine_label = tk.Label(machine_type_frame,
+                         text = 'qPCR machine used:',
+                         font = ('Arial', 10)
+                         ).pack(side = 'top',
+                                   fill = tk.X,
+                                   pady = 2)
+
+# drop-down for instrument choice
+machines = ['QuantStudio 3',
+            'QuantStudio 5',
+            'Rotor-Gene',
+            'Mic']
+machine_var = tk.StringVar(value = 'QuantStudio 5')
+
+def show_machine_choice(option):
+    print(option.get())
+
+machine_menu = tk.OptionMenu(machine_type_frame,
+                             machine_var,
+                             *machines,
+                             command = lambda x: show_machine_choice(machine_var)
+                             ).pack(anchor = tk.W)
+
+
+# button to continue to file selection after selections have been made
+def ok_click():
+    show_assay_choice()
+    show_machine_choice(machine_var)
+
+ok_button = tk.Button(root,
+                      text = 'Select results file...',
+                      command = ok_click
+                      ).pack(side = 'bottom',
+                             pady = 30)
 
 root.mainloop()
 
