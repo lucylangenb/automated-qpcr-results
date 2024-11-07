@@ -13,6 +13,7 @@ import xlsx_to_df
 ###
 
 cq_cutoff = 35
+pos_cutoff = 30
 file_type = "Excel"
 global assay, machine_type
 machine_type = "Mic"
@@ -183,10 +184,10 @@ if file_type == "Excel":
 
 def getPandaaResult_2fluors(row):
 
-    if row[unique_reporters[1] + " CT"] < 30:
+    if row[unique_reporters[1] + " CT"] < pos_cutoff:
         return f"{fluor_names[unique_reporters[1]]} Positive"
     
-    elif row[internal_control_fluor + " CT"] < 30:
+    elif row[internal_control_fluor + " CT"] < pos_cutoff:
         return "Negative"
     
     else:
@@ -195,19 +196,19 @@ def getPandaaResult_2fluors(row):
 
 def getPandaaResult_3fluors(row):
 
-    if row[unique_reporters[1] + " CT"] < 30:
-        if (row[unique_reporters[2] + " CT"] >= 30):
+    if row[unique_reporters[1] + " CT"] < pos_cutoff:
+        if (row[unique_reporters[2] + " CT"] >= pos_cutoff):
             return f"{fluor_names[unique_reporters[1]]} Positive"
         else:
             return "Invalid Result"
 
-    elif row[unique_reporters[2] + " CT"] < 30:
-        if (row[unique_reporters[1] + " CT"] >= 30):
+    elif row[unique_reporters[2] + " CT"] < pos_cutoff:
+        if (row[unique_reporters[1] + " CT"] >= pos_cutoff):
             return f"{fluor_names[unique_reporters[2]]} Positive"
         else:
             return "Invalid Result"
         
-    elif row[internal_control_fluor + " CT"] < 30:
+    elif row[internal_control_fluor + " CT"] < pos_cutoff:
         return "Negative"
       
     else:
@@ -216,19 +217,19 @@ def getPandaaResult_3fluors(row):
 
 def getPandaaResult_3fluors_cqconf(row):
 
-    if row[unique_reporters[1] + " CT"] < 30:
-        if (row[unique_reporters[2] + " CT"] >= 30) or ((row[unique_reporters[2] + " CT"] < 30) and (row[unique_reporters[2] + " Cq Conf"] <= 0.5)):
+    if row[unique_reporters[1] + " CT"] < pos_cutoff:
+        if (row[unique_reporters[2] + " CT"] >= pos_cutoff) or ((row[unique_reporters[2] + " CT"] < pos_cutoff) and (row[unique_reporters[2] + " Cq Conf"] <= 0.5)):
             return f"{fluor_names[unique_reporters[1]]} Positive"
         else:
             return "Invalid Result"
 
-    elif row[unique_reporters[2] + " CT"] < 30:
-        if (row[unique_reporters[1] + " CT"] >= 30) or ((row[unique_reporters[1] + " CT"] < 30) and (row[unique_reporters[1] + " Cq Conf"] <= 0.5)):
+    elif row[unique_reporters[2] + " CT"] < pos_cutoff:
+        if (row[unique_reporters[1] + " CT"] >= pos_cutoff) or ((row[unique_reporters[1] + " CT"] < pos_cutoff) and (row[unique_reporters[1] + " Cq Conf"] <= 0.5)):
             return f"{fluor_names[unique_reporters[2]]} Positive"
         else:
             return "Invalid Result"
         
-    elif row[internal_control_fluor + " CT"] < 30:
+    elif row[internal_control_fluor + " CT"] < pos_cutoff:
         return "Negative"
       
     else:
