@@ -176,7 +176,6 @@ if file_type == "Excel":
     elif machine_type == "Mic":
         summary_table, results_file = xlsx_to_df.mic(fluor_names, cq_cutoff)
 
-print(summary_table)
 
 ###
 ### 3. Functions to get PANDAA result
@@ -249,7 +248,7 @@ if assay == "PANDAA Ebola + Marburg": #3 fluors
 else: #2 fluors
     summary_table['Result'] = summary_table.apply(getPandaaResult_2fluors, axis=1)
 
-print(summary_table.loc[:, ["Well Position", "Sample Name", "Result"]])
+#print(summary_table.loc[:, ["Well Position", "Sample Name", "Result"]])
 
 
 # results file can't be created/written if the user already has it open - catch possible PermissionErrors
@@ -258,7 +257,7 @@ try:
 except PermissionError:
     tk.messagebox.showerror(message='Unable to write results file. Make sure results file is closed, then click OK to try again.')
 
-tk.messagebox.showinfo(title="Success", message=f"Summary results saved in: {os.path.splitext(results_file)[0]+' - Summary.csv'}")
+tk.messagebox.showinfo(title="Success", message=f"Summary results saved in:\n\n{os.path.splitext(results_file)[0]+' - Summary.csv'}")
 
 # call main window
 '''
