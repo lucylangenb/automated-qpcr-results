@@ -2,10 +2,11 @@
 ### Imports
 ###
 
-import tkinter as tk
-from PIL import Image, ImageTk
-import os
+import tkinter as tk #GUI handling
+from PIL import Image, ImageTk #image handling - allows for rescaling of Aldatu logo in main menu
+import os #filepath handling - allows for saving of results file in same directory location as user's original file is uploaded from
 
+# custom dependency - holds functions that handle parsing of xls to pandas dataframes
 import xlsx_to_df
 
 ###
@@ -15,6 +16,7 @@ import xlsx_to_df
 cq_cutoff = 35
 pos_cutoff = 30
 file_type = "Excel"
+# "assay" and "machine_type" need to be global for tk menu to change their values
 global assay, machine_type
 machine_type = "Mic"
 assay = "PANDAA LASV"
@@ -30,31 +32,33 @@ root.geometry('500x350')
 
 # handle events when close button is clicked
 def close_program():
-    root.destroy()
-    raise SystemExit()
+    root.destroy() #get rid of root window
+    raise SystemExit() #close program
 
-root.protocol('WM_DELETE_WINDOW', close_program)
+root.protocol('WM_DELETE_WINDOW', close_program) #when delete_window event occurs, run close_program function
 
 # center root on user's screen
 def center_window(self):
-        self.update_idletasks()
-        width = self.winfo_width()
+        self.update_idletasks()             #check for any changes to window size
+        width = self.winfo_width()          #get root's width and height
         height = self.winfo_height()
-        x = (self.winfo_screenwidth() // 2) - (width // 2)
+        x = (self.winfo_screenwidth() // 2) - (width // 2)  #x = half of screen width / half of window width
         y = (self.winfo_screenheight() // 2) - (height // 2)
-        self.geometry(f'{width}x{height}+{x}+{y}')
+        self.geometry(f'{width}x{height}+{x}+{y}')  #use previously calculated x, y as adjustments to horiz/vert window alignment on screen
 
 center_window(root)
 
 # resize image
 logo = Image.open('aldatulogo.gif')
-logo = logo.resize((logo.width//6, logo.height//6))
+logo = logo.resize((logo.width//6, logo.height//6)) #pixels are whole numbers, so int division needed
 
 # turn image into tk object
-logo = ImageTk.PhotoImage(logo)
-logo_label = tk.Label(root, image = logo).pack(side = 'top',
-                                                fill = tk.X,
-                                                pady = 15)
+logo = ImageTk.PhotoImage(logo) #convert logo to tk image object
+logo_label = tk.Label(root,     #tk object logo will live inside
+                      image = logo
+                      ).pack(side = 'top', #where to position, relative to other objects
+                            fill = tk.X,   #if empty space exists in x direction, fill it with logo's background (in this case, transparent)
+                            pady = 15)     #add 15 pixels above/below logo
 
 # window title
 title_label = tk.Label(root,
@@ -73,7 +77,7 @@ questions_frame.pack(side = 'top')
 assay_type_frame = tk.Frame(questions_frame)
 assay_type_frame.pack(side = 'left', padx = 20)
 
-# question title
+# question title - assay choice
 assay_type_label = tk.Label(assay_type_frame,
                                 text = 'Choose assay results to analyze:',
                                 font = ('Arial', 10)
@@ -81,7 +85,7 @@ assay_type_label = tk.Label(assay_type_frame,
                                     fill = tk.X,
                                     pady = 2)
 
-# buttons
+# radio buttons - assay choice
 assays = ['PANDAA LASV',
         'PANDAA CCHFV',
         'PANDAA Ebola + Marburg']
@@ -94,7 +98,8 @@ for option in assays:
                     padx = 20,
                     variable = assay_var,
                     command = assay_var.get(),
-                    value = option).pack(anchor = tk.W)
+                    value = option
+                    ).pack(anchor = tk.W) #center text vertically around reference point, left-justified - "W" refers to "West"
 
 # instrument choice
 machine_type_frame = tk.Frame(questions_frame)
@@ -116,15 +121,15 @@ machines = ['QuantStudio 3',
 machine_var = tk.StringVar(value = 'QuantStudio 5') # includes initialization
 
 machine_menu = tk.OptionMenu(machine_type_frame,
-                            machine_var,
-                            *machines,
+                            machine_var, #initial value in drop-down
+                            *machines,   #values to choose from
                             command = lambda x: machine_var.get()
                             ).pack(anchor = tk.W)
 
 
 # button to continue to file selection after selections have been made
 def ok_click():
-    global assay, machine_type
+    global assay, machine_type #to edit global variables within a function, need to specify that we're editing the global verisons of these variables
     assay = assay_var.get()
     machine_type = machine_var.get()
     root.destroy()
@@ -263,12 +268,3 @@ except PermissionError:
     tk.messagebox.showerror(message='Unable to write results file. Make sure results file is closed, then click OK to try again.')
 
 tk.messagebox.showinfo(title="Success", message=f"Summary results saved in:\n\n{os.path.splitext(results_file)[0]+' - Summary.csv'}")
-
-# call main window
-'''
-root.mainloop()
-root.quit()
-root.destroy()
-'''
-
-
