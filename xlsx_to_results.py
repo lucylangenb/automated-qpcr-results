@@ -1,4 +1,14 @@
 ###
+### EXE PACKAGING INSTRUCTIONS
+###
+
+# pyinstaller --onefile -w --add-data="aldatulogo.gif;." xlsx_to_results.py
+
+# --add-data flag expects directory info in the format SOURCE;DESTINATION - use '.' as destination for "this directory"
+
+
+
+###
 ### Imports
 ###
 
