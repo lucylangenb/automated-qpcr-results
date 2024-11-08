@@ -5,6 +5,7 @@
 import tkinter as tk #GUI handling
 from PIL import Image, ImageTk #image handling - allows for rescaling of Aldatu logo in main menu
 import os #filepath handling - allows for saving of results file in same directory location as user's original file is uploaded from
+import sys #executable packaging
 
 # custom dependency - holds functions that handle parsing of xls to pandas dataframes
 import xlsx_to_df
@@ -44,8 +45,15 @@ def center_window(self):
 
 center_window(root)
 
+# make sure that, when script is packaged as exe, logo image file can be found
+def get_img_path(filename):
+    if hasattr(sys, '_MEIPASS'):
+        return os.path.join(sys._MEIPASS, filename)
+    else:
+        return filename
+
 # resize image
-logo = Image.open('aldatulogo.gif')
+logo = Image.open(get_img_path('aldatulogo.gif'))
 logo = logo.resize((logo.width//6, logo.height//6)) #pixels are whole numbers, so int division needed
 
 # turn image into tk object
