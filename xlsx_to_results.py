@@ -16,10 +16,6 @@ import xlsx_to_df
 cq_cutoff = 35
 pos_cutoff = 30
 file_type = "Excel"
-# "assay" and "machine_type" need to be global for tk menu to change their values
-global assay, machine_type
-machine_type = "Mic"
-assay = "PANDAA LASV"
 
 ###
 ### 0. Main menu
