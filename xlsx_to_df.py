@@ -5,23 +5,48 @@
 import pandas as pd #file and data handling
 from tkinter import filedialog
 import tkinter as tk
+import csv
+
+
+def isblank(row):
+    return all(not field.strip() for field in row)
 
 def quantstudio(machine_type, fluor_names, cq_cutoff):
 
-    results_file = filedialog.askopenfilename(title = 'Choose results file', filetypes= [("Excel file","*.xlsx"),("Excel file 97-2003","*.xls")])
+    results_file = filedialog.askopenfilename(title = 'Choose results file', filetypes = [("All Excel Files","*.xlsx"),("All Excel Files","*.xls"),("Text Files", "*.txt")])
 
-    # see if user successfully selected a results file
-    try:
-        if machine_type == "QuantStudio 5":
-            results_table = pd.read_excel(results_file, sheet_name = "Results", skiprows = 47)
-        elif machine_type == "QuantStudio 3":
-            results_table = pd.read_excel(results_file, sheet_name = "Results", skiprows = 43)
-            
-    # if user didn't select a results file, or if the file is otherwise unreadable, close the program
-    except:
-        tk.messagebox.showerror(message='File not selected. Make sure file is not open in another program.')
-        # close program
-        raise SystemExit()
+    if results_file.split('.')[1] == 'txt':
+
+        with open(results_file, newline = '') as csvfile:
+            results_reader = csv.reader(csvfile, delimiter = '\t')
+            data_bool = False
+            data_cleaned = []
+            for line in results_reader:
+                if isblank(line): #check for additional lines at end of file
+                    data_bool = False
+                if data_bool == True:
+                    data_cleaned.append(line)
+                if '[Results]' in line: #skip non-results info at beginning of file
+                    data_bool = True
+
+        header = data_cleaned.pop(0)
+        results_table = pd.DataFrame(data_cleaned, columns = header)
+
+        
+
+    else:
+        # see if user successfully selected a results file
+        try:
+            if machine_type == "QuantStudio 5":
+                results_table = pd.read_excel(results_file, sheet_name = "Results", skiprows = 47)
+            elif machine_type == "QuantStudio 3":
+                results_table = pd.read_excel(results_file, sheet_name = "Results", skiprows = 43)
+                
+        # if user didn't select a results file, or if the file is otherwise unreadable, close the program
+        except:
+            tk.messagebox.showerror(message='File not selected. Make sure file is not open in another program.')
+            # close program
+            raise SystemExit()
 
     try:
         # assign "Undetermined" wells a CT value - "CT" column will only exist in correctly formatted results files, so can be used for error checking
@@ -29,6 +54,10 @@ def quantstudio(machine_type, fluor_names, cq_cutoff):
         # create new "Copies" column by parsing "Comments" column (get text before ' '), convert scientific notation to numbers
         # (note that this needs editing - doesn't seem to be working properly)
         results_table["Copies"] = results_table["Comments"].str.extract(r'(\w+)\s').apply(pd.to_numeric)
+
+        results_table["CT"] = results_table["CT"].apply(pd.to_numeric)
+        results_table["Cq Conf"] = results_table["Cq Conf"].apply(pd.to_numeric)
+        
     except:
         tk.messagebox.showerror(message='Unexpected machine type. Check instrument input setting.')
         # close program
