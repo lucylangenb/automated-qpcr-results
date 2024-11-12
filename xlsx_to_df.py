@@ -8,21 +8,35 @@ import tkinter as tk
 import csv
 
 
+# helper function for tsv / text file parsing
 def isblank(row):
     return all(not field.strip() for field in row)
+
+
 
 def quantstudio(machine_type, fluor_names, cq_cutoff):
 
     results_file = filedialog.askopenfilename(title = 'Choose results file', filetypes = [("All Excel Files","*.xlsx"),("All Excel Files","*.xls"),("Text Files", "*.txt")])
 
-    if results_file.split('.')[1] == 'txt':
+    # check whether a file was selected
+    try:
+        file_ext = results_file.split('.')[1]
+    # if user didn't select a results file, or if the file is otherwise unreadable, close the program
+    except:
+        tk.messagebox.showerror(message='File not selected. Make sure file is not open in another program.')
+        # close program
+        raise SystemExit()
 
+    if file_ext == 'txt': #file extension check - special handling for text files
+       
+        # text file versions of results contain inconsistent formatting, so reading these straight to a pandas df doesn't work
+        # need to work line-by-line instead to get rid of header/footer data
         with open(results_file, newline = '') as csvfile:
-            results_reader = csv.reader(csvfile, delimiter = '\t')
+            results_reader = csv.reader(csvfile, delimiter = '\t') #create csvreader object to iterate through each line of text file
             data_bool = False
-            data_cleaned = []
+            data_cleaned = [] #list of lists - will be equivalent to python's handling of a csv file
             for line in results_reader:
-                if isblank(line): #check for additional lines at end of file
+                if isblank(line): #check for additional (blank) lines at end of file
                     data_bool = False
                 if data_bool == True:
                     data_cleaned.append(line)
@@ -33,39 +47,40 @@ def quantstudio(machine_type, fluor_names, cq_cutoff):
         results_table = pd.DataFrame(data_cleaned, columns = header)
 
         
+    else: #file is not a text file (so it's an excel file) - excel files cannot be selected if open in another program, so check for this
+        file_selected = False
+        while file_selected == False:
+            try:
+                if machine_type == "QuantStudio 5":
+                    results_table = pd.read_excel(results_file, sheet_name = "Results", skiprows = 47)
+                elif machine_type == "QuantStudio 3":
+                    results_table = pd.read_excel(results_file, sheet_name = "Results", skiprows = 43)
+            except:
+                tk.messagebox.showerror(message='File is open in another program. Close the file, then click OK to continue analysis.')
+            
+            if 'results_table' in locals():
+                file_selected = True
 
-    else:
-        # see if user successfully selected a results file
-        try:
-            if machine_type == "QuantStudio 5":
-                results_table = pd.read_excel(results_file, sheet_name = "Results", skiprows = 47)
-            elif machine_type == "QuantStudio 3":
-                results_table = pd.read_excel(results_file, sheet_name = "Results", skiprows = 43)
                 
-        # if user didn't select a results file, or if the file is otherwise unreadable, close the program
-        except:
-            tk.messagebox.showerror(message='File not selected. Make sure file is not open in another program.')
-            # close program
-            raise SystemExit()
 
     try:
         # assign "Undetermined" wells a CT value - "CT" column will only exist in correctly formatted results files, so can be used for error checking
         results_table["CT"] = results_table["CT"].replace(to_replace = "Undetermined", value = cq_cutoff)
-        # create new "Copies" column by parsing "Comments" column (get text before ' '), convert scientific notation to numbers
-        # (note that this needs editing - doesn't seem to be working properly)
-        results_table["Copies"] = results_table["Comments"].str.extract(r'(\w+)\s').apply(pd.to_numeric)
-
-        results_table["CT"] = results_table["CT"].apply(pd.to_numeric)
-        results_table["Cq Conf"] = results_table["Cq Conf"].apply(pd.to_numeric)
-        
     except:
         tk.messagebox.showerror(message='Unexpected machine type. Check instrument input setting.')
         # close program
         raise SystemExit()
+    
+    # create new "Copies" column by parsing "Comments" column (get text before ' '), convert scientific notation to numbers
+    # (note that this needs editing - doesn't seem to be working properly)
+    results_table["Copies"] = results_table["Comments"].str.extract(r'(\w+)\s').apply(pd.to_numeric)
+    # make sure CT and CqConf columns contain number values, not strings
+    results_table["CT"] = results_table["CT"].apply(pd.to_numeric)
+    results_table["Cq Conf"] = results_table["Cq Conf"].apply(pd.to_numeric)
 
     # make sure file and fluor_names have the same fluorophores listed
     if sorted(list(results_table['Reporter'].unique())) != sorted(fluor_names):
-        tk.messagebox.showerror(message='Fluorophores in file do not match expected fluorophores. Check fluorophore and assay assignment.')
+        tk.messagebox.showerror(message='Fluorophores in file do not match expected fluorophores. Check assay assignment.')
         # close program
         raise SystemExit()
     
@@ -80,10 +95,10 @@ def quantstudio(machine_type, fluor_names, cq_cutoff):
             # close program
             raise SystemExit()
 
-        if first_loop == True:
+        if first_loop == True: #on first iteration of loop, initialize summary_table
             summary_table = results_newfluor.loc[:, ["Well Position", "Sample Name", "Copies", "Comments", f"{fluor} CT", f"{fluor} Cq Conf"]]
             first_loop = False
-        else:
+        else: #on subsequent iterations, just add new data to loop
             summary_table = pd.merge(summary_table, results_newfluor.loc[:, ["Well Position", f"{fluor} CT", f"{fluor} Cq Conf"]], on="Well Position")
 
     return summary_table, results_file

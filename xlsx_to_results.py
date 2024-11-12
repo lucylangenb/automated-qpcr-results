@@ -191,6 +191,7 @@ unique_reporters = [key for key in fluor_names]
 # tkinter needs root window - but, OK to hide this window immediately
 root = tk.Tk()
 root.withdraw() #hides root
+root.protocol('WM_DELETE_WINDOW', close_program) #when delete_window event occurs, run close_program function
 
 if file_type == "Excel":
     if machine_type == "QuantStudio 3" or machine_type == "QuantStudio 5":
@@ -265,14 +266,12 @@ def getPandaaResult_3fluors_cqconf(row):
 
 if assay == "PANDAA Ebola + Marburg": #3 fluors
     if machine_type == "QuantStudio 3" or machine_type == "QuantStudio 5":
-        summary_table['Result'] = summary_table.apply(getPandaaResult_3fluors_cqconf, axis=1)
+        summary_table['Result'] = summary_table.apply(getPandaaResult_3fluors_cqconf, axis=1) #axis=1 specifies to work row by row
     else:
         summary_table['Result'] = summary_table.apply(getPandaaResult_3fluors, axis=1)
 
 else: #2 fluors
     summary_table['Result'] = summary_table.apply(getPandaaResult_2fluors, axis=1)
-
-#print(summary_table.loc[:, ["Well Position", "Sample Name", "Result"]])
 
 
 # results file can't be created/written if the user already has it open - catch possible PermissionErrors
@@ -282,3 +281,4 @@ except PermissionError:
     tk.messagebox.showerror(message='Unable to write results file. Make sure results file is closed, then click OK to try again.')
 
 tk.messagebox.showinfo(title="Success", message=f"Summary results saved in:\n\n{os.path.splitext(results_file)[0]+' - Summary.csv'}")
+root.destroy()
