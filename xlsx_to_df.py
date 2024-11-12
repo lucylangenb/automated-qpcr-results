@@ -5,7 +5,7 @@
 import pandas as pd #file and data handling
 from tkinter import filedialog
 import tkinter as tk
-import csv
+import csv #text file parsing
 
 
 # helper function for tsv / text file parsing
@@ -29,7 +29,7 @@ def quantstudio(machine_type, fluor_names, cq_cutoff):
 
     if file_ext == 'txt': #file extension check - special handling for text files
        
-        # text file versions of results contain inconsistent formatting, so reading these straight to a pandas df doesn't work
+        # text file versions of results contain inconsistent formatting throughout file, so reading these straight to a pandas df doesn't work
         # need to work line-by-line instead to get rid of header/footer data
         with open(results_file, newline = '') as csvfile:
             results_reader = csv.reader(csvfile, delimiter = '\t') #create csvreader object to iterate through each line of text file
@@ -56,7 +56,9 @@ def quantstudio(machine_type, fluor_names, cq_cutoff):
                 elif machine_type == "QuantStudio 3":
                     results_table = pd.read_excel(results_file, sheet_name = "Results", skiprows = 43)
             except:
-                tk.messagebox.showerror(message='File is open in another program. Close the file, then click OK to continue analysis.')
+                proceed = tk.messagebox.askretrycancel(message='File is open in another program. Close the file, then click Retry to continue analysis.', icon = tk.messagebox.ERROR)
+                if proceed == False:
+                    raise SystemExit()
             
             if 'results_table' in locals():
                 file_selected = True
@@ -106,7 +108,7 @@ def quantstudio(machine_type, fluor_names, cq_cutoff):
 
 def rotorgene(fluor_names, cq_cutoff):
     
-    results_filenames = filedialog.askopenfilenames(title = 'Choose results files', filetypes= [("CSV", ".csv")])
+    results_filenames = filedialog.askopenfilenames(title = 'Choose results files', filetypes= [("Text Files", "*.csv")])
     first_loop = True
     used_filenames = []
 
@@ -152,9 +154,11 @@ def rotorgene(fluor_names, cq_cutoff):
 
     return summary_table, results_filenames[0]
 
+
+
 def mic(fluor_names, cq_cutoff):
         
-    results_filename = filedialog.askopenfilename(title = 'Choose results file', filetypes= [("Excel file","*.xlsx"),("Excel file 97-2003","*.xls")])
+    results_filename = filedialog.askopenfilename(title = 'Choose results file', filetypes= [("All Excel Files","*.xlsx"),("All Excel Files","*.xls")])
     
     try:
         sheetnames = pd.ExcelFile(results_filename).sheet_names
