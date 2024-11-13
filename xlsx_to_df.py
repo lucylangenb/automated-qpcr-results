@@ -6,6 +6,7 @@ import pandas as pd #file and data handling
 from tkinter import filedialog
 import tkinter as tk
 import csv #text file parsing
+import itertools #for mic csv parsing
 
 
 # helper function for tsv / text file parsing
@@ -187,23 +188,47 @@ def rotorgene(fluor_names, cq_cutoff):
 
 def mic(fluor_names, cq_cutoff):
         
-    results_filename = filedialog.askopenfilename(title = 'Choose results file', filetypes= [("All Excel Files","*.xlsx"),("All Excel Files","*.xls")])
+    results_filepath = filedialog.askopenfilename(title = 'Choose results file', filetypes = [("All Excel Files","*.xlsx"),("All Excel Files","*.xls"),("Text Files", "*.csv")])
     
+    tabs_to_use = {}
+
+    # check whether a file was selected
     try:
-        sheetnames = pd.ExcelFile(results_filename).sheet_names
+        file_ext = results_filepath.split('.')[1]
+    # if user didn't select a results file, or if the file is otherwise unreadable, close the program
     except:
         tk.messagebox.showerror(message='File not selected. Make sure file is not open in another program.')
         # close program
         raise SystemExit()
+    
 
-    tabs_to_use = {}
-    for fluor in fluor_names:
-        for tab in sheetnames:
-            if fluor_names[fluor] in tab and "Result" in tab and "Absolute" not in tab:
-                tabs_to_use[fluor] = tab
-                break
+    if file_ext == 'csv': #file extension check - special handling for text files
+        
+        # text file versions of results contain inconsistent formatting throughout file, so reading these straight to a pandas df doesn't work
+        # need to work line-by-line instead to get rid of header/footer data
+        with open(results_filepath, newline = '') as csvfile:
+            csv_lines = csvfile.readlines()
 
-    if sorted(tabs_to_use) != sorted(fluor_names):
+        chunks = [list(group) for is_blank, group in itertools.groupby(csv_lines, lambda line: line.strip() == "") if not is_blank]
+        results_csvs = {}
+
+        for fluor in fluor_names:
+            for chunk in chunks:
+                title = chunk[0]
+                if 'Start Worksheet - Analysis - Cycling' in title and 'Result' in title and (fluor in title or fluor_names[fluor] in title):
+                    results_csvs[fluor] = chunk
+                    tabs_to_use[fluor] = title
+                    break
+
+    else: #file is not a text file - must be Excel
+        sheetnames = pd.ExcelFile(results_filepath).sheet_names #get tabs in file
+        for fluor in fluor_names:
+            for tab in sheetnames: #cycle through fluorophores and tabs, assign tabs to fluorophores
+                if fluor_names[fluor] in tab and "Result" in tab and "Absolute" not in tab:
+                    tabs_to_use[fluor] = tab
+                    break
+
+    if sorted(tabs_to_use) != sorted(fluor_names): #check to make sure fluorophores with assigned tabs match the list of fluors known to be in assay
         tk.messagebox.showerror(message='Fluorophores in file do not match expected fluorophores. Check fluorophore and assay assignment.')
         # close program
         raise SystemExit()
@@ -211,10 +236,15 @@ def mic(fluor_names, cq_cutoff):
     results_dict = {}
     for fluor in fluor_names:
         
-        results_dict[fluor] = pd.read_excel(results_filename, sheet_name = tabs_to_use[fluor], skiprows = 32)
+        if file_ext == 'csv':
+            results_dict[fluor] = csv_to_df(results_csvs[fluor], ',', 'Results')
+        else:
+            results_dict[fluor] = pd.read_excel(results_filepath, sheet_name = tabs_to_use[fluor], skiprows = 32)
+
         results_dict[fluor]["Cq"] = results_dict[fluor]["Cq"].fillna(cq_cutoff)
+        results_dict[fluor]["Cq"] = results_dict[fluor]["Cq"].apply(pd.to_numeric)
         results_dict[fluor] = results_dict[fluor].rename(columns={"Well": "Well Position", "Cq": f"{fluor} CT"})
 
     summary_table = summarize(results_dict)
 
-    return summary_table, results_filename
+    return summary_table, results_filepath
