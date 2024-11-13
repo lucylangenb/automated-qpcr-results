@@ -1,6 +1,25 @@
-###
-### Functions for different machines: based on machine type, create summary results dataframe
-###
+##############################################################################################################################
+### About this code
+##############################################################################################################################
+#
+#   This script contains functions accessed by the main 'PANDAA Results' script.
+#
+#   Different qPCR machines have very different results outputs;
+#   because of this, files from different machines need to be handled differently.
+#
+#   After the user tells the program which machine they used,
+#   the program uses that information to choose which algorithm to use to create a usable results dataframe (pandas).
+#
+#   This dataframe - identical, regardless of the qPCR machine the results file originally came from -
+#   is then used by the main script to generate a results file.
+#
+#
+#
+
+
+##############################################################################################################################
+### Imports
+##############################################################################################################################
 
 import pandas as pd #file and data handling
 from tkinter import filedialog
@@ -8,6 +27,10 @@ import tkinter as tk
 import csv #text file parsing
 import itertools #for mic csv parsing
 
+
+##############################################################################################################################
+### Helper functions
+##############################################################################################################################
 
 # helper function for tsv / text file parsing
 def isblank(row):
@@ -60,6 +83,9 @@ def summarize(df_dict, machine_type = ''):
     return summary_table
 
 
+##############################################################################################################################
+### QuantStudio
+##############################################################################################################################
 
 def quantstudio(machine_type, fluor_names, cq_cutoff):
 
@@ -136,6 +162,10 @@ def quantstudio(machine_type, fluor_names, cq_cutoff):
     return summary_table, results_file
 
 
+##############################################################################################################################
+### Rotor-Gene
+##############################################################################################################################
+
 def rotorgene(fluor_names, cq_cutoff):
     
     results_filenames = filedialog.askopenfilenames(title = 'Choose results files', filetypes= [("Text Files", "*.csv")])
@@ -185,6 +215,9 @@ def rotorgene(fluor_names, cq_cutoff):
     return summary_table, results_filenames[0]
 
 
+##############################################################################################################################
+### Mic
+##############################################################################################################################
 
 def mic(fluor_names, cq_cutoff):
         
