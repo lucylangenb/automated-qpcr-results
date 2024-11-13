@@ -91,7 +91,7 @@ def quantstudio(machine_type, fluor_names, cq_cutoff):
                 elif machine_type == "QuantStudio 3":
                     results_table = pd.read_excel(results_file, sheet_name = "Results", skiprows = 43)
             except:
-                proceed = tk.messagebox.askretrycancel(message='File is open in another program. Close the file, then click Retry to continue analysis.', icon = tk.messagebox.ERROR)
+                proceed = tk.messagebox.askretrycancel(message='Incorrect file, or file is open in another program. Click Retry to analyze selected file again.', icon = tk.messagebox.ERROR)
                 if proceed == False:
                     raise SystemExit()
             
@@ -241,8 +241,7 @@ def mic(fluor_names, cq_cutoff):
         else:
             results_dict[fluor] = pd.read_excel(results_filepath, sheet_name = tabs_to_use[fluor], skiprows = 32)
 
-        results_dict[fluor]["Cq"] = results_dict[fluor]["Cq"].fillna(cq_cutoff)
-        results_dict[fluor]["Cq"] = results_dict[fluor]["Cq"].apply(pd.to_numeric)
+        results_dict[fluor]["Cq"] = results_dict[fluor]["Cq"].fillna(cq_cutoff).apply(pd.to_numeric)
         results_dict[fluor] = results_dict[fluor].rename(columns={"Well": "Well Position", "Cq": f"{fluor} CT"})
 
     summary_table = summarize(results_dict)

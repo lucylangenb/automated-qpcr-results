@@ -2,7 +2,7 @@
 ### EXE PACKAGING INSTRUCTIONS
 ###
 
-# pyinstaller --onefile -w --add-data="aldatulogo.gif;." xlsx_to_results.py
+# pyinstaller --onefile -w --add-data="*.gif;." xlsx_to_results.py
 
 # --add-data flag expects directory info in the format SOURCE;DESTINATION - use '.' as destination for "this directory"
 
@@ -19,6 +19,7 @@ import sys #executable packaging
 
 # custom dependency - holds functions that handle parsing of xls to pandas dataframes
 import xlsx_to_df
+
 
 ###
 ### User-defined values
@@ -61,6 +62,11 @@ def get_img_path(filename):
         return os.path.join(sys._MEIPASS, filename)
     else:
         return filename
+
+# change feather icon in upper corner to Aldatu logo
+ico = Image.open(get_img_path('aldatulogo_icon.gif'))
+ico = ImageTk.PhotoImage(ico)
+root.wm_iconphoto(True, ico) #True bool here ensures that all subsequent windows also use this icon
 
 # resize image
 logo = Image.open(get_img_path('aldatulogo.gif'))
