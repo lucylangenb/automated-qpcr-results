@@ -12,6 +12,52 @@ import csv #text file parsing
 def isblank(row):
     return all(not field.strip() for field in row)
 
+# helper function - cleans up csv, returns relevant data
+def csv_to_df(csv_file, csv_delim, results_flag):
+    
+    data_bool = False
+    data_cleaned = []
+    results_reader = csv.reader(csv_file, delimiter = csv_delim)
+
+    for line in results_reader:
+        if isblank(line): #check for additional (blank) lines at end of file
+            data_bool = False
+        if data_bool == True:
+            data_cleaned.append(line)
+        if results_flag in line: #skip non-results info at beginning of file
+            data_bool = True
+
+    header = data_cleaned.pop(0)
+    results_table = pd.DataFrame(data_cleaned, columns = header)
+
+    return results_table
+
+# helper function - combines many data frames into one summary data frame
+def summarize(df_dict, machine_type = ''):
+
+    first_loop = True
+
+    for fluor in df_dict:
+
+        columns = ["Well Position", "Sample Name", f"{fluor} CT"]
+        if machine_type == 'QuantStudio 5' or machine_type == 'QuantStudio 3':
+            columns.append(f"{fluor} Cq Conf")
+        if first_loop == False:
+            columns.pop(1)
+
+        if first_loop == True:
+            try:
+                summary_table = df_dict[fluor].loc[:, columns]
+            except:
+                tk.messagebox.showerror(message='Incorrect file selected. Please try again.')
+                # close program
+                raise SystemExit()
+            first_loop = False
+        else:
+            summary_table = pd.merge(summary_table, df_dict[fluor].loc[:, columns], on="Well Position")
+    
+    return summary_table
+
 
 
 def quantstudio(machine_type, fluor_names, cq_cutoff):
@@ -32,21 +78,9 @@ def quantstudio(machine_type, fluor_names, cq_cutoff):
         # text file versions of results contain inconsistent formatting throughout file, so reading these straight to a pandas df doesn't work
         # need to work line-by-line instead to get rid of header/footer data
         with open(results_file, newline = '') as csvfile:
-            results_reader = csv.reader(csvfile, delimiter = '\t') #create csvreader object to iterate through each line of text file
-            data_bool = False
-            data_cleaned = [] #list of lists - will be equivalent to python's handling of a csv file
-            for line in results_reader:
-                if isblank(line): #check for additional (blank) lines at end of file
-                    data_bool = False
-                if data_bool == True:
-                    data_cleaned.append(line)
-                if '[Results]' in line: #skip non-results info at beginning of file
-                    data_bool = True
+            results_table = csv_to_df(csvfile, '\t', '[Results]')
 
-        header = data_cleaned.pop(0)
-        results_table = pd.DataFrame(data_cleaned, columns = header)
 
-        
     else: #file is not a text file (so it's an excel file) - excel files cannot be selected if open in another program, so check for this
         file_selected = False
         while file_selected == False:
@@ -62,8 +96,7 @@ def quantstudio(machine_type, fluor_names, cq_cutoff):
             
             if 'results_table' in locals():
                 file_selected = True
-
-                
+        
 
     try:
         # assign "Undetermined" wells a CT value - "CT" column will only exist in correctly formatted results files, so can be used for error checking
@@ -86,22 +119,18 @@ def quantstudio(machine_type, fluor_names, cq_cutoff):
         # close program
         raise SystemExit()
     
-    first_loop = True
+    results_dict = {}
     for fluor in fluor_names:
         
-        results_newfluor = results_table.loc[results_table["Reporter"] == fluor]
+        results_dict[fluor] = results_table.loc[results_table["Reporter"] == fluor]
         try:
-            results_newfluor = results_newfluor.rename(columns={"CT": f"{fluor} CT", "Cq Conf": f"{fluor} Cq Conf"})
+            results_dict[fluor] = results_dict[fluor].rename(columns={"CT": f"{fluor} CT", "Cq Conf": f"{fluor} Cq Conf"})
         except:
             tk.messagebox.showerror(message='Fluorophores in file do not match those entered by user. Check fluorophore assignment.')
             # close program
             raise SystemExit()
 
-        if first_loop == True: #on first iteration of loop, initialize summary_table
-            summary_table = results_newfluor.loc[:, ["Well Position", "Sample Name", "Copies", "Comments", f"{fluor} CT", f"{fluor} Cq Conf"]]
-            first_loop = False
-        else: #on subsequent iterations, just add new data to loop
-            summary_table = pd.merge(summary_table, results_newfluor.loc[:, ["Well Position", f"{fluor} CT", f"{fluor} Cq Conf"]], on="Well Position")
+    summary_table = summarize(results_dict, machine_type)
 
     return summary_table, results_file
 
@@ -179,23 +208,13 @@ def mic(fluor_names, cq_cutoff):
         # close program
         raise SystemExit()
     
-    first_loop = True
+    results_dict = {}
     for fluor in fluor_names:
         
-        results_table = pd.read_excel(results_filename, sheet_name = tabs_to_use[fluor], skiprows = 32)
-        results_table["Cq"] = results_table["Cq"].fillna(cq_cutoff)
-        results_table = results_table.rename(columns={"Well": "Well Position", "Cq": f"{fluor} CT"})
+        results_dict[fluor] = pd.read_excel(results_filename, sheet_name = tabs_to_use[fluor], skiprows = 32)
+        results_dict[fluor]["Cq"] = results_dict[fluor]["Cq"].fillna(cq_cutoff)
+        results_dict[fluor] = results_dict[fluor].rename(columns={"Well": "Well Position", "Cq": f"{fluor} CT"})
 
-        if first_loop == True:
-            try:
-                summary_table = results_table.loc[:, ["Well Position", "Sample Name", f"{fluor} CT"]]
-            except:
-                tk.messagebox.showerror(message='Incorrect file selected. Please try again.')
-                # close program
-                raise SystemExit()
-            first_loop = False
-        else:
-            summary_table = pd.merge(summary_table, results_table.loc[:, ["Well Position", f"{fluor} CT"]], on="Well Position")
-
+    summary_table = summarize(results_dict)
 
     return summary_table, results_filename

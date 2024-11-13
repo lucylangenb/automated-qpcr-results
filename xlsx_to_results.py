@@ -274,6 +274,7 @@ else: #2 fluors
     summary_table['Result'] = summary_table.apply(getPandaaResult_2fluors, axis=1)
 
 
+
 # results file can't be created/written if the user already has it open - catch possible PermissionErrors
 try:
     summary_table.to_csv(path_or_buf=(os.path.splitext(results_file)[0]+" - Summary.csv"), columns=["Well Position", "Sample Name", "Result"])
