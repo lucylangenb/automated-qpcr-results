@@ -30,7 +30,7 @@ import os #filepath handling - allows for saving of results file in same directo
 import sys #executable packaging
 
 # custom dependency - holds functions that handle parsing of xls to pandas dataframes
-import xlsx_to_df
+import file_to_df
 
 
 ##############################################################################################################################
@@ -212,11 +212,11 @@ root.withdraw() #hides root
 root.protocol('WM_DELETE_WINDOW', close_program) #when delete_window event occurs, run close_program function
 
 if machine_type == "QuantStudio 3" or machine_type == "QuantStudio 5":
-    summary_table, results_file = xlsx_to_df.quantstudio(machine_type, fluor_names, cq_cutoff)
+    summary_table, results_file = file_to_df.quantstudio(machine_type, fluor_names, cq_cutoff)
 elif machine_type == "Rotor-Gene":
-    summary_table, results_file = xlsx_to_df.rotorgene(fluor_names, cq_cutoff)
+    summary_table, results_file = file_to_df.rotorgene(fluor_names, cq_cutoff)
 elif machine_type == "Mic":
-    summary_table, results_file = xlsx_to_df.mic(fluor_names, cq_cutoff)
+    summary_table, results_file = file_to_df.mic(fluor_names, cq_cutoff)
 
 
 ##############################################################################################################################
