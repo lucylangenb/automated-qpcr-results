@@ -39,7 +39,6 @@ import xlsx_to_df
 
 cq_cutoff = 35
 pos_cutoff = 30
-file_type = "Excel"
 
 
 ##############################################################################################################################
@@ -212,13 +211,12 @@ root = tk.Tk()
 root.withdraw() #hides root
 root.protocol('WM_DELETE_WINDOW', close_program) #when delete_window event occurs, run close_program function
 
-if file_type == "Excel":
-    if machine_type == "QuantStudio 3" or machine_type == "QuantStudio 5":
-        summary_table, results_file = xlsx_to_df.quantstudio(machine_type, fluor_names, cq_cutoff)
-    elif machine_type == "Rotor-Gene":
-        summary_table, results_file = xlsx_to_df.rotorgene(fluor_names, cq_cutoff)
-    elif machine_type == "Mic":
-        summary_table, results_file = xlsx_to_df.mic(fluor_names, cq_cutoff)
+if machine_type == "QuantStudio 3" or machine_type == "QuantStudio 5":
+    summary_table, results_file = xlsx_to_df.quantstudio(machine_type, fluor_names, cq_cutoff)
+elif machine_type == "Rotor-Gene":
+    summary_table, results_file = xlsx_to_df.rotorgene(fluor_names, cq_cutoff)
+elif machine_type == "Mic":
+    summary_table, results_file = xlsx_to_df.mic(fluor_names, cq_cutoff)
 
 
 ##############################################################################################################################
