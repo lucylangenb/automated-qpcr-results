@@ -1,5 +1,5 @@
 ###
-### Parse text files as dataframes
+### Parse text input as dataframes
 ###
 
 import pandas as pd #file and data handling
@@ -13,8 +13,6 @@ fluor_names = {"VIC": "Internal Control",
                    "FAM": "LASV"
                    }
 cq_cutoff = 35
-
-excel_files = ["*.xlsx", "*.xls"]
 
 def isblank(row):
     return all(not field.strip() for field in row)
@@ -59,47 +57,41 @@ def summarize(df_dict):
     return summary_table
     
 
+root = tk.Tk()
+root.title('Paste results data')
+root.geometry('850x400')
 
-results_filepath = filedialog.askopenfilename(title = 'Choose results file', filetypes = [("All Excel Files", excel_files),("Text Files", "*.csv")])
+input_label = tk.Label(root,
+                       text  = 'Paste Mic results below:',
+                       font = ('Arial', 10)
+                       ).pack(anchor = tk.NW,
+                              pady = 10,
+                              padx = 10)
 
-# check whether a file was selected
-try:
-    file_ext = results_filepath.split('.')[1]
-# if user didn't select a results file, or if the file is otherwise unreadable, close the program
-except:
-    tk.messagebox.showerror(message='File not selected. Make sure file is not open in another program.')
-    # close program
-    raise SystemExit()
+input_text = tk.Text(root,
+                     height = 20,
+                     width = 100)
+input_text.pack(anchor = tk.NW,
+                padx = 10)
 
-if file_ext == 'csv': #file extension check - special handling for text files
-       
-    # text file versions of results contain inconsistent formatting throughout file, so reading these straight to a pandas df doesn't work
-    # need to work line-by-line instead to get rid of header/footer data
-    with open(results_filepath, newline = '') as csvfile:
-        csv_lines = csvfile.readlines()
+def get_input():
+    input = input_text.get(1.0, 'end-1c')
+    print(input)
 
-    chunks = [list(group) for is_blank, group in itertools.groupby(csv_lines, lambda line: line.strip() == "") if not is_blank]
-    results_csvs = {}
+accept_input = tk.Button(root,
+                         text = 'OK',
+                         command = get_input)
+accept_input.pack()
 
-    for fluor in fluor_names:
-        for chunk in chunks:
-            title = chunk[0]
-            if 'Start Worksheet - Analysis - Cycling' in title and 'Result' in title and (fluor in title or fluor_names[fluor] in title):
-                results_csvs[fluor] = chunk
-                break
 
-    first_loop = True
-    results_dict = {}
-    for fluor in results_csvs:
 
-        results_dict[fluor] = csv_to_df(results_csvs[fluor], ',', 'Results')
 
-        results_dict[fluor]["Cq"] = results_dict[fluor]["Cq"].replace("", cq_cutoff)
-        results_dict[fluor] = results_dict[fluor].rename(columns={"Well": "Well Position", "Cq": f"{fluor} CT"})
 
-    summary_table = summarize(results_dict)
 
-    print(summary_table)
+
+
+root.mainloop()
+
 
 
 
