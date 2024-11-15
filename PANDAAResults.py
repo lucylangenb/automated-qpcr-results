@@ -201,7 +201,11 @@ elif assay == "PANDAA LASV":
                    }
     internal_control_fluor = "VIC"
 
-unique_reporters = [key for key in fluor_names]
+try:
+    unique_reporters = [key for key in fluor_names]
+except:
+    tk.messagebox.showerror(message='Not enough parameters selected. Please try again.')
+    raise SystemExit
     
 
 ##############################################################################################################################
