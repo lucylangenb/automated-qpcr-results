@@ -210,7 +210,7 @@ def rotorgene(fluor_names, cq_cutoff):
         # close program
         raise SystemExit()
 
-    return summary_table, results_filenames[0]
+    return summary_table, os.path.commonprefix(results_filenames)
 
 
 ##############################################################################################################################
