@@ -22,10 +22,11 @@
 ##############################################################################################################################
 
 import pandas as pd #file and data handling
-from tkinter import filedialog
-import tkinter as tk
+from tkinter import filedialog #prompt user to select results file
+import tkinter as tk #error message GUI
 import csv #text file parsing
 import itertools #for mic csv parsing
+import os #for getting file extension
 
 
 ##############################################################################################################################
@@ -93,14 +94,14 @@ def quantstudio(machine_type, fluor_names, cq_cutoff):
 
     # check whether a file was selected
     try:
-        file_ext = results_file.split('.')[1]
+        file_ext = os.path.splitext(results_file)[1]
     # if user didn't select a results file, or if the file is otherwise unreadable, close the program
     except:
         tk.messagebox.showerror(message='File not selected. Make sure file is not open in another program.')
         # close program
         raise SystemExit()
 
-    if file_ext == 'txt': #file extension check - special handling for text files
+    if file_ext == '.txt': #file extension check - special handling for text files
        
         # text file versions of results contain inconsistent formatting throughout file, so reading these straight to a pandas df doesn't work
         # need to work line-by-line instead to get rid of header/footer data
@@ -133,9 +134,6 @@ def quantstudio(machine_type, fluor_names, cq_cutoff):
         # close program
         raise SystemExit()
     
-    # create new "Copies" column by parsing "Comments" column (get text before ' '), convert scientific notation to numbers
-    # (note that this needs editing - doesn't seem to be working properly)
-    results_table["Copies"] = results_table["Comments"].str.extract(r'(\w+)\s').apply(pd.to_numeric)
     # make sure CT and CqConf columns contain number values, not strings
     results_table["CT"] = results_table["CT"].apply(pd.to_numeric)
     results_table["Cq Conf"] = results_table["Cq Conf"].apply(pd.to_numeric)
@@ -227,7 +225,7 @@ def mic(fluor_names, cq_cutoff):
 
     # check whether a file was selected
     try:
-        file_ext = results_filepath.split('.')[1]
+        file_ext = os.path.splitext(results_filepath)[1]
     # if user didn't select a results file, or if the file is otherwise unreadable, close the program
     except:
         tk.messagebox.showerror(message='File not selected. Make sure file is not open in another program.')
@@ -235,7 +233,7 @@ def mic(fluor_names, cq_cutoff):
         raise SystemExit()
     
 
-    if file_ext == 'csv': #file extension check - special handling for text files
+    if file_ext == '.csv': #file extension check - special handling for text files
         
         # text file versions of results contain inconsistent formatting throughout file, so reading these straight to a pandas df doesn't work
         # need to work line-by-line instead to get rid of header/footer data
@@ -269,7 +267,7 @@ def mic(fluor_names, cq_cutoff):
     results_dict = {}
     for fluor in fluor_names:
         
-        if file_ext == 'csv':
+        if file_ext == '.csv':
             results_dict[fluor] = csv_to_df(results_csvs[fluor], ',', 'Results')
         else:
             results_dict[fluor] = pd.read_excel(results_filepath, sheet_name = tabs_to_use[fluor], skiprows = 32)

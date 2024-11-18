@@ -7,7 +7,28 @@ from tkinter import filedialog
 import tkinter as tk
 import csv
 import itertools
+import sys
 
+filepath = r"C:\Users\lucy\Aldatu Biosciences\Aldatu Lab - Documents\Cooperative Lab Projects\PANDAA Software\example_dataset_freetown_qs5.xlsx"
+
+
+
+
+#with open(filepath, 'r') as f:
+    
+
+
+
+
+# add a line/header to the beginning of a file
+def prepend(filepath, header):
+    with open(filepath, 'r+') as file:
+        existing = file.read()
+        file.seek(0)
+        file.write(header+'\n\n'+existing)
+
+
+'''
 machine_type = 'Mic'
 fluor_names = {"VIC": "Internal Control",
                    "FAM": "LASV"
@@ -91,6 +112,7 @@ accept_input.pack()
 
 
 root.mainloop()
+'''
 
 
 
