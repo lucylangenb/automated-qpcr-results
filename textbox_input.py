@@ -9,16 +9,28 @@ import csv
 import itertools
 import sys
 
-filepath = r"C:\Users\lucy\Aldatu Biosciences\Aldatu Lab - Documents\Cooperative Lab Projects\PANDAA Software\example_dataset_freetown_qs5.xlsx"
+# helper function for tsv / text file parsing
+def isblank(row):
+    return all(not field.strip() for field in row)
 
-
-
-
-#with open(filepath, 'r') as f:
+def csv_to_df(csv_file, csv_delim, results_flag):
     
+    data_bool = False
+    data_cleaned = []
+    results_reader = csv.reader(csv_file, delimiter = csv_delim)
 
+    for line in results_reader:
+        if isblank(line): #check for additional (blank) lines at end of file
+            data_bool = False
+        if data_bool == True:
+            data_cleaned.append(line)
+        if results_flag in line: #skip non-results info at beginning of file
+            data_bool = True
 
+    header = data_cleaned.pop(0)
+    results_table = pd.DataFrame(data_cleaned, columns = header)
 
+    return results_table
 
 # add a line/header to the beginning of a file
 def prepend(filepath, header):
@@ -26,6 +38,17 @@ def prepend(filepath, header):
         existing = file.read()
         file.seek(0)
         file.write(header+'\n\n'+existing)
+
+
+
+
+filepath = r"C:\Users\lucy\Aldatu Biosciences\Aldatu Lab - Documents\Cooperative Lab Projects\PANDAA Software\example_dataset_freetown_qs5.xlsx"
+
+
+with open(filepath, 'rb') as excel_file:
+    sheet_df = pd.read_excel(excel_file, sheet_name = 'Results', usecols='A:B')
+
+print(sheet_df)
 
 
 '''
