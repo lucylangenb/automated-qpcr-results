@@ -9,6 +9,7 @@ import csv
 import itertools
 import sys
 import os
+import re
 
 # helper function for tsv / text file parsing
 def isblank(row):
@@ -47,17 +48,24 @@ filepath = r"C:\Users\lucy\Aldatu Biosciences\Aldatu Lab - Documents\Cooperative
 
 
 with open(filepath, 'rb') as excel_file:
-    sheet_csv = pd.read_excel(excel_file, sheet_name = 'Results', usecols='A:B').to_csv()
-    sheet_reader = csv.reader(sheet_csv, delimiter=',')
+    sheet_csv = pd.read_excel(excel_file, sheet_name = 'Results', usecols='A:B').to_csv(index=False)
+    sheet_reader = csv.reader(sheet_csv.splitlines(), delimiter=',')
 
     headbool = False
     head = []
 
     for line in sheet_reader:
-        if 
 
+        if isblank(line):
+            headbool = False
+        if 'Experiment' in str(line):
+            headbool = True
+            #print(str(line))
+        if headbool == True:
+            head.append(line)
+        
+print(head)
 
-print(sheet_csv)
 
 
 '''
