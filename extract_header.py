@@ -60,26 +60,16 @@ def extract_header(reader, flag = None):
 
 
 ###
-### QuantStudio
+### RotorGene
 ###
 
-filepath = r"C:\Users\lucy\Aldatu Biosciences\Aldatu Lab - Documents\Cooperative Lab Projects\PANDAA Software\example_dataset_freetown_qs5.xlsx"
+filepath = r"C:\Users\lucy\Aldatu Biosciences\Aldatu Lab - Documents\Cooperative Lab Projects\PANDAA Software\Qiagen RotorGene\Qiagen Rotor-Gene - 2023-05-11 PANDAA LASV Kit Controls - Aldatu Run - LASV.csv"
 
-file_ext = os.path.splitext(filepath)[1]
+with open(filepath, 'r') as csv_file:        
+    sheet_reader = csv.reader(csv_file, delimiter=',')
+    head = extract_header(sheet_reader, 'Machine')
 
-if file_ext == '.xlsx':
-    with open(filepath, 'rb') as excel_file:
-        sheet_csv = pd.read_excel(excel_file, sheet_name = 'Results', usecols='A:B').to_csv(index=False)
-        sheet_reader = csv.reader(sheet_csv.splitlines(), delimiter=',')
-        head = extract_header(sheet_reader, 'Experiment')
-        
-else:
-    with open(filepath, 'r') as csv_file:        
-        sheet_reader = csv.reader(csv_file, delimiter=',')
-        head = extract_header(sheet_reader, 'Experiment')
-
-results_filepath = r"C:\Users\lucy\Aldatu Biosciences\Aldatu Lab - Documents\Cooperative Lab Projects\PANDAA Software\example_dataset_freetown_qs5 - Summary.csv"
-prepend(results_filepath, head)
+print(head)
 
 
 
