@@ -8,6 +8,7 @@ import tkinter as tk
 import csv
 import itertools
 import sys
+import os
 
 # helper function for tsv / text file parsing
 def isblank(row):
@@ -46,9 +47,17 @@ filepath = r"C:\Users\lucy\Aldatu Biosciences\Aldatu Lab - Documents\Cooperative
 
 
 with open(filepath, 'rb') as excel_file:
-    sheet_df = pd.read_excel(excel_file, sheet_name = 'Results', usecols='A:B')
+    sheet_csv = pd.read_excel(excel_file, sheet_name = 'Results', usecols='A:B').to_csv()
+    sheet_reader = csv.reader(sheet_csv, delimiter=',')
 
-print(sheet_df)
+    headbool = False
+    head = []
+
+    for line in sheet_reader:
+        if 
+
+
+print(sheet_csv)
 
 
 '''

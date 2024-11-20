@@ -300,7 +300,11 @@ else: #2 fluors
 
 # results file can't be created/written if the user already has it open - catch possible PermissionErrors
 try:
-    summary_table.to_csv(path_or_buf=(os.path.splitext(results_file)[0]+" - Summary.csv"), columns=["Well Position", "Sample Name", "Result"])
+    summary_table.to_csv(
+        path_or_buf=(os.path.splitext(results_file)[0]+" - Summary.csv"),
+        columns=["Well Position", "Sample Name", "Result"],
+        index=False
+        )
 except PermissionError:
     tk.messagebox.showerror(message='Unable to write results file. Make sure results file is closed, then click OK to try again.')
 
