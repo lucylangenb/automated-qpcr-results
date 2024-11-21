@@ -43,17 +43,25 @@ def prepend(filepath, header):
             file.write('\n\n'+existing)
 
 
-def extract_header(reader, flag = None):
+def extract_header(reader, flag = None, stop = None):
+    
     if flag:
         headbool = False
     else:
         headbool = True
+
     head = []
+
     for line in reader:
-        if isblank(line):
-            headbool = False
-        if flag in str(line):
-            headbool = True
+        if not stop:
+            if isblank(line):
+                headbool = False
+        else:
+            if stop in str(line):
+                headbool = False
+        if flag:    
+            if flag in str(line):
+                headbool = True
         if headbool == True:
             head.append(line)
     return head

@@ -43,17 +43,25 @@ def prepend(filepath, header):
             file.write('\n\n'+existing)
 
 
-def extract_header(reader, flag = None):
+def extract_header(reader, flag = None, stop = None):
+    
     if flag:
         headbool = False
     else:
         headbool = True
+
     head = []
+
     for line in reader:
-        if isblank(line):
-            headbool = False
-        if flag in str(line):
-            headbool = True
+        if not stop:
+            if isblank(line):
+                headbool = False
+        else:
+            if stop in str(line):
+                headbool = False
+        if flag:    
+            if flag in str(line):
+                headbool = True
         if headbool == True:
             head.append(line)
     return head
@@ -67,7 +75,10 @@ filepath = r"C:\Users\lucy\Aldatu Biosciences\Aldatu Lab - Documents\Cooperative
 
 with open(filepath, 'r') as csv_file:        
     sheet_reader = csv.reader(csv_file, delimiter=',')
-    head = extract_header(sheet_reader, 'Machine')
+    head = extract_header(sheet_reader, stop='Quantitative')
+
+results_file = r"C:\Users\lucy\Aldatu Biosciences\Aldatu Lab - Documents\Cooperative Lab Projects\PANDAA Software\Qiagen RotorGene\Qiagen Rotor-Gene - 2023-05-11 PANDAA LASV Kit Controls - Aldatu Run -  - Summary.csv"
+prepend(results_file, head)
 
 print(head)
 
