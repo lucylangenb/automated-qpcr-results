@@ -83,12 +83,12 @@ if file_ext == '.xlsx':
     with open(filepath, 'rb') as excel_file:
         sheet_csv = pd.read_excel(excel_file, sheet_name = 'General Information', usecols='A:B').to_csv(index=False)
         sheet_reader = csv.reader(sheet_csv.splitlines(), delimiter=',')
-        head = extract_header(sheet_reader, 'General Information', 'Log')
+        head = extract_header(sheet_reader, stop='Log')
         
 else:
     with open(filepath, 'r') as csv_file:        
         sheet_reader = csv.reader(csv_file, delimiter=',')
-        head = extract_header(sheet_reader, 'General Information', 'Log')
+        head = extract_header(sheet_reader, stop='Log')
 
 
 results_file = r"C:\Users\lucy\Aldatu Biosciences\Aldatu Lab - Documents\Cooperative Lab Projects\PANDAA Software\Mic PCR\2023-02-24 - Training Samples - Freeze-Thaw QC on QS and Mic - Summary.csv"

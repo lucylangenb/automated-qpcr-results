@@ -220,9 +220,9 @@ root.protocol('WM_DELETE_WINDOW', close_program) #when delete_window event occur
 if machine_type == "QuantStudio 3" or machine_type == "QuantStudio 5":
     summary_table, results_file, head = file_to_df.quantstudio(machine_type, fluor_names, cq_cutoff)
 elif machine_type == "Rotor-Gene":
-    summary_table, results_file = file_to_df.rotorgene(fluor_names, cq_cutoff)
+    summary_table, results_file, head = file_to_df.rotorgene(fluor_names, cq_cutoff)
 elif machine_type == "Mic":
-    summary_table, results_file = file_to_df.mic(fluor_names, cq_cutoff)
+    summary_table, results_file, head = file_to_df.mic(fluor_names, cq_cutoff)
 
 
 ##############################################################################################################################
@@ -308,7 +308,7 @@ try:
         index=False
         )
     file_to_df.prepend(summary_filepath, head)
-    
+
 except PermissionError:
     tk.messagebox.showerror(message='Unable to write results file. Make sure results file is closed, then click OK to try again.')
 

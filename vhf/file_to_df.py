@@ -255,9 +255,14 @@ def rotorgene(fluor_names, cq_cutoff):
                                                             "Ct": f"{fluor} CT",
                                                             "Ct Comment": "Comments",
                                                             "Given Conc (copies/reaction)": "Copies"})
-                # first time loop is run, initialize summary table
+                # first time loop is run:
                 if first_loop == True:
+                    # initialize summary table
                     summary_table = results_table.loc[:, ["Well Position", "Sample Name", "Copies", "Comments", f"{fluor} CT"]]
+                    # and get header info
+                    with open(filename, 'r') as csv_file:        
+                        sheet_reader = csv.reader(csv_file, delimiter=',')
+                        head = extract_header(sheet_reader, stop='Quantitative')
                     first_loop = False
                 else:
                     summary_table = pd.merge(summary_table, results_table.loc[:, ["Well Position", f"{fluor} CT"]], on="Well Position")
@@ -268,7 +273,7 @@ def rotorgene(fluor_names, cq_cutoff):
         # close program
         raise SystemExit()
 
-    return summary_table, os.path.commonprefix(results_filenames)
+    return summary_table, os.path.commonprefix(results_filenames), head
 
 
 ##############################################################################################################################
@@ -296,7 +301,14 @@ def mic(fluor_names, cq_cutoff):
         # text file versions of results contain inconsistent formatting throughout file, so reading these straight to a pandas df doesn't work
         # need to work line-by-line instead to get rid of header/footer data
         with open(results_filepath, newline = '') as csvfile:
+            
+            # make list of lines
             csv_lines = csvfile.readlines()
+
+            # get header info while we're here
+            csvfile.seek(0)
+            sheet_reader = csv.reader(csvfile, delimiter=',')
+            head = extract_header(sheet_reader, stop='Log')
 
         chunks = [list(group) for is_blank, group in itertools.groupby(csv_lines, lambda line: line.strip() == "") if not is_blank]
         results_csvs = {}
@@ -316,6 +328,11 @@ def mic(fluor_names, cq_cutoff):
                 if fluor_names[fluor] in tab and "Result" in tab and "Absolute" not in tab:
                     tabs_to_use[fluor] = tab
                     break
+        # get header info
+        with open(results_filepath, 'rb') as excel_file:
+            sheet_csv = pd.read_excel(excel_file, sheet_name = 'General Information', usecols='A:B').to_csv(index=False)
+            sheet_reader = csv.reader(sheet_csv.splitlines(), delimiter=',')
+            head = extract_header(sheet_reader, stop='Log')
 
     if sorted(tabs_to_use) != sorted(fluor_names): #check to make sure fluorophores with assigned tabs match the list of fluors known to be in assay
         tk.messagebox.showerror(message='Fluorophores in file do not match expected fluorophores. Check fluorophore and assay assignment.')
@@ -335,4 +352,4 @@ def mic(fluor_names, cq_cutoff):
 
     summary_table = summarize(results_dict)
 
-    return summary_table, results_filepath
+    return summary_table, results_filepath, head
