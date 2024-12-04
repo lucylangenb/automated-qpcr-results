@@ -155,6 +155,7 @@ def quantstudio(machine_type, fluor_names, cq_cutoff):
             # get results df:
             results_table = csv_to_df(csvfile, '\t', '[Results]')
             # get header as list:
+            csvfile.seek(0)
             sheet_reader = csv.reader(csvfile, delimiter=',')
             head = extract_header(sheet_reader, 'Experiment')
 

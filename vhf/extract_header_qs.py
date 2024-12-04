@@ -89,6 +89,7 @@ else:
 results_filepath = r"C:\Users\lucy\Aldatu Biosciences\Aldatu Lab - Documents\Cooperative Lab Projects\PANDAA Software\example_dataset_freetown_qs5 - Summary.csv"
 prepend(results_filepath, head)
 
+print(head)
 
 
 
