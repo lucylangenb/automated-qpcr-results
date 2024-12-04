@@ -137,11 +137,11 @@ def extract_header(reader, flag = None, stop = None):
 
 def quantstudio(machine_type, fluor_names, cq_cutoff):
 
-    results_file = filedialog.askopenfilename(title = 'Choose results file', filetypes = [("All Excel Files","*.xlsx"),("All Excel Files","*.xls"),("Text Files", "*.txt")])
+    results_filepath = filedialog.askopenfilename(title = 'Choose results file', filetypes = [("All Excel Files","*.xlsx"),("All Excel Files","*.xls"),("Text Files", "*.txt")])
 
     # check whether a file was selected
     try:
-        file_ext = os.path.splitext(results_file)[1]
+        file_ext = os.path.splitext(results_filepath)[1]
     # if user didn't select a results file, or if the file is otherwise unreadable, close the program
     except:
         tk.messagebox.showerror(message='File not selected. Make sure file is not open in another program.')
@@ -149,7 +149,7 @@ def quantstudio(machine_type, fluor_names, cq_cutoff):
         raise SystemExit()
 
     if file_ext == '.txt': #file extension check - special handling for text files
-        with open(results_file, newline = '') as csvfile:
+        with open(results_filepath, newline = '') as csvfile:
             # text file versions of results contain inconsistent formatting throughout file, so reading these straight to a pandas df doesn't work
             # need to work line-by-line instead to get rid of header/footer data
             # get results df:
@@ -166,9 +166,9 @@ def quantstudio(machine_type, fluor_names, cq_cutoff):
         while file_selected == False:
             try:
                 if machine_type == "QuantStudio 5":
-                    results_table = pd.read_excel(results_file, sheet_name = "Results", skiprows = 47)
+                    results_table = pd.read_excel(results_filepath, sheet_name = "Results", skiprows = 47)
                 elif machine_type == "QuantStudio 3":
-                    results_table = pd.read_excel(results_file, sheet_name = "Results", skiprows = 43)
+                    results_table = pd.read_excel(results_filepath, sheet_name = "Results", skiprows = 43)
             except:
                 proceed = tk.messagebox.askretrycancel(message='Incorrect file, or file is open in another program. Click Retry to analyze selected file again.', icon = tk.messagebox.ERROR)
                 if proceed == False:
@@ -178,7 +178,7 @@ def quantstudio(machine_type, fluor_names, cq_cutoff):
                 file_selected = True
 
         # get header as list:
-        with open(results_file, 'rb') as excel_file:
+        with open(results_filepath, 'rb') as excel_file:
             sheet_csv = pd.read_excel(excel_file, sheet_name = 'Results', usecols='A:B').to_csv(index=False)
             sheet_reader = csv.reader(sheet_csv.splitlines(), delimiter=',')
             head = extract_header(sheet_reader, 'Experiment')
@@ -215,7 +215,7 @@ def quantstudio(machine_type, fluor_names, cq_cutoff):
 
     summary_table = summarize(results_dict, machine_type)
 
-    return summary_table, results_file, head
+    return summary_table, results_filepath, head
 
 
 ##############################################################################################################################
@@ -224,19 +224,19 @@ def quantstudio(machine_type, fluor_names, cq_cutoff):
 
 def rotorgene(fluor_names, cq_cutoff):
     
-    results_filenames = filedialog.askopenfilenames(title = 'Choose results files', filetypes= [("Text Files", "*.csv")])
+    results_filepaths = filedialog.askopenfilenames(title = 'Choose results files', filetypes= [("Text Files", "*.csv")])
     first_loop = True
-    used_filenames = []
+    used_filepaths = []
 
     # did the user choose enough files? (Rotor-Gene makes one file for each fluorophore)
-    if len(results_filenames) != len(fluor_names):
-        tk.messagebox.showerror(message=f'Incorrect number of files. Expected {len(fluor_names)} files, but {len(results_filenames)} were selected. Make sure files are not open in other programs.')
+    if len(results_filepaths) != len(fluor_names):
+        tk.messagebox.showerror(message=f'Incorrect number of files. Expected {len(fluor_names)} files, but {len(results_filepaths)} were selected. Make sure files are not open in other programs.')
         # close program
         raise SystemExit()
 
-    for filename in results_filenames:
+    for filepath in results_filepaths:
 
-        results_table = pd.read_csv(filename, skiprows = 27)
+        results_table = pd.read_csv(filepath, skiprows = 27)
 
         # see if files chosen are correct - if the file is a valid results file, it will have a column called "Ct"
         try:
@@ -248,8 +248,8 @@ def rotorgene(fluor_names, cq_cutoff):
 
         # cycle through all fluors needed for selected assay, match them to names of files selected
         for fluor in fluor_names:
-            if f"{fluor}.csv" in filename or f"{fluor_names[fluor]}.csv" in filename:
-                used_filenames.append(filename)
+            if f"{fluor}.csv" in filepath or f"{fluor_names[fluor]}.csv" in filepath:
+                used_filepaths.append(filepath)
                 results_table = results_table.rename(columns={"No.": "Well Position",
                                                             "Name": "Sample Name",
                                                             "Ct": f"{fluor} CT",
@@ -260,7 +260,7 @@ def rotorgene(fluor_names, cq_cutoff):
                     # initialize summary table
                     summary_table = results_table.loc[:, ["Well Position", "Sample Name", "Copies", "Comments", f"{fluor} CT"]]
                     # and get header info
-                    with open(filename, 'r') as csv_file:        
+                    with open(filepath, 'r') as csv_file:        
                         sheet_reader = csv.reader(csv_file, delimiter=',')
                         head = extract_header(sheet_reader, stop='Quantitative')
                     first_loop = False
@@ -268,12 +268,12 @@ def rotorgene(fluor_names, cq_cutoff):
                     summary_table = pd.merge(summary_table, results_table.loc[:, ["Well Position", f"{fluor} CT"]], on="Well Position")
 
     # number of files was determined to be correct, but did every file get used? if not, results are incomplete
-    if sorted(results_filenames) != sorted(used_filenames):
+    if sorted(results_filepaths) != sorted(used_filepaths):
         tk.messagebox.showerror(message='Incorrect files selected, or file names have been edited. Please try again.')
         # close program
         raise SystemExit()
 
-    return summary_table, os.path.commonprefix(results_filenames), head
+    return summary_table, os.path.commonprefix(results_filepaths), head
 
 
 ##############################################################################################################################
@@ -310,12 +310,13 @@ def mic(fluor_names, cq_cutoff):
             sheet_reader = csv.reader(csvfile, delimiter=',')
             head = extract_header(sheet_reader, stop='Log')
 
+        # create 'chunks' list: break csv into groups, separated by blank lines
         chunks = [list(group) for is_blank, group in itertools.groupby(csv_lines, lambda line: line.strip() == "") if not is_blank]
         results_csvs = {}
 
         for fluor in fluor_names:
             for chunk in chunks:
-                title = chunk[0]
+                title = chunk[0] #first line of chunk
                 if 'Start Worksheet - Analysis - Cycling' in title and 'Result' in title and (fluor in title or fluor_names[fluor] in title):
                     results_csvs[fluor] = chunk
                     tabs_to_use[fluor] = title
