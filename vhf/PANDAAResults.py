@@ -218,7 +218,7 @@ root.withdraw() #hides root
 root.protocol('WM_DELETE_WINDOW', close_program) #when delete_window event occurs, run close_program function
 
 if machine_type == "QuantStudio 3" or machine_type == "QuantStudio 5":
-    summary_table, results_file = file_to_df.quantstudio(machine_type, fluor_names, cq_cutoff)
+    summary_table, results_file, head = file_to_df.quantstudio(machine_type, fluor_names, cq_cutoff)
 elif machine_type == "Rotor-Gene":
     summary_table, results_file = file_to_df.rotorgene(fluor_names, cq_cutoff)
 elif machine_type == "Mic":
@@ -298,13 +298,17 @@ else: #2 fluors
 
 
 
+summary_filepath = os.path.splitext(results_file)[0]+" - Summary.csv"
+
 # results file can't be created/written if the user already has it open - catch possible PermissionErrors
 try:
     summary_table.to_csv(
-        path_or_buf=(os.path.splitext(results_file)[0]+" - Summary.csv"),
+        path_or_buf=summary_filepath,
         columns=["Well Position", "Sample Name", "Result"],
         index=False
         )
+    file_to_df.prepend(summary_filepath, head)
+    
 except PermissionError:
     tk.messagebox.showerror(message='Unable to write results file. Make sure results file is closed, then click OK to try again.')
 

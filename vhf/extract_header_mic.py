@@ -33,11 +33,12 @@ def csv_to_df(csv_file, csv_delim, results_flag):
 # add a line/header to the beginning of a file
 def prepend(filepath, header):
     with open(filepath, 'r+', newline='') as file:
-        existing = file.read()
-        file.seek(0)
-        if isinstance(header, str):
+        existing = file.read() #save file contents to 'existing'
+        file.seek(0) #move pointer back to start of file
+        if isinstance(header, str): #if header is single line
             file.write(header+'\n\n'+existing)
         else:
+            # header is a list - need to make writer csv object, then write list to file item by item
             writer = csv.writer(file)
             writer.writerows(header)
             file.write('\n\n'+existing)
@@ -54,12 +55,15 @@ def extract_header(reader, flag = None, stop = None):
 
     for line in reader:
         if not stop:
+            # if stop=None, use blank line (isblank) as break point
             if isblank(line):
                 headbool = False
         else:
+            # if break point arg is found in current line, stop creating header
             if stop in str(line):
                 headbool = False
-        if flag:    
+        if flag:
+            # if flag != None, look for flag in line; start appending to header if it exists
             if flag in str(line):
                 headbool = True
         if headbool == True:
@@ -68,16 +72,26 @@ def extract_header(reader, flag = None, stop = None):
 
 
 ###
-### RotorGene
+### Mic
 ###
 
-filepath = r"C:\Users\lucy\Aldatu Biosciences\Aldatu Lab - Documents\Cooperative Lab Projects\PANDAA Software\Qiagen RotorGene\Qiagen Rotor-Gene - 2023-05-11 PANDAA LASV Kit Controls - Aldatu Run - LASV.csv"
+filepath = r"C:\Users\lucy\Aldatu Biosciences\Aldatu Lab - Documents\Cooperative Lab Projects\PANDAA Software\Mic PCR\2023-02-24 - Training Samples - Freeze-Thaw QC on QS and Mic - LASV Data.csv"
 
-with open(filepath, 'r') as csv_file:        
-    sheet_reader = csv.reader(csv_file, delimiter=',')
-    head = extract_header(sheet_reader, stop='Quantitative')
+file_ext = os.path.splitext(filepath)[1]
 
-results_file = r"C:\Users\lucy\Aldatu Biosciences\Aldatu Lab - Documents\Cooperative Lab Projects\PANDAA Software\Qiagen RotorGene\Qiagen Rotor-Gene - 2023-05-11 PANDAA LASV Kit Controls - Aldatu Run -  - Summary.csv"
+if file_ext == '.xlsx':
+    with open(filepath, 'rb') as excel_file:
+        sheet_csv = pd.read_excel(excel_file, sheet_name = 'General Information', usecols='A:B').to_csv(index=False)
+        sheet_reader = csv.reader(sheet_csv.splitlines(), delimiter=',')
+        head = extract_header(sheet_reader, 'General Information', 'Log')
+        
+else:
+    with open(filepath, 'r') as csv_file:        
+        sheet_reader = csv.reader(csv_file, delimiter=',')
+        head = extract_header(sheet_reader, 'General Information', 'Log')
+
+
+results_file = r"C:\Users\lucy\Aldatu Biosciences\Aldatu Lab - Documents\Cooperative Lab Projects\PANDAA Software\Mic PCR\2023-02-24 - Training Samples - Freeze-Thaw QC on QS and Mic - Summary.csv"
 prepend(results_file, head)
 
 print(head)

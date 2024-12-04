@@ -84,6 +84,53 @@ def summarize(df_dict, machine_type = ''):
     return summary_table
 
 
+# add a line/header to the beginning of a file
+# parameters: summary file filepath, header
+def prepend(filepath, header):
+    with open(filepath, 'r+', newline='') as file:
+        existing = file.read() #save file contents to 'existing'
+        file.seek(0) #move pointer back to start of file
+        if isinstance(header, str): #if header is single line
+            file.write(header+'\n\n'+existing)
+        else:
+            # header is a list - need to make writer csv object, then write list to file item by item
+            writer = csv.writer(file)
+            writer.writerows(header)
+            file.write('\n\n'+existing)
+
+
+# extract header info from csv reader object
+# return header as a list / csv
+# parameters: reader, flag (to begin reading lines to header), stop (to stop reading lines to header)
+def extract_header(reader, flag = None, stop = None):
+    
+    if flag:
+        headbool = False
+    else:
+        # if no flag is defined, start reading header from top of file
+        headbool = True
+
+    head = []
+
+    for line in reader:
+        if not stop:
+            # if no stop point is defined, use blank line (isblank) as break point
+            if isblank(line):
+                headbool = False
+        else:
+            # if stop is found in current line, stop creating header
+            if stop in str(line):
+                headbool = False
+        if flag:
+            # if flag is defined, look for flag in line; start appending to header if it exists
+            if flag in str(line):
+                headbool = True
+        if headbool == True:
+            head.append(line)
+    return head
+
+
+
 ##############################################################################################################################
 ### QuantStudio
 ##############################################################################################################################
@@ -102,14 +149,18 @@ def quantstudio(machine_type, fluor_names, cq_cutoff):
         raise SystemExit()
 
     if file_ext == '.txt': #file extension check - special handling for text files
-       
-        # text file versions of results contain inconsistent formatting throughout file, so reading these straight to a pandas df doesn't work
-        # need to work line-by-line instead to get rid of header/footer data
         with open(results_file, newline = '') as csvfile:
+            # text file versions of results contain inconsistent formatting throughout file, so reading these straight to a pandas df doesn't work
+            # need to work line-by-line instead to get rid of header/footer data
+            # get results df:
             results_table = csv_to_df(csvfile, '\t', '[Results]')
-
+            # get header as list:
+            sheet_reader = csv.reader(csvfile, delimiter=',')
+            head = extract_header(sheet_reader, 'Experiment')
 
     else: #file is not a text file (so it's an excel file) - excel files cannot be selected if open in another program, so check for this
+        
+        # get results df:
         file_selected = False
         while file_selected == False:
             try:
@@ -124,6 +175,12 @@ def quantstudio(machine_type, fluor_names, cq_cutoff):
             
             if 'results_table' in locals():
                 file_selected = True
+
+        # get header as list:
+        with open(results_file, 'rb') as excel_file:
+            sheet_csv = pd.read_excel(excel_file, sheet_name = 'Results', usecols='A:B').to_csv(index=False)
+            sheet_reader = csv.reader(sheet_csv.splitlines(), delimiter=',')
+            head = extract_header(sheet_reader, 'Experiment')
         
 
     try:
@@ -157,7 +214,7 @@ def quantstudio(machine_type, fluor_names, cq_cutoff):
 
     summary_table = summarize(results_dict, machine_type)
 
-    return summary_table, results_file
+    return summary_table, results_file, head
 
 
 ##############################################################################################################################

@@ -71,7 +71,7 @@ def extract_header(reader, flag = None, stop = None):
 ### QuantStudio
 ###
 
-filepath = r"C:\Users\lucy\Aldatu Biosciences\Aldatu Lab - Documents\Cooperative Lab Projects\PANDAA Software\example_dataset_freetown_qs5.xlsx"
+filepath = r"C:\Users\lucy\Aldatu Biosciences\Aldatu Lab - Documents\Cooperative Lab Projects\PANDAA Software\2024-06-17 - Inclusivity SUDV Boniface.txt"
 
 file_ext = os.path.splitext(filepath)[1]
 
