@@ -32,7 +32,7 @@ import os #filepath handling - allows for saving of results file in same directo
 import sys #executable packaging
 
 # custom dependency - holds functions that handle parsing of xls to pandas dataframes
-import file_to_df
+import vhf_library as vhf
 
 
 ##############################################################################################################################
@@ -218,11 +218,11 @@ root.withdraw() #hides root
 root.protocol('WM_DELETE_WINDOW', close_program) #when delete_window event occurs, run close_program function
 
 if machine_type == "QuantStudio 3" or machine_type == "QuantStudio 5":
-    summary_table, results_file, head = file_to_df.quantstudio(machine_type, fluor_names, cq_cutoff)
+    summary_table, results_file, head = vhf.quantstudio(machine_type, fluor_names, cq_cutoff)
 elif machine_type == "Rotor-Gene":
-    summary_table, results_file, head = file_to_df.rotorgene(fluor_names, cq_cutoff)
+    summary_table, results_file, head = vhf.rotorgene(fluor_names, cq_cutoff)
 elif machine_type == "Mic":
-    summary_table, results_file, head = file_to_df.mic(fluor_names, cq_cutoff)
+    summary_table, results_file, head = vhf.mic(fluor_names, cq_cutoff)
 
 
 ##############################################################################################################################
@@ -307,7 +307,7 @@ try:
         columns=["Well Position", "Sample Name", "Result"],
         index=False
         )
-    file_to_df.prepend(summary_filepath, head)
+    vhf.prepend(summary_filepath, head)
 
 except PermissionError:
     tk.messagebox.showerror(message='Unable to write results file. Make sure results file is closed, then click OK to try again.')
