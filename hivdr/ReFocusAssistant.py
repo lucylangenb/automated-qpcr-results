@@ -32,7 +32,7 @@ import os #filepath handling - allows for saving of results file in same directo
 import sys #executable packaging
 
 # custom dependency - holds functions that handle parsing of xls to pandas dataframes
-import file_to_df
+import vhf_library as vhf
 
 
 ##############################################################################################################################
@@ -181,32 +181,8 @@ root.mainloop()
 ### 1. Initialization
 ##############################################################################################################################
 
-# create variables based on assay chosen
-if assay == "PANDAA Ebola + Marburg":
-    fluor_names = {"CY5": "Internal Control",  
-                "FAM": "EBOV",              
-                "VIC": "MARV"               
-                }
-    internal_control_fluor = "CY5"
+fluor_names, internal_control_fluor, unique_reporters = vhf.getfluors(assay)
 
-elif assay == "PANDAA CCHFV":
-    fluor_names = {"CY5": "Internal Control",
-                   "FAM": "CCHFV"
-                   }
-    internal_control_fluor = "CY5"
-
-elif assay == "PANDAA LASV":
-    fluor_names = {"VIC": "Internal Control",
-                   "FAM": "LASV"
-                   }
-    internal_control_fluor = "VIC"
-
-try:
-    unique_reporters = [key for key in fluor_names]
-except:
-    tk.messagebox.showerror(message='Not enough parameters selected. Please try again.')
-    raise SystemExit
-    
 
 ##############################################################################################################################
 ### 2. Run analysis subprocess based on machine type
@@ -218,11 +194,11 @@ root.withdraw() #hides root
 root.protocol('WM_DELETE_WINDOW', close_program) #when delete_window event occurs, run close_program function
 
 if machine_type == "QuantStudio 3" or machine_type == "QuantStudio 5":
-    summary_table, results_file, head = file_to_df.quantstudio(machine_type, fluor_names, cq_cutoff)
+    summary_table, results_file, head = vhf.quantstudio(machine_type, fluor_names, cq_cutoff)
 elif machine_type == "Rotor-Gene":
-    summary_table, results_file, head = file_to_df.rotorgene(fluor_names, cq_cutoff)
+    summary_table, results_file, head = vhf.rotorgene(fluor_names, cq_cutoff)
 elif machine_type == "Mic":
-    summary_table, results_file, head = file_to_df.mic(fluor_names, cq_cutoff)
+    summary_table, results_file, head = vhf.mic(fluor_names, cq_cutoff)
 
 
 ##############################################################################################################################
@@ -307,7 +283,7 @@ try:
         columns=["Well Position", "Sample Name", "Result"],
         index=False
         )
-    file_to_df.prepend(summary_filepath, head)
+    vhf.prepend(summary_filepath, head)
 
 except PermissionError:
     tk.messagebox.showerror(message='Unable to write results file. Make sure results file is closed, then click OK to try again.')
