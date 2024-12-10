@@ -30,7 +30,43 @@ import os #for getting file extension
 
 
 ##############################################################################################################################
-### Helper functions
+### Initialization - get fluors based on selected assay
+##############################################################################################################################
+
+def getfluors(assay):
+    # create variables based on assay chosen
+    if assay == "PANDAA Ebola + Marburg":
+        fluor_names = {"CY5": "Internal Control",  
+                    "FAM": "EBOV",              
+                    "VIC": "MARV"               
+                    }
+        internal_control_fluor = "CY5"
+
+    elif assay == "PANDAA CCHFV":
+        fluor_names = {"CY5": "Internal Control",
+                    "FAM": "CCHFV"
+                    }
+        internal_control_fluor = "CY5"
+
+    elif assay == "PANDAA LASV":
+        fluor_names = {"VIC": "Internal Control",
+                    "FAM": "LASV"
+                    }
+        internal_control_fluor = "VIC"
+
+    try:
+        unique_reporters = [key for key in fluor_names]
+    except:
+        tk.messagebox.showerror(message='Not enough parameters selected. Please try again.')
+        raise SystemExit
+    
+    return fluor_names, internal_control_fluor, unique_reporters
+
+
+
+
+##############################################################################################################################
+### Helper functions for data analysis - file to dataframe
 ##############################################################################################################################
 
 # helper function for tsv / text file parsing
@@ -132,10 +168,10 @@ def extract_header(reader, flag = None, stop = None):
 
 
 ##############################################################################################################################
-### QuantStudio
+### QuantStudio - file to dataframe
 ##############################################################################################################################
 
-def quantstudio(machine_type, fluor_names, cq_cutoff):
+def quantstudio(machine_type, fluor_names, cq_cutoff=35):
 
     results_filepath = filedialog.askopenfilename(title = 'Choose results file', filetypes = [("All Excel Files","*.xlsx"),("All Excel Files","*.xls"),("Text Files", "*.txt")])
 
@@ -219,10 +255,10 @@ def quantstudio(machine_type, fluor_names, cq_cutoff):
 
 
 ##############################################################################################################################
-### Rotor-Gene
+### Rotor-Gene - file to dataframe
 ##############################################################################################################################
 
-def rotorgene(fluor_names, cq_cutoff):
+def rotorgene(fluor_names, cq_cutoff=35):
     
     results_filepaths = filedialog.askopenfilenames(title = 'Choose results files', filetypes= [("Text Files", "*.csv")])
     first_loop = True
@@ -277,10 +313,10 @@ def rotorgene(fluor_names, cq_cutoff):
 
 
 ##############################################################################################################################
-### Mic
+### Mic - file to dataframe
 ##############################################################################################################################
 
-def mic(fluor_names, cq_cutoff):
+def mic(fluor_names, cq_cutoff=35):
         
     results_filepath = filedialog.askopenfilename(title = 'Choose results file', filetypes = [("All Excel Files","*.xlsx"),("All Excel Files","*.xls"),("Text Files", "*.csv")])
     

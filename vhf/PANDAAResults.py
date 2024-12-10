@@ -181,32 +181,8 @@ root.mainloop()
 ### 1. Initialization
 ##############################################################################################################################
 
-# create variables based on assay chosen
-if assay == "PANDAA Ebola + Marburg":
-    fluor_names = {"CY5": "Internal Control",  
-                "FAM": "EBOV",              
-                "VIC": "MARV"               
-                }
-    internal_control_fluor = "CY5"
+fluor_names, internal_control_fluor, unique_reporters = vhf.getfluors(assay)
 
-elif assay == "PANDAA CCHFV":
-    fluor_names = {"CY5": "Internal Control",
-                   "FAM": "CCHFV"
-                   }
-    internal_control_fluor = "CY5"
-
-elif assay == "PANDAA LASV":
-    fluor_names = {"VIC": "Internal Control",
-                   "FAM": "LASV"
-                   }
-    internal_control_fluor = "VIC"
-
-try:
-    unique_reporters = [key for key in fluor_names]
-except:
-    tk.messagebox.showerror(message='Not enough parameters selected. Please try again.')
-    raise SystemExit
-    
 
 ##############################################################################################################################
 ### 2. Run analysis subprocess based on machine type
