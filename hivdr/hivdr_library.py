@@ -35,6 +35,12 @@ import os #for getting file extension
 
 def getfluors(assay):
     # create variables based on assay chosen
+
+    # match case would be preferable here, but I have to use Python 3.9 for Opentrons... so, we're stuck with if/elif
+
+    ###
+    ### Viral hemorrhagic fevers
+    ###
     if assay == "PANDAA Ebola + Marburg":
         fluor_names = {"CY5": "Internal Control",  
                     "FAM": "EBOV",              
@@ -53,6 +59,17 @@ def getfluors(assay):
                     "FAM": "LASV"
                     }
         internal_control_fluor = "VIC"
+
+    ###
+    ### HIVDR
+    ###
+    elif assay == "076V 184VI":
+        fluor_names = {"CY5": "VQ",  
+                    "FAM": "076V",              
+                    "NED": "184VI"               
+                    }
+        internal_control_fluor = "CY5"
+    
 
     try:
         unique_reporters = [key for key in fluor_names]

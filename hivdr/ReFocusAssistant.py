@@ -32,7 +32,7 @@ import os #filepath handling - allows for saving of results file in same directo
 import sys #executable packaging
 
 # custom dependency - holds functions that handle parsing of xls to pandas dataframes
-import vhf_library as vhf
+import hivdr_library as hivdr
 
 
 ##############################################################################################################################
@@ -181,7 +181,7 @@ root.mainloop()
 ### 1. Initialization
 ##############################################################################################################################
 
-fluor_names, internal_control_fluor, unique_reporters = vhf.getfluors(assay)
+fluor_names, internal_control_fluor, unique_reporters = hivdr.getfluors(assay)
 
 
 ##############################################################################################################################
@@ -194,11 +194,11 @@ root.withdraw() #hides root
 root.protocol('WM_DELETE_WINDOW', close_program) #when delete_window event occurs, run close_program function
 
 if machine_type == "QuantStudio 3" or machine_type == "QuantStudio 5":
-    summary_table, results_file, head = vhf.quantstudio(machine_type, fluor_names, cq_cutoff)
+    summary_table, results_file, head = hivdr.quantstudio(machine_type, fluor_names, cq_cutoff)
 elif machine_type == "Rotor-Gene":
-    summary_table, results_file, head = vhf.rotorgene(fluor_names, cq_cutoff)
+    summary_table, results_file, head = hivdr.rotorgene(fluor_names, cq_cutoff)
 elif machine_type == "Mic":
-    summary_table, results_file, head = vhf.mic(fluor_names, cq_cutoff)
+    summary_table, results_file, head = hivdr.mic(fluor_names, cq_cutoff)
 
 
 ##############################################################################################################################
@@ -283,7 +283,7 @@ try:
         columns=["Well Position", "Sample Name", "Result"],
         index=False
         )
-    vhf.prepend(summary_filepath, head)
+    hivdr.prepend(summary_filepath, head)
 
 except PermissionError:
     tk.messagebox.showerror(message='Unable to write results file. Make sure results file is closed, then click OK to try again.')
