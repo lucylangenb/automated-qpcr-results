@@ -9,7 +9,7 @@ import os #for getting file extension
 
 # new imports for hivdr_library
 import re
-import numbers
+import numpy as np
 
 
 # helper function - combines many data frames into one summary data frame
@@ -22,10 +22,13 @@ def summarize(df_dict, machine_type = ''):
         columns = ["Well Position", "Sample Name", "Task", f"{fluor} CT", f"{fluor} Quantity"]
         if machine_type == 'QuantStudio 5' or machine_type == 'QuantStudio 3':
             columns.append(f"{fluor} Cq Conf")
-        if first_loop == False:
+        else:
+            if first_loop:
+                columns.append('Assigned Quantity')
+        if not first_loop:
             columns = columns[:1] + columns[3:] #remove columns with indices 1 and 2
 
-        if first_loop == True:
+        if first_loop:
             try:
                 summary_table = df_dict[fluor].loc[:, columns]
             except Exception as e:
@@ -46,6 +49,31 @@ def task(row):
         return 'Standard'
     else:
         return 'Unknown'
+    
+
+
+# helper function - get standard curve using least squares
+def linreg(df, fluor='CY5'):
+    data = df.loc[df['Assigned Quantity'].notnull(), #only rows with assigned copy numbers - *not* NaN
+                     ['Assigned Quantity', f'{fluor} CT']] #only columns with 'x' and 'y' data
+    
+    if fluor != 'CY5':
+        data['Assigned Quantity'] = data['Assigned Quantity'].div(5)
+
+    x = np.array(data['Assigned Quantity'].apply(np.log10))
+    y = np.array(data[f'{fluor} CT'])
+
+    A = np.vstack([x, np.ones(len(x))]).T
+    m, c = np.linalg.lstsq(A,y, rcond=None)[0] #0 specifies that we only want the least squares solution, not residuals
+
+    return m, c
+
+
+# helper function - get quantity based on standard curve regression
+def quantify(y, m, b):
+    x = (y-b)/m
+    return 10**x
+
 
 ##################################
 
@@ -112,14 +140,19 @@ elif machine_type == 'Mic':
 
     #print(tabs_to_use)
     
+    info_df = pd.read_excel(results_filepath, sheet_name = "Samples"
+                            ).loc[:, ['Well', 'Type', 'Standards Concentration (Copies/µL)']
+                            ].rename(columns={"Well": "Well Position", 'Type': 'Task', 'Standards Concentration (Copies/µL)': 'Assigned Quantity'})
+
     results_dict = {}
-    
+    first_loop = True
     for fluor in fluor_names:
 
         row_indices_to_drop = []
         col_names = None
 
         results_dict[fluor] = pd.read_excel(results_filepath, sheet_name = tabs_to_use[fluor], skiprows = 32)
+        
         #print(results_dict[fluor])
         for row_index in list(results_dict[fluor].index.values):
             try:
@@ -135,11 +168,23 @@ elif machine_type == 'Mic':
             results_dict[fluor].reset_index(inplace=True, drop=True)
         
         results_dict[fluor]["Cq"] = results_dict[fluor]["Cq"].fillna(cq_cutoff).apply(pd.to_numeric)
+        #results_dict[fluor]["Assigned Quantity"] = results_dict[fluor]["Assigned Quantity"].fillna(0).apply(pd.to_numeric)
         results_dict[fluor]["Well"] = results_dict[fluor]["Well"].apply(pd.to_numeric)
         results_dict[fluor] = results_dict[fluor].rename(columns={"Well": "Well Position", "Cq": f"{fluor} CT"})
-        results_dict[fluor]["Task"] = results_dict[fluor].apply(task, axis=1)
+        
+        #results_dict[fluor]["Task"] = results_dict[fluor].apply(task, axis=1)
         results_dict[fluor][f"{fluor} Quantity"] = f"{fluor} Quantity"
+
+        results_dict[fluor] = pd.merge(results_dict[fluor], info_df, on='Well Position')
+
+        if fluor == 'CY5':
+            m, b = linreg(results_dict[fluor])
+            results_dict[fluor][f"{fluor} Quantity"] = results_dict[fluor][f"{fluor} CT"].apply(quantify, args=(m, b))
+
 
     summary_table = summarize(results_dict)
     print(summary_table)
+    #print(summary_table.loc[summary_table['Assigned Quantity'].notnull()])
+    #print(linreg(summary_table))
+
     
