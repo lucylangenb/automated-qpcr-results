@@ -288,5 +288,5 @@ try:
 except PermissionError:
     tk.messagebox.showerror(message='Unable to write results file. Make sure results file is closed, then click OK to try again.')
 
-tk.messagebox.showinfo(title="Success", message=f"Summary results saved in:\n\n{os.path.splitext(results_file)[0]+' - Summary.csv'}")
+tk.messagebox.showinfo(title="Success", message=f"Summary results saved in:\n\n{summary_filepath}")
 root.destroy()
