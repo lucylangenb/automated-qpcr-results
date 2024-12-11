@@ -34,40 +34,50 @@ def summarize(df_dict, machine_type = ''):
 
 
 machine_type = 'QuantStudio 5'
-fluor_names = {"CY5": "VQ",  
+
+cq_cutoff = 35
+
+
+if machine_type == 'QuantStudio 5':
+
+    fluor_names = {"CY5": "VQ",  
                     "FAM": "076V",              
                     "NED": "184VI"               
                     }
-cq_cutoff = 35
 
-results_filepath = r"C:\Users\lucy\Aldatu Biosciences\Aldatu Lab - Documents\Cooperative Lab Projects\PANDAA Software\HIVDR\2024-11-12 - 076 184VI - QS-PHIVDR001 PANDAA 2 - Raw.xlsx"
+    results_filepath = r"C:\Users\lucy\Aldatu Biosciences\Aldatu Lab - Documents\Cooperative Lab Projects\PANDAA Software\HIVDR\2024-11-12 - 076 184VI - QS-PHIVDR001 PANDAA 2 - Raw.xlsx"
 
-file_ext = os.path.splitext(results_filepath)[1]
-#print(file_ext)
+    file_ext = os.path.splitext(results_filepath)[1]
+    #print(file_ext)
 
-results_table = pd.read_excel(results_filepath, sheet_name = "Results", skiprows = 47)
-#print(results_table.loc[:, :'Quantity'])
+    results_table = pd.read_excel(results_filepath, sheet_name = "Results", skiprows = 47)
+    #print(results_table.loc[:, :'Quantity'])
 
-results_table["CT"] = results_table["CT"].replace(to_replace = "Undetermined", value = cq_cutoff)
-results_table["Quantity"] = results_table["Quantity"].fillna(0)
-results_table["CT"] = results_table["CT"].apply(pd.to_numeric)
-results_table["Cq Conf"] = results_table["Cq Conf"].apply(pd.to_numeric)
-results_table["Quantity"] = results_table["Quantity"].apply(pd.to_numeric)
+    results_table["CT"] = results_table["CT"].replace(to_replace = "Undetermined", value = cq_cutoff)
+    results_table["Quantity"] = results_table["Quantity"].fillna(0)
+    results_table["CT"] = results_table["CT"].apply(pd.to_numeric)
+    results_table["Cq Conf"] = results_table["Cq Conf"].apply(pd.to_numeric)
+    results_table["Quantity"] = results_table["Quantity"].apply(pd.to_numeric)
 
-results_dict = {}
-for fluor in fluor_names:
-    
-    results_dict[fluor] = results_table.loc[results_table["Reporter"] == fluor]
-    try:
-        results_dict[fluor] = results_dict[fluor].rename(columns={"CT": f"{fluor} CT", "Quantity": f"{fluor} Quantity", "Cq Conf": f"{fluor} Cq Conf"})
-    except:
-        tk.messagebox.showerror(message='Fluorophores in file do not match those entered by user. Check fluorophore assignment.')
-        # close program
-        raise SystemExit()
+    results_dict = {}
+    for fluor in fluor_names:
+        
+        results_dict[fluor] = results_table.loc[results_table["Reporter"] == fluor]
+        try:
+            results_dict[fluor] = results_dict[fluor].rename(columns={"CT": f"{fluor} CT", "Quantity": f"{fluor} Quantity", "Cq Conf": f"{fluor} Cq Conf"})
+        except:
+            tk.messagebox.showerror(message='Fluorophores in file do not match those entered by user. Check fluorophore assignment.')
+            # close program
+            raise SystemExit()
+        
+    summary_table = summarize(results_dict, machine_type)
+    print(summary_table)
+
+elif machine_type == 'Mic':
+    fluor_names = {"CY5": "VQ",  
+                        "FAM": "076V",              
+                        "NED": "184VI"               
+                        }
 
 
 
-
-
-summary_table = summarize(results_dict, machine_type)
-print(summary_table)
