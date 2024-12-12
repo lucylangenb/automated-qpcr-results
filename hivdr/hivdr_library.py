@@ -27,6 +27,7 @@ import tkinter as tk #error message GUI
 import csv #text file parsing
 import itertools #for mic csv parsing
 import os #for getting file extension
+import numpy as np #for least squares regression
 
 
 ##############################################################################################################################
@@ -80,8 +81,6 @@ def getfluors(assay):
     return fluor_names, internal_control_fluor, unique_reporters
 
 
-
-
 ##############################################################################################################################
 ### Helper functions for data analysis - file to dataframe
 ##############################################################################################################################
@@ -90,10 +89,12 @@ def getfluors(assay):
 def isblank(row):
     return all(not field.strip() for field in row)
 
+
 # helper function - cleans up csv, returns relevant data
-def csv_to_df(csv_file, csv_delim, results_flag):
+def csv_to_df(csv_file, csv_delim, results_flag=None):
     
     data_bool = False
+    header_found = False
     data_cleaned = []
     results_reader = csv.reader(csv_file, delimiter = csv_delim)
 
@@ -102,13 +103,19 @@ def csv_to_df(csv_file, csv_delim, results_flag):
             data_bool = False
         if data_bool == True:
             data_cleaned.append(line)
-        if results_flag in line: #skip non-results info at beginning of file
-            data_bool = True
-
+        if results_flag:
+            if results_flag in line: #skip non-results info at beginning of file
+                data_bool = True
+        if not results_flag: #if no results_flag is defined, look for blank line
+            if isblank(line) and not header_found:
+                data_bool = True
+                header_found = True
+            
     header = data_cleaned.pop(0)
     results_table = pd.DataFrame(data_cleaned, columns = header)
 
     return results_table
+
 
 # helper function - combines many data frames into one summary data frame
 def summarize(df_dict, machine_type = ''):
@@ -117,16 +124,23 @@ def summarize(df_dict, machine_type = ''):
 
     for fluor in df_dict:
 
-        columns = ["Well Position", "Sample Name", f"{fluor} CT"]
+        columns = ["Well Position", "Sample Name", "Task", f"{fluor} CT", f"{fluor} Quantity"]
         if machine_type == 'QuantStudio 5' or machine_type == 'QuantStudio 3':
             columns.append(f"{fluor} Cq Conf")
-        if first_loop == False:
-            columns.pop(1)
+        '''
+        # this code snippet includes 'Assigned Quantity' for non-QS files
+        else:
+            if first_loop:
+                columns.append('Assigned Quantity')
+        '''
+        if not first_loop:
+            columns = columns[:1] + columns[3:] #remove columns with indices 1 and 2 - 'Sample Name' and 'Task'
 
-        if first_loop == True:
+        if first_loop:
             try:
                 summary_table = df_dict[fluor].loc[:, columns]
-            except:
+            except Exception as e:
+                #print(e)
                 tk.messagebox.showerror(message='Incorrect file selected. Please try again.')
                 # close program
                 raise SystemExit()
@@ -183,6 +197,30 @@ def extract_header(reader, flag = None, stop = None):
     return head
 
 
+# helper function - get standard curve using least squares
+def linreg(df, fluor='CY5'):
+    data = df.loc[df['Assigned Quantity'].notnull(), #only rows with assigned copy numbers - *not* NaN
+                     ['Assigned Quantity', f'{fluor} CT']] #only columns with 'x' and 'y' data
+    
+    if fluor != 'CY5':
+        data['Assigned Quantity'] = data['Assigned Quantity'].div(5) #controls have 20% DRMs
+
+    x = np.array(data['Assigned Quantity'].apply(np.log10))
+    y = np.array(data[f'{fluor} CT'])
+
+    A = np.vstack([x, np.ones(len(x))]).T
+    m, b = np.linalg.lstsq(A,y, rcond=None)[0] #0 specifies that we only want the least squares solution, not residuals
+
+    return m, b
+
+
+# helper function - get quantity based on standard curve regression
+# in regression, y=mx+b ==
+# (Cq) = m*(log10 copies) + b
+def quantify(y, m, b):
+    x = (y-b)/m
+    return 10**x
+
 
 ##############################################################################################################################
 ### QuantStudio - file to dataframe
@@ -212,11 +250,16 @@ def quantstudio(machine_type, fluor_names, cq_cutoff=35):
             sheet_reader = csv.reader(csvfile, delimiter=',')
             head = extract_header(sheet_reader, 'Experiment')
 
+        # only need to convert data to numeric if coming from text file
+        results_table["Cq Conf"] = results_table["Cq Conf"].apply(pd.to_numeric)
+        results_table["Quantity"] = pd.to_numeric(results_table['Quantity'].str.replace(',', ''), errors='coerce')
+
+
     else: #file is not a text file (so it's an excel file) - excel files cannot be selected if open in another program, so check for this
         
         # get results df:
         file_selected = False
-        while file_selected == False:
+        while not file_selected:
             try:
                 if machine_type == "QuantStudio 5":
                     results_table = pd.read_excel(results_filepath, sheet_name = "Results", skiprows = 47)
@@ -224,7 +267,7 @@ def quantstudio(machine_type, fluor_names, cq_cutoff=35):
                     results_table = pd.read_excel(results_filepath, sheet_name = "Results", skiprows = 43)
             except:
                 proceed = tk.messagebox.askretrycancel(message='Incorrect file, or file is open in another program. Click Retry to analyze selected file again.', icon = tk.messagebox.ERROR)
-                if proceed == False:
+                if not proceed:
                     raise SystemExit()
             
             if 'results_table' in locals():
@@ -245,9 +288,9 @@ def quantstudio(machine_type, fluor_names, cq_cutoff=35):
         # close program
         raise SystemExit()
     
-    # make sure CT and CqConf columns contain number values, not strings
+    # make sure CT, CqConf, Quantity columns contain number values, not strings
     results_table["CT"] = results_table["CT"].apply(pd.to_numeric)
-    results_table["Cq Conf"] = results_table["Cq Conf"].apply(pd.to_numeric)
+    results_table["Quantity"] = results_table["Quantity"].fillna(0)
 
     # make sure file and fluor_names have the same fluorophores listed
     if sorted(list(results_table['Reporter'].unique())) != sorted(fluor_names):
@@ -260,7 +303,7 @@ def quantstudio(machine_type, fluor_names, cq_cutoff=35):
         
         results_dict[fluor] = results_table.loc[results_table["Reporter"] == fluor]
         try:
-            results_dict[fluor] = results_dict[fluor].rename(columns={"CT": f"{fluor} CT", "Cq Conf": f"{fluor} Cq Conf"})
+            results_dict[fluor] = results_dict[fluor].rename(columns={"CT": f"{fluor} CT", "Quantity": f"{fluor} Quantity", "Cq Conf": f"{fluor} Cq Conf"})
         except:
             tk.messagebox.showerror(message='Fluorophores in file do not match those entered by user. Check fluorophore assignment.')
             # close program
@@ -374,6 +417,9 @@ def mic(fluor_names, cq_cutoff=35):
                     results_csvs[fluor] = chunk
                     tabs_to_use[fluor] = title
                     break
+                elif 'Start Worksheet - Samples' in title: #get sample info (control vs unknown, concentration if available) while we're here
+                    info_csv = chunk
+
 
     else: #file is not a text file - must be Excel
         sheetnames = pd.ExcelFile(results_filepath).sheet_names #get tabs in file
@@ -388,21 +434,63 @@ def mic(fluor_names, cq_cutoff=35):
             sheet_reader = csv.reader(sheet_csv.splitlines(), delimiter=',')
             head = extract_header(sheet_reader, stop='Log')
 
-    if sorted(tabs_to_use) != sorted(fluor_names): #check to make sure fluorophores with assigned tabs match the list of fluors known to be in assay
+        # get sample task assignment (controls vs unknowns) and assigned copy numbers, if any
+        info_df = pd.read_excel(results_filepath, sheet_name = "Samples"
+                            ).loc[:, ['Well', 'Type', 'Standards Concentration (Copies/µL)']
+                            ].rename(columns={"Well": "Well Position", 'Type': 'Task', 'Standards Concentration (Copies/µL)': 'Assigned Quantity'})
+
+
+    # check to make sure fluorophores with assigned tabs match the list of fluors known to be in assay
+    if sorted(tabs_to_use) != sorted(fluor_names):
         tk.messagebox.showerror(message='Fluorophores in file do not match expected fluorophores. Check fluorophore and assay assignment.')
         # close program
         raise SystemExit()
-    
+
+
+    # get results dataframes for each fluorophore, compile into dict    
     results_dict = {}
+    first_loop = True
     for fluor in fluor_names:
         
         if file_ext == '.csv':
             results_dict[fluor] = csv_to_df(results_csvs[fluor], ',', 'Results')
+            if first_loop:
+                info_df = csv_to_df(info_csv, ','
+                                    ).loc[:, ['Well', 'Type', 'Standards Concentration (Copies/ÂµL)']
+                                    ].rename(columns={"Well": "Well Position", 'Type': 'Task', 'Standards Concentration (Copies/ÂµL)': 'Assigned Quantity'})
+                info_df['Well Position'] = info_df['Well Position'].apply(pd.to_numeric)
+                info_df['Assigned Quantity'] = info_df['Assigned Quantity'].apply(pd.to_numeric)
+                first_loop = False
         else:
             results_dict[fluor] = pd.read_excel(results_filepath, sheet_name = tabs_to_use[fluor], skiprows = 32)
 
-        results_dict[fluor]["Cq"] = results_dict[fluor]["Cq"].fillna(cq_cutoff).apply(pd.to_numeric)
+            # Mic results might not start at expected skiprow - remove any non-numerical data before results table
+            row_indices_to_drop = []
+            col_names = None
+            for row_index in list(results_dict[fluor].index.values):
+                try:
+                    int(results_dict[fluor].iloc[row_index, 0]) #can we convert the value in the first column ("Well") into an integer? if not, must be text
+                except ValueError:
+                    col_names = list(results_dict[fluor].iloc[row_index, :]) #this must then be the header row - copy info to variable
+                    row_indices_to_drop.append(row_index)
+            if col_names is not None:
+                for i in row_indices_to_drop:
+                    results_dict[fluor] = results_dict[fluor].drop(i)    #drop any saved rows
+                    results_dict[fluor].columns = col_names              #replace header
+                results_dict[fluor].reset_index(inplace=True, drop=True) #fix any index numbering problems that may have occurred as result of row dropping
+
+
+        results_dict[fluor]["Cq"] = results_dict[fluor]["Cq"].apply(pd.to_numeric)
+        results_dict[fluor]["Cq"] = results_dict[fluor]["Cq"].fillna(cq_cutoff)
+        results_dict[fluor]["Well"] = results_dict[fluor]["Well"].apply(pd.to_numeric)
         results_dict[fluor] = results_dict[fluor].rename(columns={"Well": "Well Position", "Cq": f"{fluor} CT"})
+
+        results_dict[fluor] = pd.merge(results_dict[fluor], info_df, on='Well Position')
+
+        # get linear regression for given fluorophore/assay, then quantify that DRM
+        m, b = linreg(results_dict[fluor], fluor)
+        results_dict[fluor][f"{fluor} Quantity"] = results_dict[fluor][f"{fluor} CT"].apply(quantify, args=(m, b))
+
 
     summary_table = summarize(results_dict)
 
