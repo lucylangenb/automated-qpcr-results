@@ -14,7 +14,7 @@
 ### EXE PACKAGING INSTRUCTIONS
 ##############################################################################################################################
 
-# pyinstaller --onefile -w --add-data="*.gif;." --icon=aldatulogo_icon.ico --version-file=version.txt PANDAAResults.py
+# pyinstaller --onefile -w --add-data="*.gif;." --icon=aldatulogo_icon.ico --version-file=version.txt ReFocusAssistant.py
 
 # --add-data flag expects directory info in the format SOURCE;DESTINATION - use '.' as destination for "this directory"
 # --icon adds an icon
@@ -40,7 +40,7 @@ import hivdr_library as hivdr
 ##############################################################################################################################
 
 cq_cutoff = 35
-pos_cutoff = 30
+pos_cutoff = 25
 
 
 ##############################################################################################################################
@@ -49,7 +49,7 @@ pos_cutoff = 30
 
 # initialize root window
 root = tk.Tk()
-root.title('Aldatu Biosciences - qPCR Analysis')
+root.title('Aldatu Biosciences - ReFocus Assistant')
 root.geometry('500x350')
 
 # handle events when close button is clicked
@@ -96,7 +96,7 @@ logo_label = tk.Label(root,     #tk object logo will live inside
 
 # window title
 title_label = tk.Label(root,
-                        text = 'PANDAA qPCR Results Analysis',
+                        text = 'ReFocus Assistant',
                         font = ('Arial', 12, 'bold')
                         ).pack(side = 'top',
                                 fill = tk.X,
@@ -109,35 +109,31 @@ questions_frame.pack(side = 'top')
 
 # frame to hold information about assay type choice
 assay_type_frame = tk.Frame(questions_frame)
-assay_type_frame.pack(side = 'left', padx = 20)
+assay_type_frame.pack(side = 'left', padx = 20, pady = 20)
 
 # question title - assay choice
 assay_type_label = tk.Label(assay_type_frame,
-                                text = 'Choose assay results to analyze:',
+                                text = 'Analyze results for:',
                                 font = ('Arial', 10)
                                 ).pack(side = 'top',
                                     fill = tk.X,
                                     pady = 2)
 
 # radio buttons - assay choice
-assays = ['PANDAA LASV',
-        'PANDAA CCHFV',
-        'PANDAA Ebola + Marburg']
-assay_var = tk.StringVar()
-assay_var.set(None) #initialize - forces radio buttons to be empty upon loading screen
+assays = ['076V 184VI',
+        '82AFT 84V']
+assay_var = tk.StringVar(value = '076V 184VI')
+#assay_var.set(None) #initialize - forces radio buttons to be empty upon loading screen
 
-for option in assays:
-    tk.Radiobutton(assay_type_frame,
-                    text = option,
-                    padx = 20,
-                    variable = assay_var,
-                    command = assay_var.get(),
-                    value = option
-                    ).pack(anchor = tk.W) #center text vertically around reference point, left-justified - "W" refers to "West"
+machine_menu = tk.OptionMenu(assay_type_frame,
+                            assay_var, #initial value in drop-down
+                            *assays,   #values to choose from
+                            command = lambda x: assay_var.get()
+                            ).pack(anchor = tk.W)
 
 # instrument choice
 machine_type_frame = tk.Frame(questions_frame)
-machine_type_frame.pack(side = 'right', padx = 20)
+machine_type_frame.pack(side = 'right', padx = 20, pady = 20)
 
 # question title for instrument choice
 machine_label = tk.Label(machine_type_frame,

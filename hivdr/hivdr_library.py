@@ -70,6 +70,13 @@ def getfluors(assay):
                     "NED": "184VI"               
                     }
         internal_control_fluor = "CY5"
+
+    elif assay == '82AFT 84V':
+        fluor_names = {"CY5": "VQ",  
+                        "FAM": "84V",              
+                        "NED": "82AFT"               
+                        }
+        internal_control_fluor = 'CY5'
     
 
     try:
