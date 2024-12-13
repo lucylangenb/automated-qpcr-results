@@ -201,6 +201,13 @@ elif machine_type == "Mic":
 ### 3. Functions to get PANDAA result
 ##############################################################################################################################
 
+def hivdr_results(row):
+    vq = row[unique_reporters[0] + ' Quantity']
+    drm1 = row[unique_reporters[1] + ' Quantity'] / vq
+    drm2 = row[unique_reporters[2] + ' Quantity'] / vq
+    print()
+
+
 def getPandaaResult_2fluors(row):
 
     if row[unique_reporters[1] + " CT"] < pos_cutoff:
