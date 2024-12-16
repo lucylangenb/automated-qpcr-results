@@ -83,7 +83,7 @@ def csv_to_df(csv_file, csv_delim, results_flag):
     for line in results_reader:
         if isblank(line): #check for additional (blank) lines at end of file
             data_bool = False
-        if data_bool == True:
+        if data_bool:
             data_cleaned.append(line)
         if results_flag in line: #skip non-results info at beginning of file
             data_bool = True
@@ -103,10 +103,10 @@ def summarize(df_dict, machine_type = ''):
         columns = ["Well Position", "Sample Name", f"{fluor} CT"]
         if machine_type == 'QuantStudio 5' or machine_type == 'QuantStudio 3':
             columns.append(f"{fluor} Cq Conf")
-        if first_loop == False:
+        if not first_loop:
             columns.pop(1)
 
-        if first_loop == True:
+        if first_loop:
             try:
                 summary_table = df_dict[fluor].loc[:, columns]
             except:
@@ -161,7 +161,7 @@ def extract_header(reader, flag = None, stop = None):
             # if flag is defined, look for flag in line; start appending to header if it exists
             if flag in str(line):
                 headbool = True
-        if headbool == True:
+        if headbool:
             head.append(line)
     return head
 
@@ -199,7 +199,7 @@ def quantstudio(machine_type, fluor_names, cq_cutoff=35):
         
         # get results df:
         file_selected = False
-        while file_selected == False:
+        while not file_selected:
             try:
                 if machine_type == "QuantStudio 5":
                     results_table = pd.read_excel(results_filepath, sheet_name = "Results", skiprows = 47)
@@ -207,7 +207,7 @@ def quantstudio(machine_type, fluor_names, cq_cutoff=35):
                     results_table = pd.read_excel(results_filepath, sheet_name = "Results", skiprows = 43)
             except:
                 proceed = tk.messagebox.askretrycancel(message='Incorrect file, or file is open in another program. Click Retry to analyze selected file again.', icon = tk.messagebox.ERROR)
-                if proceed == False:
+                if not proceed:
                     raise SystemExit()
             
             if 'results_table' in locals():
@@ -292,7 +292,7 @@ def rotorgene(fluor_names, cq_cutoff=35):
                                                             "Ct Comment": "Comments",
                                                             "Given Conc (copies/reaction)": "Copies"})
                 # first time loop is run:
-                if first_loop == True:
+                if first_loop:
                     # initialize summary table
                     summary_table = results_table.loc[:, ["Well Position", "Sample Name", "Copies", "Comments", f"{fluor} CT"]]
                     # and get header info
