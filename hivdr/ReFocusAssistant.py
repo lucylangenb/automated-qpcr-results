@@ -201,103 +201,58 @@ elif machine_type == "Mic":
 ### 3. Functions to get PANDAA result
 ##############################################################################################################################
 
-def hivdr_results(row):
-    vq = row[unique_reporters[0] + ' Quantity']
-    drm1 = row[unique_reporters[1] + ' Quantity'] / vq
-    drm2 = row[unique_reporters[2] + ' Quantity'] / vq
-    print(f"{row}")
-    print(f"VQ: {vq}")
-    print(f"DRM1: {drm1}")
-    print(f"DRM2: {drm2}")
-    return drm1, drm2
-
-
-def getPandaaResult_2fluors(row):
-
-    if row[unique_reporters[1] + " CT"] < pos_cutoff:
-        return f"{fluor_names[unique_reporters[1]]} Positive"
-    
-    elif row[internal_control_fluor + " CT"] < pos_cutoff:
-        return "Negative"
-    
+def hivdr_results(row, col_name):
+    if row[col_name] < 0.05 or row[unique_reporters[0] + ' Quantity'] < 50:
+        call = 'Negative'
+    elif row[col_name] >= 0.1:
+        call = 'Positive'
     else:
-        return "Invalid Result"
-    
+        call = 'Indeterminate'
+    return call
 
-def getPandaaResult_3fluors(row):
-
-    if row[unique_reporters[1] + " CT"] < pos_cutoff:
-        if (row[unique_reporters[2] + " CT"] >= pos_cutoff):
-            return f"{fluor_names[unique_reporters[1]]} Positive"
-        else:
-            return "Invalid Result"
-
-    elif row[unique_reporters[2] + " CT"] < pos_cutoff:
-        if (row[unique_reporters[1] + " CT"] >= pos_cutoff):
-            return f"{fluor_names[unique_reporters[2]]} Positive"
-        else:
-            return "Invalid Result"
-        
-    elif row[internal_control_fluor + " CT"] < pos_cutoff:
-        return "Negative"
-      
-    else:
-        return "Invalid Result"
-    
-
-def getPandaaResult_3fluors_cqconf(row):
-
-    if row[unique_reporters[1] + " CT"] < pos_cutoff:
-        if (row[unique_reporters[2] + " CT"] >= pos_cutoff) or ((row[unique_reporters[2] + " CT"] < pos_cutoff) and (row[unique_reporters[2] + " Cq Conf"] <= 0.5)):
-            return f"{fluor_names[unique_reporters[1]]} Positive"
-        else:
-            return "Invalid Result"
-
-    elif row[unique_reporters[2] + " CT"] < pos_cutoff:
-        if (row[unique_reporters[1] + " CT"] >= pos_cutoff) or ((row[unique_reporters[1] + " CT"] < pos_cutoff) and (row[unique_reporters[1] + " Cq Conf"] <= 0.5)):
-            return f"{fluor_names[unique_reporters[2]]} Positive"
-        else:
-            return "Invalid Result"
-        
-    elif row[internal_control_fluor + " CT"] < pos_cutoff:
-        return "Negative"
-      
-    else:
-        return "Invalid Result"
-    
     
 ##############################################################################################################################
 ### 4. Use PANDAA function to get new column in dataframe
 ##############################################################################################################################
 
-if assay == "PANDAA Ebola + Marburg": #3 fluors
-    if machine_type == "QuantStudio 3" or machine_type == "QuantStudio 5":
-        summary_table['Result'] = summary_table.apply(getPandaaResult_3fluors_cqconf, axis=1) #axis=1 specifies to work row by row
-    else:
-        summary_table['Result'] = summary_table.apply(getPandaaResult_3fluors, axis=1)
+# create additional columns with DRM percentages
+summary_table = summary_table.assign(
+                                    drm1_percent = lambda x: x[unique_reporters[1] + ' Quantity'] / x[unique_reporters[0] + ' Quantity'],
+                                    drm2_percent = lambda x: x[unique_reporters[2] + ' Quantity'] / x[unique_reporters[0] + ' Quantity']
+                                    ).fillna(0)
 
-else: #2 fluors
-    #summary_table['Result'] = summary_table.apply(getPandaaResult_2fluors, axis=1)
-    print(summary_table.iloc[1,:])
-    hivdr_results(summary_table.iloc[1,:])
-    summary_table[[unique_reporters[1] + '%', unique_reporters[2] + '%']] = summary_table.apply(hivdr_results)
-    print(summary_table)
+# using DRM percentage data, make a qualitative call
+summary_table[fluor_names[unique_reporters[1]] + ' Call'] = summary_table.apply(hivdr_results, col_name='drm1_percent', axis=1)
+summary_table[fluor_names[unique_reporters[2]] + ' Call'] = summary_table.apply(hivdr_results, col_name='drm2_percent', axis=1)
 
-
-
+# get destination filepath
 summary_filepath = os.path.splitext(results_file)[0]+" - Summary.csv"
 
 # results file can't be created/written if the user already has it open - catch possible PermissionErrors
-try:
-    summary_table.to_csv(
-        path_or_buf=summary_filepath,
-        columns=["Well Position", "Sample Name", "Result"],
-        index=False
-        )
-    hivdr.prepend(summary_filepath, head)
+file_saved = False
+while not file_saved:
+    try:
+        # save file to destination filepath
+        summary_table.to_csv(
+            path_or_buf=summary_filepath,
+            columns=["Well Position", 
+                    "Sample Name", 
+                    #'drm1_percent', 
+                    #'drm2_percent', 
+                    fluor_names[unique_reporters[1]] + ' Call', 
+                    fluor_names[unique_reporters[2]] + ' Call'],
+            index=False
+            )
+        # add header info
+        hivdr.prepend(summary_filepath, head)
+        file_saved = True
 
-except PermissionError:
-    tk.messagebox.showerror(message='Unable to write results file. Make sure results file is closed, then click OK to try again.')
+    # if file couldn't be saved, let the user know
+    except PermissionError:
+        proceed = tk.messagebox.askretrycancel(message='Unable to write results file. Make sure results file is closed, then click Retry to try again.', icon = tk.messagebox.ERROR)
+        if not proceed:
+            raise SystemExit()
+        
 
-tk.messagebox.showinfo(title="Success", message=f"Summary results saved in:\n\n{os.path.splitext(results_file)[0]+' - Summary.csv'}")
+tk.messagebox.showinfo(title="Success", message=f"Summary results saved in:\n\n{summary_filepath}")
 root.destroy()
