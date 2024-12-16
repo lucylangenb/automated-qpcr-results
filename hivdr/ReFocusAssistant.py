@@ -205,7 +205,11 @@ def hivdr_results(row):
     vq = row[unique_reporters[0] + ' Quantity']
     drm1 = row[unique_reporters[1] + ' Quantity'] / vq
     drm2 = row[unique_reporters[2] + ' Quantity'] / vq
-    print()
+    print(f"{row}")
+    print(f"VQ: {vq}")
+    print(f"DRM1: {drm1}")
+    print(f"DRM2: {drm2}")
+    return drm1, drm2
 
 
 def getPandaaResult_2fluors(row):
@@ -273,7 +277,11 @@ if assay == "PANDAA Ebola + Marburg": #3 fluors
         summary_table['Result'] = summary_table.apply(getPandaaResult_3fluors, axis=1)
 
 else: #2 fluors
-    summary_table['Result'] = summary_table.apply(getPandaaResult_2fluors, axis=1)
+    #summary_table['Result'] = summary_table.apply(getPandaaResult_2fluors, axis=1)
+    print(summary_table.iloc[1,:])
+    hivdr_results(summary_table.iloc[1,:])
+    summary_table[[unique_reporters[1] + '%', unique_reporters[2] + '%']] = summary_table.apply(hivdr_results)
+    print(summary_table)
 
 
 
