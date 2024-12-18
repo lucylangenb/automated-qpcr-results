@@ -41,6 +41,7 @@ import vhf_library as vhf
 
 cq_cutoff = 35
 pos_cutoff = 30
+dRn_percent_cutoff = 0.05 #if (sample dRn / max dRn) is less than this value, sample is considered No Amplification and marked negative
 
 
 ##############################################################################################################################
@@ -194,7 +195,7 @@ root.withdraw() #hides root
 root.protocol('WM_DELETE_WINDOW', close_program) #when delete_window event occurs, run close_program function
 
 if machine_type == "QuantStudio 3" or machine_type == "QuantStudio 5":
-    summary_table, results_file, head = vhf.quantstudio(machine_type, fluor_names, cq_cutoff)
+    summary_table, max_dRn, results_file, head = vhf.quantstudio(machine_type, fluor_names, cq_cutoff)
 elif machine_type == "Rotor-Gene":
     summary_table, results_file, head = vhf.rotorgene(fluor_names, cq_cutoff)
 elif machine_type == "Mic":
@@ -205,9 +206,10 @@ elif machine_type == "Mic":
 ### 3. Functions to get PANDAA result
 ##############################################################################################################################
 
+
 def getPandaaResult_2fluors(row):
 
-    if row[unique_reporters[1] + " CT"] < pos_cutoff:
+    if row[unique_reporters[1] + " CT"] < pos_cutoff and row[unique_reporters[1] + " dRn"]/max_dRn[unique_reporters[1]] > dRn_percent_cutoff:
         return f"{fluor_names[unique_reporters[1]]} Positive"
     
     elif row[internal_control_fluor + " CT"] < pos_cutoff:
@@ -272,6 +274,9 @@ if assay == "PANDAA Ebola + Marburg": #3 fluors
 else: #2 fluors
     summary_table['Result'] = summary_table.apply(getPandaaResult_2fluors, axis=1)
 
+print(summary_table)
+print(max_dRn)
+
 csv_columns = ["Well Position",
                  "Sample Name",
                  "Result"]
@@ -283,10 +288,11 @@ for i in range(len(unique_reporters)):
                                                   })
     #if i != 0: #don't add internal control column to csv
     csv_columns.insert(i+2, f'{fluor_names[unique_reporters[i]]} Cq') #insert columns starting at col index 2
-    #csv_columns.append(f'{fluor_names[unique_reporters[i]]} dRn')
+    csv_columns.append(f'{fluor_names[unique_reporters[i]]} dRn')
     if machine_type == "QuantStudio 3" or machine_type == "QuantStudio 5":
         summary_table = summary_table.rename(columns={f'{unique_reporters[i]} Cq Conf': f'{fluor_names[unique_reporters[i]]} Cq Conf'})
 
+      
 summary_filepath = os.path.splitext(results_file)[0]+" - Summary.csv"
 
 # results file can't be created/written if the user already has it open - catch possible PermissionErrors
