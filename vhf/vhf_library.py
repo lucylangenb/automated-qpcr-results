@@ -100,7 +100,7 @@ def summarize(df_dict, machine_type = ''):
 
     for fluor in df_dict:
 
-        columns = ["Well Position", "Sample Name", f"{fluor} CT"]
+        columns = ["Well Position", "Sample Name", f"{fluor} CT", f"{fluor} dRn"]
         if machine_type == 'QuantStudio 5' or machine_type == 'QuantStudio 3':
             columns.append(f"{fluor} Cq Conf")
         if not first_loop:
@@ -243,7 +243,9 @@ def quantstudio(machine_type, fluor_names, cq_cutoff=35):
         
         results_dict[fluor] = results_table.loc[results_table["Reporter"] == fluor]
         try:
-            results_dict[fluor] = results_dict[fluor].rename(columns={"CT": f"{fluor} CT", "Cq Conf": f"{fluor} Cq Conf"})
+            results_dict[fluor] = results_dict[fluor].rename(columns={"CT": f"{fluor} CT",
+                                                                      "Cq Conf": f"{fluor} Cq Conf",
+                                                                      "Delta Rn (last cycle)": f"{fluor} dRn"})
         except:
             tk.messagebox.showerror(message='Fluorophores in file do not match those entered by user. Check fluorophore assignment.')
             # close program

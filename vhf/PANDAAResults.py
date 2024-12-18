@@ -278,9 +278,12 @@ csv_columns = ["Well Position",
 
 # rename summary table columns since data analysis is complete
 for i in range(len(unique_reporters)):
-    summary_table = summary_table.rename(columns={f'{unique_reporters[i]} CT': f'{fluor_names[unique_reporters[i]]} Cq'})
+    summary_table = summary_table.rename(columns={f'{unique_reporters[i]} CT': f'{fluor_names[unique_reporters[i]]} Cq',
+                                                  f'{unique_reporters[i]} dRn': f'{fluor_names[unique_reporters[i]]} dRn' 
+                                                  })
     #if i != 0: #don't add internal control column to csv
     csv_columns.insert(i+2, f'{fluor_names[unique_reporters[i]]} Cq') #insert columns starting at col index 2
+    #csv_columns.append(f'{fluor_names[unique_reporters[i]]} dRn')
     if machine_type == "QuantStudio 3" or machine_type == "QuantStudio 5":
         summary_table = summary_table.rename(columns={f'{unique_reporters[i]} Cq Conf': f'{fluor_names[unique_reporters[i]]} Cq Conf'})
 
