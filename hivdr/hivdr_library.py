@@ -280,6 +280,21 @@ def quantstudio(machine_type, fluor_names, cq_cutoff=35):
             if 'results_table' in locals():
                 file_selected = True
 
+        # QS results might not start at expected skiprow - remove any non-numerical data before results table
+        row_indices_to_drop = []
+        col_names = None
+        for row_index in list(results_table.index.values):
+            try:
+                int(results_table.iloc[row_index, 0]) #can we convert the value in the first column ("Well") into an integer? if not, must be text
+            except ValueError:
+                col_names = list(results_table.iloc[row_index, :]) #this must then be the header row - copy info to variable
+                row_indices_to_drop.append(row_index)
+        if col_names is not None:
+            for i in row_indices_to_drop:
+                results_table = results_table.drop(i)    #drop any saved rows
+            results_table.columns = col_names              #replace header
+            results_table.reset_index(inplace=True, drop=True) #fix any index numbering problems that may have occurred as result of row dropping
+
         # get header as list:
         with open(results_filepath, 'rb') as excel_file:
             sheet_csv = pd.read_excel(excel_file, sheet_name = 'Results', usecols='A:B').to_csv(index=False)

@@ -203,7 +203,10 @@ def quantstudio(machine_type, fluor_names, cq_cutoff=35):
         file_selected = False
         while not file_selected:
             try:
-                results_table = pd.read_excel(results_filepath, sheet_name = "Results", skiprows = 43)
+                if machine_type == "QuantStudio 5":
+                    results_table = pd.read_excel(results_filepath, sheet_name = "Results", skiprows = 47)
+                elif machine_type == "QuantStudio 3":
+                    results_table = pd.read_excel(results_filepath, sheet_name = "Results", skiprows = 43)
             except:
                 proceed = tk.messagebox.askretrycancel(message='Incorrect file, or file is open in another program. Click Retry to analyze selected file again.', icon = tk.messagebox.ERROR)
                 if not proceed:
