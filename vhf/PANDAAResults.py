@@ -272,7 +272,17 @@ if assay == "PANDAA Ebola + Marburg": #3 fluors
 else: #2 fluors
     summary_table['Result'] = summary_table.apply(getPandaaResult_2fluors, axis=1)
 
+csv_columns = ["Well Position",
+                 "Sample Name",
+                 "Result"]
 
+# rename summary table columns since data analysis is complete
+for i in range(len(unique_reporters)):
+    summary_table = summary_table.rename(columns={f'{unique_reporters[i]} CT': f'{fluor_names[unique_reporters[i]]} Cq'})
+    #if i != 0: #don't add internal control column to csv
+    csv_columns.insert(i+2, f'{fluor_names[unique_reporters[i]]} Cq') #insert columns starting at col index 2
+    if machine_type == "QuantStudio 3" or machine_type == "QuantStudio 5":
+        summary_table = summary_table.rename(columns={f'{unique_reporters[i]} Cq Conf': f'{fluor_names[unique_reporters[i]]} Cq Conf'})
 
 summary_filepath = os.path.splitext(results_file)[0]+" - Summary.csv"
 
@@ -280,7 +290,7 @@ summary_filepath = os.path.splitext(results_file)[0]+" - Summary.csv"
 try:
     summary_table.to_csv(
         path_or_buf=summary_filepath,
-        columns=["Well Position", "Sample Name", "Result"],
+        columns=csv_columns,
         index=False
         )
     vhf.prepend(summary_filepath, head)
