@@ -290,16 +290,22 @@ for i in range(len(unique_reporters)):
 summary_filepath = os.path.splitext(results_file)[0]+" - Summary.csv"
 
 # results file can't be created/written if the user already has it open - catch possible PermissionErrors
-try:
-    summary_table.to_csv(
-        path_or_buf=summary_filepath,
-        columns=csv_columns,
-        index=False
-        )
-    vhf.prepend(summary_filepath, head)
+file_saved = False
+while not file_saved:
+    try:
+        summary_table.to_csv(
+            path_or_buf=summary_filepath,
+            columns=csv_columns,
+            index=False
+            )
+        vhf.prepend(summary_filepath, head)
+        file_saved = True
 
-except PermissionError:
-    tk.messagebox.showerror(message='Unable to write results file. Make sure results file is closed, then click OK to try again.')
+    # if file couldn't be saved, let the user know
+    except PermissionError:
+        proceed = tk.messagebox.askretrycancel(message='Unable to write results file. Make sure results file is closed, then click Retry to try again.', icon = tk.messagebox.ERROR)
+        if not proceed:
+            raise SystemExit()
 
 tk.messagebox.showinfo(title="Success", message=f"Summary results saved in:\n\n{summary_filepath}")
 root.destroy()
