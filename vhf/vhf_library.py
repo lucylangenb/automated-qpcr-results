@@ -203,10 +203,7 @@ def quantstudio(machine_type, fluor_names, cq_cutoff=35):
         file_selected = False
         while not file_selected:
             try:
-                if machine_type == "QuantStudio 5":
-                    results_table = pd.read_excel(results_filepath, sheet_name = "Results", skiprows = 47)
-                elif machine_type == "QuantStudio 3":
-                    results_table = pd.read_excel(results_filepath, sheet_name = "Results", skiprows = 43)
+                results_table = pd.read_excel(results_filepath, sheet_name = "Results", skiprows = 43)
             except:
                 proceed = tk.messagebox.askretrycancel(message='Incorrect file, or file is open in another program. Click Retry to analyze selected file again.', icon = tk.messagebox.ERROR)
                 if not proceed:
@@ -215,12 +212,28 @@ def quantstudio(machine_type, fluor_names, cq_cutoff=35):
             if 'results_table' in locals():
                 file_selected = True
 
+        # QS results might not start at expected skiprow - remove any non-numerical data before results table
+        row_indices_to_drop = []
+        col_names = None
+        for row_index in list(results_table.index.values):
+            try:
+                int(results_table.iloc[row_index, 0]) #can we convert the value in the first column ("Well") into an integer? if not, must be text
+            except ValueError:
+                col_names = list(results_table.iloc[row_index, :]) #this must then be the header row - copy info to variable
+                row_indices_to_drop.append(row_index)
+        if col_names is not None:
+            for i in row_indices_to_drop:
+                results_table = results_table.drop(i)    #drop any saved rows
+            results_table.columns = col_names              #replace header
+            results_table.reset_index(inplace=True, drop=True) #fix any index numbering problems that may have occurred as result of row dropping
+
         # get header as list:
         with open(results_filepath, 'rb') as excel_file:
             sheet_csv = pd.read_excel(excel_file, sheet_name = 'Results', usecols='A:B').to_csv(index=False)
             sheet_reader = csv.reader(sheet_csv.splitlines(), delimiter=',')
             head = extract_header(sheet_reader, 'Experiment')
         
+
 
     try:
         # assign "Undetermined" wells a CT value - "CT" column will only exist in correctly formatted results files, so can be used for error checking
@@ -241,6 +254,7 @@ def quantstudio(machine_type, fluor_names, cq_cutoff=35):
         raise SystemExit()
     
     results_dict = {}
+    max_dRn = {}
     for fluor in fluor_names:
         
         results_dict[fluor] = results_table.loc[results_table["Reporter"] == fluor]
@@ -252,10 +266,12 @@ def quantstudio(machine_type, fluor_names, cq_cutoff=35):
             tk.messagebox.showerror(message='Fluorophores in file do not match those entered by user. Check fluorophore assignment.')
             # close program
             raise SystemExit()
+        
+        max_dRn[fluor] = results_dict[fluor][f"{fluor} dRn"].max()
 
     summary_table = summarize(results_dict, machine_type)
 
-    return summary_table, results_filepath, head
+    return summary_table, max_dRn, results_filepath, head
 
 
 ##############################################################################################################################
@@ -385,8 +401,24 @@ def mic(fluor_names, cq_cutoff=35):
         
         if file_ext == '.csv':
             results_dict[fluor] = csv_to_df(results_csvs[fluor], ',', 'Results')
+        
         else:
             results_dict[fluor] = pd.read_excel(results_filepath, sheet_name = tabs_to_use[fluor], skiprows = 32)
+            # Mic results might not start at expected skiprow - remove any non-numerical data before results table
+            row_indices_to_drop = []
+            col_names = None
+            for row_index in list(results_dict[fluor].index.values):
+                try:
+                    int(results_dict[fluor].iloc[row_index, 0]) #can we convert the value in the first column ("Well") into an integer? if not, must be text
+                except ValueError:
+                    col_names = list(results_dict[fluor].iloc[row_index, :]) #this must then be the header row - copy info to variable
+                    row_indices_to_drop.append(row_index)
+            if col_names is not None:
+                for i in row_indices_to_drop:
+                    results_dict[fluor] = results_dict[fluor].drop(i)    #drop any saved rows
+                    results_dict[fluor].columns = col_names              #replace header
+                results_dict[fluor].reset_index(inplace=True, drop=True) #fix any index numbering problems that may have occurred as result of row dropping
+
 
         results_dict[fluor]["Cq"] = results_dict[fluor]["Cq"].fillna(cq_cutoff).apply(pd.to_numeric)
         results_dict[fluor] = results_dict[fluor].rename(columns={"Well": "Well Position", "Cq": f"{fluor} CT"})
