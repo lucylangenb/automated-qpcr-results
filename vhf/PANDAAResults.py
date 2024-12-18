@@ -203,77 +203,50 @@ elif machine_type == "Mic":
 
 
 ##############################################################################################################################
-### 3. Functions to get PANDAA result
+### 3. Function to get PANDAA result
 ##############################################################################################################################
 
+def get_pandaa_result(row):
 
-def getPandaaResult_2fluors(row):
+    # first value - index 0 - in list corresponds to internal control
+    # therefore, fill this list index with high number
+    cq_vals = [98]
 
-    if row[unique_reporters[1] + " CT"] < pos_cutoff and row[unique_reporters[1] + " dRn"]/max_dRn[unique_reporters[1]] > dRn_percent_cutoff:
-        return f"{fluor_names[unique_reporters[1]]} Positive"
-    
+    # iterate through all other (non-IC) fluorophores for the row
+    for i in range(1, len(unique_reporters)):
+        # if a positive signal is observed (Cq below cutoff plus dRn is >5% of max on plate), add it to the list
+        if row[unique_reporters[i] + " CT"] < pos_cutoff and row[unique_reporters[i] + " dRn"]/max_dRn[unique_reporters[i]] > dRn_percent_cutoff:
+            cq_vals.append(row[unique_reporters[i] + " CT"])
+        # otherwise, add another high number
+        else:
+            cq_vals.append(99)
+
+    # find the minimum of the list of Cq values
+    fluor_min = cq_vals.index(min(cq_vals))
+    # if the minimum is not the artificial internal control / index-0 value, well was positive for something
+    # well tested positive for whatever the lowest observed Cq value was (if more than one fluorophore present)
+    if fluor_min != 0:
+        print(f'{cq_vals}. Min index: {fluor_min}. Result: {fluor_names[unique_reporters[fluor_min]]} Positive')
+        return f'{fluor_names[unique_reporters[fluor_min]]} Positive'
+    # otherwise, check IC amplification - was it successful? if so, this is a negative reaction
     elif row[internal_control_fluor + " CT"] < pos_cutoff:
+        print(f'{cq_vals}. Min index: {fluor_min}. Result: Negative')
         return "Negative"
-    
+    # nothing amplified, including IC? result invalid
     else:
         return "Invalid Result"
     
 
-def getPandaaResult_3fluors(row):
-
-    if row[unique_reporters[1] + " CT"] < pos_cutoff:
-        if (row[unique_reporters[2] + " CT"] >= pos_cutoff):
-            return f"{fluor_names[unique_reporters[1]]} Positive"
-        else:
-            return "Invalid Result"
-
-    elif row[unique_reporters[2] + " CT"] < pos_cutoff:
-        if (row[unique_reporters[1] + " CT"] >= pos_cutoff):
-            return f"{fluor_names[unique_reporters[2]]} Positive"
-        else:
-            return "Invalid Result"
-        
-    elif row[internal_control_fluor + " CT"] < pos_cutoff:
-        return "Negative"
-      
-    else:
-        return "Invalid Result"
-    
-
-def getPandaaResult_3fluors_cqconf(row):
-
-    if row[unique_reporters[1] + " CT"] < pos_cutoff:
-        if (row[unique_reporters[2] + " CT"] >= pos_cutoff) or ((row[unique_reporters[2] + " CT"] < pos_cutoff) and (row[unique_reporters[2] + " Cq Conf"] <= 0.5)):
-            return f"{fluor_names[unique_reporters[1]]} Positive"
-        else:
-            return "Invalid Result"
-
-    elif row[unique_reporters[2] + " CT"] < pos_cutoff:
-        if (row[unique_reporters[1] + " CT"] >= pos_cutoff) or ((row[unique_reporters[1] + " CT"] < pos_cutoff) and (row[unique_reporters[1] + " Cq Conf"] <= 0.5)):
-            return f"{fluor_names[unique_reporters[2]]} Positive"
-        else:
-            return "Invalid Result"
-        
-    elif row[internal_control_fluor + " CT"] < pos_cutoff:
-        return "Negative"
-      
-    else:
-        return "Invalid Result"
     
     
 ##############################################################################################################################
 ### 4. Use PANDAA function to get new column in dataframe
 ##############################################################################################################################
 
-if assay == "PANDAA Ebola + Marburg": #3 fluors
-    if machine_type == "QuantStudio 3" or machine_type == "QuantStudio 5":
-        summary_table['Result'] = summary_table.apply(getPandaaResult_3fluors_cqconf, axis=1) #axis=1 specifies to work row by row
-    else:
-        summary_table['Result'] = summary_table.apply(getPandaaResult_3fluors, axis=1)
 
-else: #2 fluors
-    summary_table['Result'] = summary_table.apply(getPandaaResult_2fluors, axis=1)
 
+
+summary_table['Result'] = summary_table.apply(get_pandaa_result, axis=1)
 print(summary_table)
 print(max_dRn)
 

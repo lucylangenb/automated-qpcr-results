@@ -249,6 +249,7 @@ def quantstudio(machine_type, fluor_names, cq_cutoff=35):
     # make sure CT and CqConf columns contain number values, not strings
     results_table["CT"] = results_table["CT"].apply(pd.to_numeric)
     results_table["Cq Conf"] = results_table["Cq Conf"].apply(pd.to_numeric)
+    results_table["Baseline End"] = results_table["Baseline End"].apply(pd.to_numeric)
 
     # make sure file and fluor_names have the same fluorophores listed
     if sorted(list(results_table['Reporter'].unique())) != sorted(fluor_names):
@@ -270,10 +271,16 @@ def quantstudio(machine_type, fluor_names, cq_cutoff=35):
             # close program
             raise SystemExit()
         
-        max_dRn[fluor] = results_dict[fluor][f"{fluor} dRn"].max()
+        if fluor_names[fluor] == 'Internal Control':
+            baseline_end = 5
+        else:
+            baseline_end = 10
+        get_max = results_dict[fluor].loc[results_dict[fluor]['Baseline End'] >= baseline_end, [f"{fluor} dRn"]]
+        max_dRn[fluor] = float(get_max[f"{fluor} dRn"].max())
 
     summary_table = summarize(results_dict, machine_type)
-
+    print(get_max)
+    print(max_dRn)
     return summary_table, max_dRn, results_filepath, head
 
 
