@@ -28,6 +28,8 @@ import csv #text file parsing
 import itertools #for mic csv parsing
 import os #for getting file extension
 
+pd.set_option('future.no_silent_downcasting', True)
+
 
 ##############################################################################################################################
 ### Initialization - get fluors based on selected assay
