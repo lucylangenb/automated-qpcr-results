@@ -102,9 +102,10 @@ def summarize(df_dict, machine_type = ''):
 
     for fluor in df_dict:
 
-        columns = ["Well Position", "Sample Name", f"{fluor} CT", f"{fluor} dRn"]
+        columns = ["Well Position", "Sample Name", f"{fluor} CT"]
         if machine_type == 'QuantStudio 5' or machine_type == 'QuantStudio 3':
             columns.append(f"{fluor} Cq Conf")
+            columns.append(f"{fluor} dRn")
         if not first_loop:
             columns.pop(1)
 
@@ -196,6 +197,8 @@ def quantstudio(machine_type, fluor_names, cq_cutoff=35):
             csvfile.seek(0)
             sheet_reader = csv.reader(csvfile, delimiter=',')
             head = extract_header(sheet_reader, 'Experiment')
+            # text files save values as strings - handle dRn values separated with commas/thousands separator:
+            results_table["Delta Rn (last cycle)"] = results_table["Delta Rn (last cycle)"].str.replace(',', '').astype(float)
 
     else: #file is not a text file (so it's an excel file) - excel files cannot be selected if open in another program, so check for this
         
@@ -250,7 +253,7 @@ def quantstudio(machine_type, fluor_names, cq_cutoff=35):
     results_table["CT"] = results_table["CT"].apply(pd.to_numeric)
     results_table["Cq Conf"] = results_table["Cq Conf"].apply(pd.to_numeric)
     results_table["Baseline End"] = results_table["Baseline End"].apply(pd.to_numeric)
-    results_table["Delta Rn (last cycle)"] = results_table["Delta Rn (last cycle)"].str.replace(',', '').astype(float)
+    
 
     # make sure file and fluor_names have the same fluorophores listed
     if sorted(list(results_table['Reporter'].unique())) != sorted(fluor_names):
@@ -280,8 +283,6 @@ def quantstudio(machine_type, fluor_names, cq_cutoff=35):
         max_dRn[fluor] = float(get_max[f"{fluor} dRn"].max())
 
     summary_table = summarize(results_dict, machine_type)
-    print(get_max)
-    print(max_dRn)
     return summary_table, max_dRn, results_filepath, head
 
 

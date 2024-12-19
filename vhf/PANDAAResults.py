@@ -215,22 +215,28 @@ def get_pandaa_result(row):
     # iterate through all other (non-IC) fluorophores for the row
     for i in range(1, len(unique_reporters)):
         # if a positive signal is observed (Cq below cutoff plus dRn is >5% of max on plate), add it to the list
-        if row[unique_reporters[i] + " CT"] < pos_cutoff and row[unique_reporters[i] + " dRn"]/max_dRn[unique_reporters[i]] > dRn_percent_cutoff:
-            cq_vals.append(row[unique_reporters[i] + " CT"])
-        # otherwise, add another high number
+        if machine_type == 'QuantStudio 3' or machine_type == 'QuantStudio 5':
+            if (row[unique_reporters[i] + " CT"] < pos_cutoff and
+                row[unique_reporters[i] + " dRn"]/max_dRn[unique_reporters[i]] > dRn_percent_cutoff
+                ):
+                cq_vals.append(row[unique_reporters[i] + " CT"])
+            # otherwise, add another high number
+            else:
+                cq_vals.append(99)
         else:
-            cq_vals.append(99)
+            if row[unique_reporters[i] + " CT"] < pos_cutoff: #RotorGene and Mic have internal dRn cutoff handling
+                cq_vals.append(row[unique_reporters[i] + " CT"])
+            else:
+                cq_vals.append(99)
 
     # find the minimum of the list of Cq values
     fluor_min = cq_vals.index(min(cq_vals))
     # if the minimum is not the artificial internal control / index-0 value, well was positive for something
     # well tested positive for whatever the lowest observed Cq value was (if more than one fluorophore present)
     if fluor_min != 0:
-        print(f'{cq_vals}. Min index: {fluor_min}. Result: {fluor_names[unique_reporters[fluor_min]]} Positive')
         return f'{fluor_names[unique_reporters[fluor_min]]} Positive'
     # otherwise, check IC amplification - was it successful? if so, this is a negative reaction
     elif row[internal_control_fluor + " CT"] < pos_cutoff:
-        print(f'{cq_vals}. Min index: {fluor_min}. Result: Negative')
         return "Negative"
     # nothing amplified, including IC? result invalid
     else:
@@ -244,11 +250,7 @@ def get_pandaa_result(row):
 ##############################################################################################################################
 
 
-
-
 summary_table['Result'] = summary_table.apply(get_pandaa_result, axis=1)
-print(summary_table)
-print(max_dRn)
 
 csv_columns = ["Well Position",
                  "Sample Name",
@@ -256,14 +258,16 @@ csv_columns = ["Well Position",
 
 # rename summary table columns since data analysis is complete
 for i in range(len(unique_reporters)):
-    summary_table = summary_table.rename(columns={f'{unique_reporters[i]} CT': f'{fluor_names[unique_reporters[i]]} Cq',
-                                                  f'{unique_reporters[i]} dRn': f'{fluor_names[unique_reporters[i]]} dRn' 
+    summary_table = summary_table.rename(columns={f'{unique_reporters[i]} CT': f'{fluor_names[unique_reporters[i]]} Cq'
+                                                  #f'{unique_reporters[i]} dRn': f'{fluor_names[unique_reporters[i]]} dRn' 
                                                   })
     #if i != 0: #don't add internal control column to csv
     csv_columns.insert(i+2, f'{fluor_names[unique_reporters[i]]} Cq') #insert columns starting at col index 2
-    csv_columns.append(f'{fluor_names[unique_reporters[i]]} dRn')
     if machine_type == "QuantStudio 3" or machine_type == "QuantStudio 5":
-        summary_table = summary_table.rename(columns={f'{unique_reporters[i]} Cq Conf': f'{fluor_names[unique_reporters[i]]} Cq Conf'})
+        summary_table = summary_table.rename(columns={f'{unique_reporters[i]} Cq Conf': f'{fluor_names[unique_reporters[i]]} Cq Conf',
+                                                      f'{unique_reporters[i]} dRn': f'{fluor_names[unique_reporters[i]]} dRn'
+                                                      })
+        #csv_columns.append(f'{fluor_names[unique_reporters[i]]} dRn')
 
       
 summary_filepath = os.path.splitext(results_file)[0]+" - Summary.csv"
