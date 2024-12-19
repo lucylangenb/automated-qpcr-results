@@ -246,10 +246,11 @@ def quantstudio(machine_type, fluor_names, cq_cutoff=35):
         # close program
         raise SystemExit()
     
-    # make sure CT and CqConf columns contain number values, not strings
+    # make sure columns contain number values, not strings
     results_table["CT"] = results_table["CT"].apply(pd.to_numeric)
     results_table["Cq Conf"] = results_table["Cq Conf"].apply(pd.to_numeric)
     results_table["Baseline End"] = results_table["Baseline End"].apply(pd.to_numeric)
+    results_table["Delta Rn (last cycle)"] = results_table["Delta Rn (last cycle)"].str.replace(',', '').astype(float)
 
     # make sure file and fluor_names have the same fluorophores listed
     if sorted(list(results_table['Reporter'].unique())) != sorted(fluor_names):
