@@ -1,66 +1,34 @@
-from reportlab.pdfgen import canvas
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+#
+# ReportLab - How-to guide / experimentation
+#
+# Resources:
+# - https://docs.reportlab.com/reportlab/userguide/
+# - https://www.reportlab.com/docs/reportlab-userguide.pdf
+# - https://www.blog.pythonlibrary.org/page/9/?s=reportlab
+# - https://leanpub.com/reportlab/read_sample
+#
+# Currently reading:
+# https://www.blog.pythonlibrary.org/2010/03/08/a-simple-step-by-step-reportlab-tutorial/
+#
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
 
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
-from reportlab.lib.styles import getSampleStyleSheet
-from reportlab.rl_config import defaultPageSize
+
+###
+### 1. A Simple Step-by-Step Reportlab Tutorial
+### https://www.blog.pythonlibrary.org/2010/03/08/a-simple-step-by-step-reportlab-tutorial/
+###
+
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import letter #A4 is default - to change, need this import
+
+# to use inches as units instead of pixels, can import:
 from reportlab.lib.units import inch
 
-PAGE_HEIGHT=defaultPageSize[1]; PAGE_WIDTH=defaultPageSize[0]
-styles = getSampleStyleSheet()
+page_width, page_height = letter
 
-Title = "Hello world"
-pageinfo = "platypus example"
-def myFirstPage(canvas, doc):
-    canvas.saveState()
-    canvas.setFont('Times-Bold',16)
-    canvas.drawCentredString(PAGE_WIDTH/2.0, PAGE_HEIGHT-108, Title)
-    canvas.setFont('Times-Roman',9)
-    canvas.drawString(inch, 0.75 * inch, "First Page / %s" % pageinfo)
-    canvas.restoreState()
-def myLaterPages(canvas, doc):
-    canvas.saveState()
-    canvas.setFont('Times-Roman',9)
-    canvas.drawString(inch, 0.75 * inch, "Page %d %s" % (doc.page, pageinfo))
-    canvas.restoreState()
-
-
-def go():
-    doc = SimpleDocTemplate("phello.pdf")
-    Story = [Spacer(1,2*inch)]
-    style = styles["Normal"]
-    for i in range(100):
-        bogustext = ("This is Paragraph number %s. " % i) *20
-        p = Paragraph(bogustext, style)
-        Story.append(p)
-        Story.append(Spacer(1,0.2*inch))
-    doc.build(Story, onFirstPage=myFirstPage, onLaterPages=myLaterPages)
-
-
-go()
-
-
-
-
-
-'''
-def hello(c):
-    c.drawString(100,100,"Hello World")
-c = canvas.Canvas("hello.pdf",
-                  # args below are set to defaults
-                  pagesize=(595.27,841.89), #A4
-                  bottomup=1,
-                  pageCompression=0,
-                  verbosity=0,
-                  encrypt=None
-                  )
-
-hello(c)
-#c.addOutlineEntry("Add Outline Entry", "Hello World", level=0, closed=None)
-
-c.setAuthor("Author")
-c.setTitle("Title")
-c.setSubject("Subject")
-
-c.showPage()
-c.save()
-'''
+c = canvas.Canvas("hello.pdf", pagesize=letter) #in order to save pdf, need to provide filename (absolute or relative path is ok)
+c.drawString(inch,              #x coord
+             page_height-inch,  #y coord
+             "Welcome to Reportlab!") #"draws" text, using lower left corner as origin
+c.save() #save drawing to pdf
