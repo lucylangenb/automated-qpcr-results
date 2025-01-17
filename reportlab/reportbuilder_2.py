@@ -176,18 +176,42 @@ class Report:
            self.styles['Normal'])
     
 
-    def csv_to_table(self, file):
+    def csv_to_table(self, file, bold='top'):
         ''''''
         data = []
         with open(file, newline='') as csvfile:
             reader = csv.reader(csvfile, delimiter=',')
-            for row in reader:
-                row_data = []
-                for item in row:
-                    if item != '':
-                        row_data.append(self.create_text(item))
-                if len(row_data) > 1:
-                    data.append(row_data)
+            
+            if bold == 'top':
+                for row in reader:
+                    row_data = []
+                    first = True
+                    for item in row:
+                        if item != '':
+                            if first:
+                                row_data.append(self.create_text(item, bold=True))
+                                first = False
+                            else:
+                                row_data.append(self.create_text(item))
+                    if len(row_data) > 1:
+                        data.append(row_data)
+
+
+            elif bold == 'left':
+                first = True
+                for row in reader:
+                    row_data = []
+                    for item in row:
+                        if item != '':
+                            if first:
+                                row_data.append(self.create_text(item, bold=True))
+                            else:
+                                row_data.append(self.create_text(item))
+                    if len(row_data) > 1:
+                        data.append(row_data)
+                    if first:
+                        first = False
+
         return data
 
    
