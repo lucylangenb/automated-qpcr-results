@@ -16,6 +16,39 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image
 from reportlab.platypus import Flowable, Indenter, Table, TableStyle
 
 
+def footer(canvas, doc):
+    ''''''
+    width, height = doc.pagesize
+    styles = getSampleStyleSheet()
+    
+    ptext = '<font size=10><em>This is a custom footer</em></font>'
+    p = Paragraph(ptext, styles['Normal'])
+    p.wrapOn(canvas, width, height)
+    p.drawOn(canvas, doc.leftMargin+5, doc.bottomMargin)
+
+
+def header_and_footer(canvas, doc):
+    ''''''
+    #create header
+    width, height = doc.pagesize
+    styles = getSampleStyleSheet()
+    
+    ptext = '<font size=10><em>Report</em></font>'
+    p = Paragraph(ptext, styles['Normal'])
+    p.wrapOn(canvas, width, height)
+    p.drawOn(canvas, doc.leftMargin+5, height - doc.topMargin)
+
+    ptext = '<font size=10><em>{} - LASV Results</em></font>'.format(datetime.now().strftime('%Y-%m-%d')) #get actual date
+    p = Paragraph(ptext, styles['Normal'])
+    p.hAlign = 'RIGHT'
+    p.wrapOn(canvas, width, height)
+    p.drawOn(canvas, width - doc.rightMargin, height - doc.topMargin)
+
+    #also create footer
+    footer(canvas, doc)
+
+
+
 class Header(Flowable):
     
     def __init__(self, width=2*inch, height=0.2*inch):
@@ -58,7 +91,7 @@ class Report:
         ''''''
         self.doc = SimpleDocTemplate(pdf_file, pagesize=pagesize,
                                      rightMargin=0.75*inch, leftMargin=0.75*inch,
-                                     topMargin=0.75*inch, bottomMargin=0.75*inch)
+                                     topMargin=0.75*inch, bottomMargin=0.5*inch)
         self.elements = []
         self.styles = getSampleStyleSheet()
         self.width, self.height = pagesize
@@ -157,7 +190,9 @@ class Report:
 
     def save(self):
         ''''''
-        self.doc.build(self.elements)
+        self.doc.build(self.elements,
+                       onFirstPage=footer,
+                       onLaterPages=header_and_footer)
 
 
 
