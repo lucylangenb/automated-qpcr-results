@@ -1,5 +1,3 @@
-# eob_flow_consumer.py
-
 import os
 import time
 import getpass
@@ -7,7 +5,7 @@ from datetime import datetime
 import re
 
 import time
-from reportlab.lib.enums import TA_JUSTIFY
+#from reportlab.lib.enums import TA_JUSTIFY
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch, mm
