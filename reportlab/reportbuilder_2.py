@@ -54,11 +54,11 @@ class PageNumCanvas(canvas.Canvas):
         self.drawRightString(7.75*inch-5, 0.5*inch+3, page)
 
 
-def get_plain_text(text):
-    regex = re.compile('<.*?>') #lazy - match as few chars as possible between <>
-    for match in regex.finditer(text):
-        text = text.replace(match.group(), '')
-    return text
+def strip_ascii(text):
+    '''Remove non-ASCII characters from string.'''
+    return "".join(char for char in text
+                    if 31 < ord(char) < 127
+                  )
 
 
 def footer(canvas, doc):
@@ -87,6 +87,7 @@ def header_and_footer(canvas, doc):
     width, height = doc.pagesize
     styles = getSampleStyleSheet()
     font_size = 9
+    regex = re.compile('<.*?>') #lazy - match as few chars as possible between <>
     
     # left aligned part of header
     ptext = '<font size={}><em>Report</em></font>'.format(font_size)
@@ -97,7 +98,7 @@ def header_and_footer(canvas, doc):
     # right aligned part of header
     ptext = '''<font size={0}><em>{1} - LASV Results</em></font>'''.format(font_size, datetime.now().strftime('%Y-%m-%d')) #get actual date
     p = Paragraph(ptext, styles['Normal'])
-    p_width = stringWidth(get_plain_text(ptext), styles['Normal'].fontName, font_size)
+    p_width = stringWidth(re.sub(regex, '', ptext), styles['Normal'].fontName, font_size)
     p.wrapOn(canvas, width, height)
     p.drawOn(canvas, width - doc.rightMargin - p_width - 5, height - doc.topMargin)
 
@@ -158,6 +159,7 @@ class Report:
         self.head = head
         self.results = results
 
+
     def coord(self, x, y, unit=1):
         x, y = x*unit, self.height - y*unit
         return x, y
@@ -187,12 +189,14 @@ class Report:
                     row_data = []
                     first = True
                     for item in row:
+
                         if item != '':
+                            plain = strip_ascii(item)
                             if first:
-                                row_data.append(self.create_text(item, bold=True))
+                                row_data.append(self.create_text(plain, bold=True))
                                 first = False
                             else:
-                                row_data.append(self.create_text(item))
+                                row_data.append(self.create_text(plain))
                     if len(row_data) > 1:
                         data.append(row_data)
 
@@ -228,11 +232,11 @@ class Report:
         self.elements.append(p)
         self.elements.append(Spacer(1,0.2*inch))
 
-        filepath = os.path.dirname(os.path.abspath(__file__))
-        user = getpass.getuser()
+        #filepath = os.path.dirname(os.path.abspath(__file__))
+        #user = getpass.getuser()
         data = self.csv_to_table(self.head)
         
-        colWidths = [0.875*inch, 5.95*inch]
+        colWidths = [inch, 5.825*inch] #original: 0.875*inch, 5.95*inch
         table_style = TableStyle([('INNERGRID', (0,0), (-1,-1), 0.25, colors.black),
                                   ('BOX', (0,0), (-1,-1), 0.25, colors.black),
                                   ('VALIGN',(0,0),(-1,-1),'MIDDLE')])
