@@ -76,7 +76,7 @@ def footer(canvas, doc):
                                    date=datetime.now().strftime('%d-%b-%Y %H:%M:%S'))
     p = Paragraph(ptext, styles['Normal'])
     p.wrapOn(canvas, width, height)
-    p.drawOn(canvas, doc.leftMargin+5, doc.bottomMargin)
+    p.drawOn(canvas, doc.leftMargin+5, 0.5*inch)
 
     # right aligned part - 'Page x of y' - is covered by PageNumCanvas
 
@@ -152,12 +152,13 @@ class Report:
         ''''''
         self.doc = SimpleDocTemplate(pdf_file, pagesize=pagesize,
                                      rightMargin=0.75*inch, leftMargin=0.75*inch,
-                                     topMargin=0.75*inch, bottomMargin=0.5*inch)
+                                     topMargin=0.75*inch, bottomMargin=0.75*inch)
         self.elements = []
         self.styles = getSampleStyleSheet()
         self.width, self.height = pagesize
         self.head = head
         self.results = results
+        self.name = ''
 
 
     def coord(self, x, y, unit=1):
@@ -178,13 +179,13 @@ class Report:
            self.styles['Normal'])
     
 
-    def csv_to_table(self, file, bold='top'):
+    def csv_to_table(self, file, bold='left'):
         ''''''
         data = []
         with open(file, newline='') as csvfile:
             reader = csv.reader(csvfile, delimiter=',')
             
-            if bold == 'top':
+            if bold == 'left':
                 for row in reader:
                     row_data = []
                     first = True
@@ -201,16 +202,17 @@ class Report:
                         data.append(row_data)
 
 
-            elif bold == 'left':
+            elif bold == 'top':
                 first = True
                 for row in reader:
                     row_data = []
                     for item in row:
                         if item != '':
+                            plain = strip_ascii(item)
                             if first:
-                                row_data.append(self.create_text(item, bold=True))
+                                row_data.append(self.create_text(plain, bold=True))
                             else:
-                                row_data.append(self.create_text(item))
+                                row_data.append(self.create_text(plain))
                     if len(row_data) > 1:
                         data.append(row_data)
                     if first:
@@ -234,9 +236,9 @@ class Report:
 
         #filepath = os.path.dirname(os.path.abspath(__file__))
         #user = getpass.getuser()
-        data = self.csv_to_table(self.head)
+        data = self.csv_to_table(self.head, bold='left')
         
-        colWidths = [inch, 5.825*inch] #original: 0.875*inch, 5.95*inch
+        colWidths = [1.125*inch, 5.7*inch] #original: 0.875*inch, 5.95*inch
         table_style = TableStyle([('INNERGRID', (0,0), (-1,-1), 0.25, colors.black),
                                   ('BOX', (0,0), (-1,-1), 0.25, colors.black),
                                   ('VALIGN',(0,0),(-1,-1),'MIDDLE')])
@@ -255,17 +257,7 @@ class Report:
         self.elements.append(p)
         self.elements.append(Spacer(1, 0.2*inch))
 
-        well_pos = self.create_text('Well', bold=True)
-        sample = self.create_text('Sample Name', bold=True)
-        result_txt = self.create_text('Result', bold=True)
-        data = [[well_pos, sample, result_txt]]
-
-        result_one = [self.create_text('A1'),
-                      self.create_text('Sample 1'),
-                      self.create_text('LASV Positive')]
-        for item in range(50):
-            data.append(result_one)
-
+        data = self.csv_to_table(self.results, bold='top')
         colWidths = [0.5*inch, 3.625*inch, 2.75*inch]
         table_style = TableStyle([('INNERGRID', (0,0), (-1,-1), 0.25, colors.black),
                                   ('BOX', (0,0), (-1,-1), 0.25, colors.black),
