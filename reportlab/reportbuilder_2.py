@@ -1,19 +1,14 @@
-import os
-import time
-import getpass
 from datetime import datetime
 import re
 import csv
 
-import time
-#from reportlab.lib.enums import TA_JUSTIFY
 from reportlab.lib.pagesizes import letter
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.units import inch, mm
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib.units import inch
 from reportlab.lib import utils, colors
 from reportlab.pdfgen import canvas
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image
-from reportlab.platypus import Flowable, Indenter, Table, TableStyle
+from reportlab.platypus import Flowable, Table, TableStyle
 from reportlab.pdfbase.pdfmetrics import stringWidth
 
 version = '1.0.0'
@@ -33,12 +28,12 @@ class PageNumCanvas(canvas.Canvas):
         self.pages = []
 
     def showPage(self): #override
-        '''on a page break, add info to list'''
+        '''On a page break, add new page info to list'''
         self.pages.append(dict(self.__dict__))
         self._startPage()
 
     def save(self): #override
-        '''add page num to each page (x of y)'''
+        '''Get total pages, then draw 'Page x of y' text on each page'''
         page_count = len(self.pages)
         for page in self.pages:
             self.__dict__.update(page)
@@ -48,21 +43,21 @@ class PageNumCanvas(canvas.Canvas):
         canvas.Canvas.save(self)
 
     def draw_page_number(self, page_count):
-        '''add page num'''
+        '''Format 'Page x of y' text in bottom right corner of each page'''
         page = 'Page %s of %s' % (self._pageNumber, page_count)
         self.setFont('Helvetica-Oblique', 9)
         self.drawRightString(7.75*inch-5, 0.5*inch+3, page)
 
 
 def strip_ascii(text):
-    '''Remove non-ASCII characters from string.'''
+    '''Remove non-ASCII characters from string'''
     return "".join(char for char in text
                     if 31 < ord(char) < 127
                   )
 
 
 def footer(canvas, doc):
-    ''''''
+    '''Draw left-aligned footer with version and date info'''
     width, height = doc.pagesize
     styles = getSampleStyleSheet()
     font_size = 9
@@ -82,8 +77,8 @@ def footer(canvas, doc):
 
 
 
-def header_and_footer(canvas, doc):
-    ''''''
+def header(canvas, doc):
+    '''Draw header with right-aligned experiment name'''
     width, height = doc.pagesize
     styles = getSampleStyleSheet()
     font_size = 9
@@ -102,7 +97,11 @@ def header_and_footer(canvas, doc):
     p.wrapOn(canvas, width, height)
     p.drawOn(canvas, width - doc.rightMargin - p_width - 5, height - doc.topMargin)
 
-    # also create footer
+
+
+def header_and_footer(canvas, doc):
+    '''Draw header and footer on same page'''
+    header(canvas, doc)
     footer(canvas, doc)
 
 
@@ -112,7 +111,7 @@ def header_and_footer(canvas, doc):
 #######################################################################################
 
 class Header(Flowable):
-    
+    '''First-page header with logo and minimal text'''
     def __init__(self, width=2*inch, height=0.2*inch):
         Flowable.__init__(self)
         self.width = width
@@ -120,11 +119,12 @@ class Header(Flowable):
         self.styles = getSampleStyleSheet()
 
     def coord(self, x, y, unit=1):
+        '''Based on (x,y) in inches or mm, get coordinate in points'''
         x, y = x*unit, self.height - y*unit
         return x, y
     
     def draw(self):
-
+        '''Draw logo and minimal text'''
         img_filepath = r"C:\Users\lucy\OneDrive - Aldatu Biosciences\Desktop\PANDAA qPCR Results\vhf\aldatulogo_icon.gif"
         desired_width = 30
 
@@ -134,7 +134,6 @@ class Header(Flowable):
         img = Image(img_filepath,
                 width=desired_width,
                 height=(desired_width * aspect)) #scale height based on aspect ratio
-        #img.hAlign = 'CENTER'
         img.wrapOn(self.canv, self.width, self.height)
         img.drawOn(self.canv, *self.coord(0,0,inch))
 
@@ -145,9 +144,7 @@ class Header(Flowable):
 
 
 class Report:
-    '''
-    report class
-    '''
+    '''Report class'''
     def __init__(self, pdf_file, head, results, pagesize=letter):
         ''''''
         self.doc = SimpleDocTemplate(pdf_file, pagesize=pagesize,
@@ -162,11 +159,12 @@ class Report:
 
 
     def coord(self, x, y, unit=1):
+        '''Based on (x,y) in inches or mm, get coordinate in points'''
         x, y = x*unit, self.height - y*unit
         return x, y
     
     def create_text(self, text, size=10, bold=False):
-        """"""
+        '''Convert string to Paragraph object'''
         if bold:
             return Paragraph('''<font size={size}><b>
             {text}</b></font>
@@ -180,7 +178,7 @@ class Report:
     
 
     def csv_to_table(self, file, bold='left'):
-        ''''''
+        '''Convert CSV data to list of Paragraph objects, for use in Reportlab Table object'''
         data = []
         with open(file, newline='') as csvfile:
             reader = csv.reader(csvfile, delimiter=',')
@@ -222,22 +220,19 @@ class Report:
 
    
     def create_header(self):
-        ''''''
+        '''Create Header object'''
         header = Header()
         self.elements.append(header)
     
 
     def create_run_info(self):
-        ''''''
+        '''Draw run info table for traceability/quality purposes'''
         ptext = '<font size=14><b>Run Information</b></font>'
         p = Paragraph(ptext, self.styles['Normal'])
         self.elements.append(p)
         self.elements.append(Spacer(1,0.2*inch))
 
-        #filepath = os.path.dirname(os.path.abspath(__file__))
-        #user = getpass.getuser()
         data = self.csv_to_table(self.head, bold='left')
-        
         colWidths = [1.125*inch, 5.7*inch] #original: 0.875*inch, 5.95*inch
         table_style = TableStyle([('INNERGRID', (0,0), (-1,-1), 0.25, colors.black),
                                   ('BOX', (0,0), (-1,-1), 0.25, colors.black),
@@ -251,7 +246,7 @@ class Report:
 
 
     def create_results(self):
-        ''''''
+        '''Draw run results table'''
         ptext = '<font size=14><b>Samples</b></font>'
         p = Paragraph(ptext, self.styles['Normal'])
         self.elements.append(p)
@@ -272,7 +267,7 @@ class Report:
 
 
     def create(self):
-        ''''''
+        '''Create Report PDF with header, run info table, results table'''
         self.create_header()
         self.create_run_info()
         self.create_results()
@@ -280,7 +275,7 @@ class Report:
 
 
     def save(self):
-        ''''''
+        '''Build Report doc'''
         self.doc.build(self.elements,
                        onFirstPage=footer,
                        onLaterPages=header_and_footer,
@@ -295,7 +290,7 @@ class Report:
 
 if __name__ == '__main__':
     pdf_file = 'results_example.pdf'
-    header = 'sample_header.csv'
-    data = 'sample_results.csv'
-    results = Report(pdf_file, header, data)
+    header_file = 'sample_header.csv'
+    data_file = 'sample_results.csv'
+    results = Report(pdf_file, header_file, data_file)
     results.create()
