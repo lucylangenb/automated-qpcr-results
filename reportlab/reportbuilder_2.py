@@ -1,6 +1,5 @@
 from datetime import datetime
-import re
-import csv
+import re, csv, os
 
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.styles import getSampleStyleSheet
@@ -91,7 +90,7 @@ def header(canvas, doc):
     p.drawOn(canvas, doc.leftMargin+5, height - doc.topMargin)
 
     # right aligned part of header
-    ptext = '''<font size={0}><em>{1} - LASV Results</em></font>'''.format(font_size, datetime.now().strftime('%Y-%m-%d')) #get actual date
+    ptext = '''<font size={0}><em>{1}</em></font>'''.format(font_size, doc.name)
     p = Paragraph(ptext, styles['Normal'])
     p_width = stringWidth(re.sub(regex, '', ptext), styles['Normal'].fontName, font_size)
     p.wrapOn(canvas, width, height)
@@ -155,7 +154,7 @@ class Report:
         self.width, self.height = pagesize
         self.head = head
         self.results = results
-        self.name = ''
+        self.doc.name = ''
 
 
     def coord(self, x, y, unit=1):
@@ -163,6 +162,7 @@ class Report:
         x, y = x*unit, self.height - y*unit
         return x, y
     
+
     def create_text(self, text, size=10, bold=False):
         '''Convert string to Paragraph object'''
         if bold:
@@ -177,18 +177,37 @@ class Report:
            self.styles['Normal'])
     
 
+    def get_exp_name(self, file, use_path=False, kw=None):
+        '''Find file name in run info metadata'''
+        if use_path: #use filepath to get file's name, use as experiment name
+            return os.path.splitext(os.path.basename(file))[0]
+        
+        with open(file, newline='') as csvfile:
+            reader = csv.reader(csvfile, delimiter=',')
+            
+            if kw: #find keyword in first column of table, return value of second column
+                for row in reader:
+                    if kw in row[0]:
+                        return row[1]
+            else: #default - find "Experiment Name" in first column (or similar wording), return value of second column
+                for row in reader:
+                    if 'Name' in row[0] and 'File' not in row[0]:
+                        return row[1] 
+        
+        return 'None'
+    
+
     def csv_to_table(self, file, bold='left'):
         '''Convert CSV data to list of Paragraph objects, for use in Reportlab Table object'''
         data = []
         with open(file, newline='') as csvfile:
             reader = csv.reader(csvfile, delimiter=',')
             
-            if bold == 'left':
+            if bold == 'left': #make left-most column bold
                 for row in reader:
                     row_data = []
                     first = True
                     for item in row:
-
                         if item != '':
                             plain = strip_ascii(item)
                             if first:
@@ -196,11 +215,11 @@ class Report:
                                 first = False
                             else:
                                 row_data.append(self.create_text(plain))
-                    if len(row_data) > 1:
+                    if len(row_data) > 1: #if there's data in this row, add it to list
                         data.append(row_data)
 
 
-            elif bold == 'top':
+            elif bold == 'top': #make top row bold
                 first = True
                 for row in reader:
                     row_data = []
@@ -211,14 +230,13 @@ class Report:
                                 row_data.append(self.create_text(plain, bold=True))
                             else:
                                 row_data.append(self.create_text(plain))
-                    if len(row_data) > 1:
+                    if len(row_data) > 1: #if there's data in this row, add it to list
                         data.append(row_data)
                     if first:
                         first = False
-
         return data
+    
 
-   
     def create_header(self):
         '''Create Header object'''
         header = Header()
@@ -233,6 +251,8 @@ class Report:
         self.elements.append(Spacer(1,0.2*inch))
 
         data = self.csv_to_table(self.head, bold='left')
+        self.doc.name = self.get_exp_name(self.head)
+
         colWidths = [1.125*inch, 5.7*inch] #original: 0.875*inch, 5.95*inch
         table_style = TableStyle([('INNERGRID', (0,0), (-1,-1), 0.25, colors.black),
                                   ('BOX', (0,0), (-1,-1), 0.25, colors.black),
@@ -290,7 +310,7 @@ class Report:
 
 if __name__ == '__main__':
     pdf_file = 'results_example.pdf'
-    header_file = 'sample_header.csv'
+    header_file = r'C:\Users\lucy\OneDrive - Aldatu Biosciences\Desktop\PANDAA qPCR Results\reportlab\sample_header.csv'
     data_file = 'sample_results.csv'
     results = Report(pdf_file, header_file, data_file)
     results.create()
