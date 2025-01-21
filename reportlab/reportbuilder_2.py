@@ -177,66 +177,75 @@ class Report:
            self.styles['Normal'])
     
 
-    def get_exp_name(self, file, use_path=False, kw=None):
-        '''Find file name in run info metadata'''
-        if use_path: #use filepath to get file's name, use as experiment name
-            return os.path.splitext(os.path.basename(file))[0]
+    def get_exp_name(self, input_data, use_path=False, kw=None):
+        """Find file name in run info metadata or keyword in the data."""
         
-        with open(file, newline='') as csvfile:
-            reader = csv.reader(csvfile, delimiter=',')
-            
-            if kw: #find keyword in first column of table, return value of second column
-                for row in reader:
-                    if kw in row[0]:
+        def process_reader(reader, keyword):
+            """Process the reader (file or list) to find the desired keyword or experiment name."""
+            for row in reader:
+                if keyword:  # Find keyword in the first column
+                    if keyword in row[0]:
                         return row[1]
-            else: #default - find "Experiment Name" in first column (or similar wording), return value of second column
-                for row in reader:
+                else:  # Default: find "Experiment Name" or similar
                     if 'Name' in row[0] and 'File' not in row[0]:
-                        return row[1] 
-        
-        return 'None'
+                        return row[1]
+            return 'None'  # Default return value if nothing is found
+
+        if use_path:  # Use filepath to get the file's name
+            return os.path.splitext(os.path.basename(input_data))[0]
+
+        # Handle input_data (file or list)
+        if isinstance(input_data, list):  # If input is a list
+            return process_reader(input_data, kw)
+        else:  # If input is a CSV file
+            with open(input_data, newline='') as csvfile:
+                reader = csv.reader(csvfile, delimiter=',')
+                return process_reader(reader, kw)
     
-
-    def csv_to_table(self, file, bold='left'):
-        '''Convert CSV data to list of Paragraph objects, for use in Reportlab Table object'''
-        data = []
-        with open(file, newline='') as csvfile:
-            reader = csv.reader(csvfile, delimiter=',')
-            
-            if bold == 'left': #make left-most column bold
-                for row in reader:
-                    row_data = []
-                    first = True
-                    for item in row:
-                        if item != '':
-                            plain = strip_ascii(item)
-                            if first:
-                                row_data.append(self.create_text(plain, bold=True))
-                                first = False
-                            else:
-                                row_data.append(self.create_text(plain))
-                    if len(row_data) > 1: #if there's data in this row, add it to list
-                        data.append(row_data)
-
-
-            elif bold == 'top': #make top row bold
-                first = True
-                for row in reader:
-                    row_data = []
-                    for item in row:
-                        if item != '':
-                            plain = strip_ascii(item)
-                            if first:
-                                row_data.append(self.create_text(plain, bold=True))
-                            else:
-                                row_data.append(self.create_text(plain))
-                    if len(row_data) > 1: #if there's data in this row, add it to list
-                        data.append(row_data)
-                    if first:
-                        first = False
-        return data
     
+    def csv_to_table(self, input_data, bold='left'):
+        """Convert CSV or list data to a list of Paragraph objects, for use in a ReportLab Table object."""
 
+        def process_row(row, bold_condition):
+            """Process a single row, making certain elements bold based on the condition."""
+            row_data = []
+            first = True
+            for item in row:
+                if item:
+                    plain = strip_ascii(item)
+                    if bold_condition(first):
+                        row_data.append(self.create_text(plain, bold=True))
+                    else:
+                        row_data.append(self.create_text(plain))
+                    first = False
+            return row_data
+
+        def process_data(reader, bold_condition):
+            """Process the rows of the reader or list data."""
+            data = []
+            for row in reader:
+                row_data = process_row(row, bold_condition)
+                if len(row_data) > 1:  # Only add rows with data
+                    data.append(row_data)
+            return data
+
+        # Determine bolding condition based on the bold parameter
+        if bold == 'left':
+            bold_condition = lambda first: first
+        elif bold == 'top':
+            bold_condition = lambda first: False
+        else:
+            raise ValueError("Invalid value for 'bold'. Use 'left' or 'top'.")
+
+        # Handle input_data (file or list)
+        if isinstance(input_data, list):
+            return process_data(input_data, bold_condition)
+        else:
+            with open(input_data, newline='') as csvfile:
+                reader = csv.reader(csvfile, delimiter=',')
+                return process_data(reader, bold_condition)
+
+    
     def create_header(self):
         '''Create Header object'''
         header = Header()
@@ -310,7 +319,23 @@ class Report:
 
 if __name__ == '__main__':
     pdf_file = 'results_example.pdf'
-    header_file = r'C:\Users\lucy\OneDrive - Aldatu Biosciences\Desktop\PANDAA qPCR Results\reportlab\sample_header.csv'
+    #header_file = r'C:\Users\lucy\OneDrive - Aldatu Biosciences\Desktop\PANDAA qPCR Results\reportlab\sample_header.csv'
+    header_file = [['Experiment Barcode',''],	
+['Experiment Comment',''],	
+['Experiment File Name',	r'C:\Users\lucy\Aldatu Biosciences\Aldatu Lab - Documents\Cooperative Lab Projects\PANDAA Software\2024-01-17 - LASV Training Kit QC.eds'],
+['Experiment Name',	'2024-01-17 - LASV Training Kit QC'],
+['Experiment Run End Time',	'2024-01-17 11:18:31 AM EST'],
+['Experiment Type',	'Standard Curve'],
+['Instrument Name',	'Aldatu-QS3'],
+['Instrument Serial Number',	'272310002'],
+['Instrument Type',	'QuantStudio™ 3 System'],
+['Passive Reference',	'ROX'],
+['Post-read Stage/Step'],	
+['Pre-read Stage/Step'	],
+['Quantification Cycle Method',	'Ct'],
+['Signal Smoothing On',	'TRUE'],
+['Stage/ Cycle where Ct Analysis is performed',	'Stage3, Step2'],
+['User Name',	'IJM']]
     data_file = 'sample_results.csv'
     results = Report(pdf_file, header_file, data_file)
     results.create()
