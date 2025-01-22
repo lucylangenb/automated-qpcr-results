@@ -206,44 +206,53 @@ class Report:
     def csv_to_table(self, input_data, bold='left'):
         """Convert CSV or list data to a list of Paragraph objects, for use in a ReportLab Table object."""
 
-        def process_row(row, bold_condition):
-            """Process a single row, making certain elements bold based on the condition."""
-            row_data = []
-            first = True
-            for item in row:
-                if item:
-                    plain = strip_ascii(item)
-                    if bold_condition(first):
-                        row_data.append(self.create_text(plain, bold=True))
-                    else:
-                        row_data.append(self.create_text(plain))
-                    first = False
-            return row_data
-
-        def process_data(reader, bold_condition):
+        def process_data(reader, bold):
             """Process the rows of the reader or list data."""
             data = []
-            for row in reader:
-                row_data = process_row(row, bold_condition)
-                if len(row_data) > 1:  # Only add rows with data
-                    data.append(row_data)
-            return data
+            if bold == 'left': #make left-most column bold
+                for row in reader:
+                    row_data = []
+                    first = True
+                    for item in row:
+                        if item != '':
+                            plain = strip_ascii(item)
+                            if first:
+                                row_data.append(self.create_text(plain, bold=True))
+                                first = False
+                            else:
+                                row_data.append(self.create_text(plain))
+                    if len(row_data) > 1: #if there's data in this row, add it to list
+                        data.append(row_data)
 
-        # Determine bolding condition based on the bold parameter
-        if bold == 'left':
-            bold_condition = lambda first: first
-        elif bold == 'top':
-            bold_condition = lambda first: False
-        else:
-            raise ValueError("Invalid value for 'bold'. Use 'left' or 'top'.")
+
+            elif bold == 'top': #make top row bold
+                first = True
+                for row in reader:
+                    row_data = []
+                    for item in row:
+                        if item != '':
+                            plain = strip_ascii(item)
+                            if first:
+                                row_data.append(self.create_text(plain, bold=True))
+                            else:
+                                row_data.append(self.create_text(plain))
+                    if len(row_data) > 1: #if there's data in this row, add it to list
+                        data.append(row_data)
+                    if first:
+                        first = False
+            
+            else:
+                raise ValueError("Invalid value for 'bold'. Use 'left' or 'top'.")
+            
+            return data
 
         # Handle input_data (file or list)
         if isinstance(input_data, list):
-            return process_data(input_data, bold_condition)
+            return process_data(input_data, bold)
         else:
             with open(input_data, newline='') as csvfile:
                 reader = csv.reader(csvfile, delimiter=',')
-                return process_data(reader, bold_condition)
+                return process_data(reader, bold)
 
     
     def create_header(self):
