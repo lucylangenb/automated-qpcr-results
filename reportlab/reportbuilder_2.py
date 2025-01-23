@@ -20,7 +20,7 @@ version = '1.0.0'
 #################################################################################
 
 class PageNumCanvas(canvas.Canvas):
-
+    '''Instances can be passed to the canvasmaker argument of doc.build(), allowing page numbers to be added in the bottom right corner.'''
     def __init__(self, *args, **kwargs):
         '''Constructor'''
         canvas.Canvas.__init__(self, *args, **kwargs)
