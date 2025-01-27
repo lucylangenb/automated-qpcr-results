@@ -35,7 +35,7 @@ pd.set_option('future.no_silent_downcasting', True)
 class qpcrAnalyzer:
     ''''''
     def __init__(self, cq_cutoff=35, pos_cutoff=30, dRn_percent_cutoff=0.05,
-                 machine_type=None, assay=None):
+                 machine_type: str=None, assay: str=None):
         ''''''
         self.cq_cutoff = cq_cutoff
         self.pos_cutoff = pos_cutoff
@@ -58,32 +58,42 @@ class qpcrAnalyzer:
     ### Helper functions for data analysis - file to dataframe
     ##############################################################################################################################
 
-    def isblank(self, row):
+    def isblank(self, row:str):
         '''If string is blank, return True; otherwise, return False'''
         return all(not field.strip() for field in row)
     
 
-    def csv_to_df(self, csv_file, csv_delim, results_flag):
-        '''Given a CSV, skip metadata and extract relevant results data'''
+    def csv_to_df(self, csv_file:list, csv_delim:str, results_flag:str):
+        '''
+        Convert a CSV file into a DataFrame by skipping metadata and extracting relevant results.
+
+        Args:
+            csv_file (str): Path to the CSV file.
+            csv_delim (str): Delimiter used in the CSV file.
+            results_flag (str): Flag to identify the start of the results section.
+
+        Returns:
+            pd.DataFrame: Extracted results as a pandas DataFrame.
+        '''
         data_bool = False
         data_cleaned = []
         results_reader = csv.reader(csv_file, delimiter = csv_delim)
 
         for line in results_reader:
-            if self.isblank(line): #check for additional (blank) lines at end of file
+            if self.isblank(line): #skip blank lines at the end of the file
                 data_bool = False
             if data_bool:
                 data_cleaned.append(line)
-            if results_flag in line: #skip non-results info at beginning of file
+            if results_flag in line: #begin extracting when the results flag is encountered
                 data_bool = True
 
         header = data_cleaned.pop(0)
-        results_table = pd.DataFrame(data_cleaned, columns = header)
+        results_table = pd.DataFrame(data_cleaned, columns = header) #first line of cleaned data is the header
 
         return results_table
     
 
-    def summarize(self, df_dict):
+    def summarize(self, df_dict:dict):
         '''Combine multiple pandas dataframes into a single summary dataframe'''
         first_loop = True
 
@@ -124,8 +134,8 @@ class qpcrAnalyzer:
                 file.write('\n\n'+existing)
 
 
-    def extract_header(self, reader, flag = None, stop = None):
-        '''Extract header info from CSV reader object'''
+    def extract_header(self, reader:csv.reader, flag: str=None, stop: str=None):
+        '''Extract header info from CSV reader object.'''
         headbool = False if flag else True # if no flag is defined, start reading header from top of file
         head = []
 
@@ -147,12 +157,53 @@ class qpcrAnalyzer:
         return head
     
 
+    def select_file(self, filetypes: list, num_files = 1, extension: bool = True):
+        '''Prompt user to select one or more files.
+        
+        Args:
+            filetypes (tuple list): allowable file extensions
+            num_files (int): number of files expected
+            extension (bool): if True, returns file extension as string
+
+        Returns:
+            selected filepath(s): as string or, if multiple, as a list of strings
+            (optional) file extension: as string
+
+        '''
+        if num_files > 1:
+            
+            title = 'Choose results files'
+            filepaths = filedialog.askopenfilenames(title=title, filetypes=filetypes)
+            ext = os.path.splitext(filepaths[0])[1]
+
+            if len(filepaths) != num_files:
+                tk.messagebox.showerror(message=f'''Incorrect number of files. Expected {num_files} files,
+                                            but {len(filepaths)} were selected. Make sure files are not open in other programs.''')
+                # close program
+                raise SystemExit()
+            
+        else: #num_files <= 1
+            title = 'Choose results file'
+            filepaths = filedialog.askopenfilename(title=title, filetypes=filetypes)
+            ext = os.path.splitext(filepaths)[1]
+        
+        if not filepaths:
+            tk.messagebox.showerror(message="No file selected. Make sure file is not open in another program.")
+            raise SystemExit()
+        
+        if extension:
+             return filepaths, ext
+        else:
+            return filepaths
+
+    
+
     ##############################################################################################################################
     ### Initialization - get fluors based on selected assay
     ##############################################################################################################################
 
     def init_reporters(self):
-        '''Get reporters and targets, given assay name'''
+        '''Get reporters and targets, given assay name.'''
         if self.assay == "PANDAA Ebola + Marburg":
             self.reporter_dict = {  "CY5": "Internal Control",  
                                     "FAM": "EBOV",              
@@ -182,18 +233,11 @@ class qpcrAnalyzer:
     ### QuantStudio - file to dataframe
     ##############################################################################################################################
     def parse_qs(self):
-        ''''''
-        self.filepath = filedialog.askopenfilename(title = 'Choose results file',
-                                                   filetypes = [("All Excel Files","*.xlsx"),("All Excel Files","*.xls"),("Text Files", "*.txt")])
+        '''Parse QuantStudio 3/5 file into a standardized pandas dataframe.'''
+        self.filepath, self.ext = self.select_file(filetypes = [("All Excel Files","*.xlsx"),
+                                                                ("All Excel Files","*.xls"),
+                                                                ("Text Files", "*.txt")])
         
-        # check whether a file was selected - try getting file extension
-        try:
-            self.ext = os.path.splitext(self.filepath)[1]
-        # if user didn't select a results file, or if the file is otherwise unreadable, close the program
-        except:
-            tk.messagebox.showerror(message='File not selected. Make sure file is not open in another program.')
-            # close program
-            raise SystemExit()
         
         if self.ext == '.txt': #file extension check - special handling for text files
             with open(self.filepath, newline = '') as csvfile:
@@ -297,18 +341,15 @@ class qpcrAnalyzer:
     ##############################################################################################################################
 
     def parse_rgq(self):
-        ''''''
-        results_filepaths = filedialog.askopenfilenames(title = 'Choose results files', filetypes= [("Text Files", "*.csv")])
+        '''Parse Rotor-Gene Q results files into a standardized pandas dataframe.'''
+        results_filepaths = self.select_file(filetypes = [("Text Files", "*.csv")],
+                                         num_files=len(self.reporter_dict),
+                                         extension=False)
+    
         self.filepath = os.path.commonprefix(results_filepaths)
         first_loop = True
         used_filepaths = []
 
-        # did the user choose enough files? (Rotor-Gene makes one file for each fluorophore)
-        if len(results_filepaths) != len(self.reporter_dict):
-            tk.messagebox.showerror(message=f'''Incorrect number of files. Expected {len(self.reporter_dict)} files,
-                                            but {len(results_filepaths)} were selected. Make sure files are not open in other programs.''')
-            # close program
-            raise SystemExit()
 
         for filepath in results_filepaths:
 
@@ -355,20 +396,11 @@ class qpcrAnalyzer:
     ##############################################################################################################################
 
     def parse_mic(self):
-        ''''''
-        self.filepath = filedialog.askopenfilename(title = 'Choose results file',
-                                                      filetypes = [("All Excel Files","*.xlsx"),("All Excel Files","*.xls"),("Text Files", "*.csv")])
+        '''Parse Mic results file into a standardized pandas dataframe.'''
+        self.filepath, self.ext = self.select_file(filetypes = [("All Excel Files","*.xlsx"),
+                                                                ("All Excel Files","*.xls"),
+                                                                ("Text Files", "*.csv")])
         tabs_to_use = {}
-
-        # check whether a file was selected
-        try:
-            self.ext = os.path.splitext(self.filepath)[1]
-        # if user didn't select a results file, or if the file is otherwise unreadable, close the program
-        except:
-            tk.messagebox.showerror(message='File not selected. Make sure file is not open in another program.')
-            # close program
-            raise SystemExit()
-        
 
         if self.ext == '.csv': #file extension check - special handling for text files
             
