@@ -19,7 +19,7 @@ from PIL import Image, ImageTk # Image handling
 import os # Filepath handling
 import sys # Executable packaging
 import vhf_library as vhf # Custom dependency for parsing and analysis
-import pandas as pd
+#import pandas as pd
 
 class PANDAAApp:
     def __init__(self):
@@ -36,7 +36,7 @@ class PANDAAApp:
         ico = self.get_image('aldatulogo_icon.gif')
         self.root.wm_iconphoto(True, ico)
 
-        logo = self.get_image('aldatulogo.gif', resize=(100, 100))
+        logo = self.get_image('aldatulogo.gif', resize=True, aspect=1/6)
         logo_label = tk.Label(self.root, image=logo)
         logo_label.image = logo
         logo_label.pack(side='top', fill=tk.X, pady=15)
@@ -58,11 +58,15 @@ class PANDAAApp:
         y = (self.root.winfo_screenheight() // 2) - (height // 2)
         self.root.geometry(f'{width}x{height}+{x}+{y}')
 
-    def get_image(self, filename, resize=None):
+    def get_image(self, filename, resize=None, aspect=None):
         path = os.path.join(sys._MEIPASS, filename) if hasattr(sys, '_MEIPASS') else filename
         img = Image.open(path)
         if resize:
-            img = img.resize(resize)
+            if aspect:
+                img = img.resize((round(img.width*aspect),
+                                  round(img.height*aspect)))
+            else:
+                img = img.resize(resize)
         return ImageTk.PhotoImage(img)
 
     def setup_questions_frame(self):
@@ -73,7 +77,8 @@ class PANDAAApp:
         assay_type_frame.pack(side='left', padx=20)
 
         tk.Label(assay_type_frame, text='Choose assay results to analyze:', font=('Arial', 10)).pack(side='top', fill=tk.X, pady=2)
-        self.assay_var = tk.StringVar(value=None)
+        self.assay_var = tk.StringVar()
+        self.assay_var.set(None) #initialize - forces radio buttons to be empty upon loading screen (needs to be separate line for some reason?)
 
         for option in ['PANDAA LASV', 'PANDAA CCHFV', 'PANDAA Ebola + Marburg']:
             tk.Radiobutton(assay_type_frame, text=option, variable=self.assay_var, value=option).pack(anchor=tk.W)
@@ -89,6 +94,8 @@ class PANDAAApp:
     def ok_click(self):
         self.assay = self.assay_var.get()
         self.machine_type = self.machine_var.get()
+        print(self.assay_var.get())
+        print(self.machine_var.get())
         self.close_program()
 
     def close_program(self):
@@ -102,6 +109,7 @@ class PANDAAApp:
     def validate_assay(self):
         valid_assays = ['PANDAA LASV', 'PANDAA CCHFV', 'PANDAA Ebola + Marburg']
         if self.assay not in valid_assays:
+            print('Error')
             raise ValueError(f"Invalid assay selection: {self.assay}. Please select a valid assay.")
 
     def get_pandaa_result(self, row, fluor_names, internal_control_fluor, unique_reporters, max_dRn):
