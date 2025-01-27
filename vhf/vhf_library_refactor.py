@@ -110,17 +110,17 @@ class qpcrAnalyzer:
         return summary_table
     
 
-    def prepend(self, filepath, header):
+    def prepend(self):
         '''Add a line or header to the beginning of a file'''
-        with open(filepath, 'r+', newline='') as file:
+        with open(self.filepath, 'r+', newline='') as file:
             existing = file.read() #save file contents to 'existing'
             file.seek(0) #move pointer back to start of file
-            if isinstance(header, str): #if header is single line
-                file.write(header+'\n\n'+existing)
+            if isinstance(self.head, str): #if header is single line
+                file.write(self.head+'\n\n'+existing)
             else:
                 # header is a list - need to make writer csv object, then write list to file item by item
                 writer = csv.writer(file)
-                writer.writerows(header)
+                writer.writerows(self.head)
                 file.write('\n\n'+existing)
 
 
@@ -166,7 +166,7 @@ class qpcrAnalyzer:
                                  }
             self.ic = "CY5"
 
-        elif self.assay == "PANDAA CCHFV":
+        elif self.assay == "PANDAA LASV":
             self.reporter_dict = {  "CY5": "Internal Control",  
                                     "FAM": "LASV"              
                                  }
@@ -292,177 +292,171 @@ class qpcrAnalyzer:
         self.results = self.summarize(results_dict)
 
 
+    ##############################################################################################################################
+    ### Rotor-Gene - file to dataframe
+    ##############################################################################################################################
+
     def parse_rgq(self):
         ''''''
-        pass
+        results_filepaths = filedialog.askopenfilenames(title = 'Choose results files', filetypes= [("Text Files", "*.csv")])
+        self.filepath = os.path.commonprefix(results_filepaths)
+        first_loop = True
+        used_filepaths = []
+
+        # did the user choose enough files? (Rotor-Gene makes one file for each fluorophore)
+        if len(results_filepaths) != len(self.reporter_dict):
+            tk.messagebox.showerror(message=f'''Incorrect number of files. Expected {len(self.reporter_dict)} files,
+                                            but {len(results_filepaths)} were selected. Make sure files are not open in other programs.''')
+            # close program
+            raise SystemExit()
+
+        for filepath in results_filepaths:
+
+            results_table = pd.read_csv(filepath, skiprows = 27)
+
+            # see if files chosen are correct - if the file is a valid results file, it will have a column called "Ct"
+            try:
+                results_table["Ct"] = results_table["Ct"].fillna(self.cq_cutoff)
+            except:
+                tk.messagebox.showerror(message='Incorrect files selected. Please try again.')
+                # close program
+                raise SystemExit()
+
+            # cycle through all fluors needed for selected assay, match them to names of files selected
+            for fluor in self.reporter_dict:
+                if f"{fluor}.csv" in filepath or f"{self.reporter_dict[fluor]}.csv" in filepath:
+                    used_filepaths.append(filepath)
+                    results_table = results_table.rename(columns={"No.": "Well Position",
+                                                                "Name": "Sample Name",
+                                                                "Ct": f"{fluor} CT",
+                                                                "Ct Comment": "Comments",
+                                                                "Given Conc (copies/reaction)": "Copies"})
+                    # first time loop is run:
+                    if first_loop:
+                        # initialize summary table
+                        self.results = results_table.loc[:, ["Well Position", "Sample Name", "Copies", "Comments", f"{fluor} CT"]]
+                        # and get header info
+                        with open(filepath, 'r') as csv_file:        
+                            sheet_reader = csv.reader(csv_file, delimiter=',')
+                            self.head = self.extract_header(sheet_reader, stop='Quantitative')
+                        first_loop = False
+                    else:
+                        self.results = pd.merge(self.results, results_table.loc[:, ["Well Position", f"{fluor} CT"]], on="Well Position")
+
+        # number of files was determined to be correct, but did every file get used? if not, results are incomplete
+        if sorted(results_filepaths) != sorted(used_filepaths):
+            tk.messagebox.showerror(message='Incorrect files selected, or file names have been edited. Please try again.')
+            # close program
+            raise SystemExit()
+
+
+    ##############################################################################################################################
+    ### Mic - file to dataframe
+    ##############################################################################################################################
 
     def parse_mic(self):
         ''''''
-        pass
+        self.filepath = filedialog.askopenfilename(title = 'Choose results file',
+                                                      filetypes = [("All Excel Files","*.xlsx"),("All Excel Files","*.xls"),("Text Files", "*.csv")])
+        tabs_to_use = {}
+
+        # check whether a file was selected
+        try:
+            self.ext = os.path.splitext(self.filepath)[1]
+        # if user didn't select a results file, or if the file is otherwise unreadable, close the program
+        except:
+            tk.messagebox.showerror(message='File not selected. Make sure file is not open in another program.')
+            # close program
+            raise SystemExit()
+        
+
+        if self.ext == '.csv': #file extension check - special handling for text files
+            
+            # text file versions of results contain inconsistent formatting throughout file, so reading these straight to a pandas df doesn't work
+            # need to work line-by-line instead to get rid of header/footer data
+            with open(self.filepath, newline = '') as csvfile:
+                
+                # make list of lines
+                csv_lines = csvfile.readlines()
+
+                # get header info while we're here
+                csvfile.seek(0)
+                sheet_reader = csv.reader(csvfile, delimiter=',')
+                self.head = self.extract_header(sheet_reader, stop='Log')
+
+            # create 'chunks' list: break csv into groups, separated by blank lines
+            chunks = [list(group) for is_blank, group in itertools.groupby(csv_lines, lambda line: line.strip() == "") if not is_blank]
+            results_csvs = {}
+
+            for fluor in self.reporter_dict:
+                for chunk in chunks:
+                    title = chunk[0] #first line of chunk
+                    if 'Start Worksheet - Analysis - Cycling' in title and 'Result' in title and (fluor in title or self.reporter_dict[fluor] in title):
+                        results_csvs[fluor] = chunk
+                        tabs_to_use[fluor] = title
+                        break
+
+        else: #file is not a text file - must be Excel
+            sheetnames = pd.ExcelFile(self.filepath).sheet_names #get tabs in file
+            for fluor in self.reporter_dict:
+                for tab in sheetnames: #cycle through fluorophores and tabs, assign tabs to fluorophores
+                    if self.reporter_dict[fluor] in tab and "Result" in tab and "Absolute" not in tab:
+                        tabs_to_use[fluor] = tab
+                        break
+            # get header info
+            with open(self.filepath, 'rb') as excel_file:
+                sheet_csv = pd.read_excel(excel_file, sheet_name = 'General Information', usecols='A:B').to_csv(index=False)
+                sheet_reader = csv.reader(sheet_csv.splitlines(), delimiter=',')
+                self.head = self.extract_header(sheet_reader, stop='Log')
+
+        if sorted(tabs_to_use) != sorted(self.reporter_dict): #check to make sure fluorophores with assigned tabs match the list of fluors known to be in assay
+            tk.messagebox.showerror(message='Fluorophores in file do not match expected fluorophores. Check fluorophore and assay assignment.')
+            # close program
+            raise SystemExit()
+        
+        results_dict = {}
+        for fluor in self.reporter_dict:
+            
+            if self.ext == '.csv':
+                results_dict[fluor] = self.csv_to_df(results_csvs[fluor], ',', 'Results')
+            
+            else:
+                results_dict[fluor] = pd.read_excel(self.filepath, sheet_name = tabs_to_use[fluor], skiprows = 32)
+                # Mic results might not start at expected skiprow - remove any non-numerical data before results table
+                row_indices_to_drop = []
+                col_names = None
+                for row_index in list(results_dict[fluor].index.values):
+                    try:
+                        int(results_dict[fluor].iloc[row_index, 0]) #can we convert the value in the first column ("Well") into an integer? if not, must be text
+                    except ValueError:
+                        col_names = list(results_dict[fluor].iloc[row_index, :]) #this must then be the header row - copy info to variable
+                        row_indices_to_drop.append(row_index)
+                if col_names is not None:
+                    for i in row_indices_to_drop:
+                        results_dict[fluor] = results_dict[fluor].drop(i)    #drop any saved rows
+                        results_dict[fluor].columns = col_names              #replace header
+                    results_dict[fluor].reset_index(inplace=True, drop=True) #fix any index numbering problems that may have occurred as result of row dropping
+
+
+            results_dict[fluor]["Cq"] = results_dict[fluor]["Cq"].fillna(self.cq_cutoff).apply(pd.to_numeric)
+            results_dict[fluor] = results_dict[fluor].rename(columns={"Well": "Well Position", "Cq": f"{fluor} CT"})
+
+        self.results = self.summarize(results_dict)
+
 
 
     def analyze(self):
         ''''''
         self.init_reporters()
-        self.parse_qs()
+        self.parse_mic()
 
 
 
-##############################################################################################################################
-### Rotor-Gene - file to dataframe
-##############################################################################################################################
-
-def rotorgene(fluor_names, cq_cutoff=35):
-    
-    results_filepaths = filedialog.askopenfilenames(title = 'Choose results files', filetypes= [("Text Files", "*.csv")])
-    first_loop = True
-    used_filepaths = []
-
-    # did the user choose enough files? (Rotor-Gene makes one file for each fluorophore)
-    if len(results_filepaths) != len(fluor_names):
-        tk.messagebox.showerror(message=f'Incorrect number of files. Expected {len(fluor_names)} files, but {len(results_filepaths)} were selected. Make sure files are not open in other programs.')
-        # close program
-        raise SystemExit()
-
-    for filepath in results_filepaths:
-
-        results_table = pd.read_csv(filepath, skiprows = 27)
-
-        # see if files chosen are correct - if the file is a valid results file, it will have a column called "Ct"
-        try:
-            results_table["Ct"] = results_table["Ct"].fillna(cq_cutoff)
-        except:
-            tk.messagebox.showerror(message='Incorrect files selected. Please try again.')
-            # close program
-            raise SystemExit()
-
-        # cycle through all fluors needed for selected assay, match them to names of files selected
-        for fluor in fluor_names:
-            if f"{fluor}.csv" in filepath or f"{fluor_names[fluor]}.csv" in filepath:
-                used_filepaths.append(filepath)
-                results_table = results_table.rename(columns={"No.": "Well Position",
-                                                            "Name": "Sample Name",
-                                                            "Ct": f"{fluor} CT",
-                                                            "Ct Comment": "Comments",
-                                                            "Given Conc (copies/reaction)": "Copies"})
-                # first time loop is run:
-                if first_loop:
-                    # initialize summary table
-                    summary_table = results_table.loc[:, ["Well Position", "Sample Name", "Copies", "Comments", f"{fluor} CT"]]
-                    # and get header info
-                    with open(filepath, 'r') as csv_file:        
-                        sheet_reader = csv.reader(csv_file, delimiter=',')
-                        head = extract_header(sheet_reader, stop='Quantitative')
-                    first_loop = False
-                else:
-                    summary_table = pd.merge(summary_table, results_table.loc[:, ["Well Position", f"{fluor} CT"]], on="Well Position")
-
-    # number of files was determined to be correct, but did every file get used? if not, results are incomplete
-    if sorted(results_filepaths) != sorted(used_filepaths):
-        tk.messagebox.showerror(message='Incorrect files selected, or file names have been edited. Please try again.')
-        # close program
-        raise SystemExit()
-
-    return summary_table, os.path.commonprefix(results_filepaths), head
 
 
-##############################################################################################################################
-### Mic - file to dataframe
-##############################################################################################################################
-
-def mic(fluor_names, cq_cutoff=35):
-        
-    results_filepath = filedialog.askopenfilename(title = 'Choose results file', filetypes = [("All Excel Files","*.xlsx"),("All Excel Files","*.xls"),("Text Files", "*.csv")])
-    
-    tabs_to_use = {}
-
-    # check whether a file was selected
-    try:
-        file_ext = os.path.splitext(results_filepath)[1]
-    # if user didn't select a results file, or if the file is otherwise unreadable, close the program
-    except:
-        tk.messagebox.showerror(message='File not selected. Make sure file is not open in another program.')
-        # close program
-        raise SystemExit()
-    
-
-    if file_ext == '.csv': #file extension check - special handling for text files
-        
-        # text file versions of results contain inconsistent formatting throughout file, so reading these straight to a pandas df doesn't work
-        # need to work line-by-line instead to get rid of header/footer data
-        with open(results_filepath, newline = '') as csvfile:
-            
-            # make list of lines
-            csv_lines = csvfile.readlines()
-
-            # get header info while we're here
-            csvfile.seek(0)
-            sheet_reader = csv.reader(csvfile, delimiter=',')
-            head = extract_header(sheet_reader, stop='Log')
-
-        # create 'chunks' list: break csv into groups, separated by blank lines
-        chunks = [list(group) for is_blank, group in itertools.groupby(csv_lines, lambda line: line.strip() == "") if not is_blank]
-        results_csvs = {}
-
-        for fluor in fluor_names:
-            for chunk in chunks:
-                title = chunk[0] #first line of chunk
-                if 'Start Worksheet - Analysis - Cycling' in title and 'Result' in title and (fluor in title or fluor_names[fluor] in title):
-                    results_csvs[fluor] = chunk
-                    tabs_to_use[fluor] = title
-                    break
-
-    else: #file is not a text file - must be Excel
-        sheetnames = pd.ExcelFile(results_filepath).sheet_names #get tabs in file
-        for fluor in fluor_names:
-            for tab in sheetnames: #cycle through fluorophores and tabs, assign tabs to fluorophores
-                if fluor_names[fluor] in tab and "Result" in tab and "Absolute" not in tab:
-                    tabs_to_use[fluor] = tab
-                    break
-        # get header info
-        with open(results_filepath, 'rb') as excel_file:
-            sheet_csv = pd.read_excel(excel_file, sheet_name = 'General Information', usecols='A:B').to_csv(index=False)
-            sheet_reader = csv.reader(sheet_csv.splitlines(), delimiter=',')
-            head = extract_header(sheet_reader, stop='Log')
-
-    if sorted(tabs_to_use) != sorted(fluor_names): #check to make sure fluorophores with assigned tabs match the list of fluors known to be in assay
-        tk.messagebox.showerror(message='Fluorophores in file do not match expected fluorophores. Check fluorophore and assay assignment.')
-        # close program
-        raise SystemExit()
-    
-    results_dict = {}
-    for fluor in fluor_names:
-        
-        if file_ext == '.csv':
-            results_dict[fluor] = csv_to_df(results_csvs[fluor], ',', 'Results')
-        
-        else:
-            results_dict[fluor] = pd.read_excel(results_filepath, sheet_name = tabs_to_use[fluor], skiprows = 32)
-            # Mic results might not start at expected skiprow - remove any non-numerical data before results table
-            row_indices_to_drop = []
-            col_names = None
-            for row_index in list(results_dict[fluor].index.values):
-                try:
-                    int(results_dict[fluor].iloc[row_index, 0]) #can we convert the value in the first column ("Well") into an integer? if not, must be text
-                except ValueError:
-                    col_names = list(results_dict[fluor].iloc[row_index, :]) #this must then be the header row - copy info to variable
-                    row_indices_to_drop.append(row_index)
-            if col_names is not None:
-                for i in row_indices_to_drop:
-                    results_dict[fluor] = results_dict[fluor].drop(i)    #drop any saved rows
-                    results_dict[fluor].columns = col_names              #replace header
-                results_dict[fluor].reset_index(inplace=True, drop=True) #fix any index numbering problems that may have occurred as result of row dropping
-
-
-        results_dict[fluor]["Cq"] = results_dict[fluor]["Cq"].fillna(cq_cutoff).apply(pd.to_numeric)
-        results_dict[fluor] = results_dict[fluor].rename(columns={"Well": "Well Position", "Cq": f"{fluor} CT"})
-
-    summary_table = summarize(results_dict)
-
-    return summary_table, results_filepath, head
 
 
 if __name__ == '__main__':
-    data = qpcrAnalyzer(assay='PANDAA Ebola + Marburg', machine_type='QuantStudio 5')
+    data = qpcrAnalyzer(assay='PANDAA LASV', machine_type='Mic')
     data.analyze()
     print(data.results)
