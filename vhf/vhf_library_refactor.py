@@ -37,21 +37,28 @@ class qpcrAnalyzer:
     def __init__(self, cq_cutoff=35, pos_cutoff=30, dRn_percent_cutoff=0.05,
                  machine_type: str=None, assay: str=None):
         ''''''
+        # get user-provided parameters
         self.cq_cutoff = cq_cutoff
         self.pos_cutoff = pos_cutoff
         self.dRn_percent_cutoff = dRn_percent_cutoff
         self.machine_type = machine_type
         self.assay = assay
 
+        # prepare for assay initialization
         self.reporter_dict = {}
         self.reporter_list = []
         self.ic = None #internal control reporter
 
+        # set other necessary parameters to None / blank, for now
         self.filepath = None
         self.ext = None
         self.head = None
         self.results = None
         self.max_dRn_dict = {}
+
+        # initialize GUI, hide main window
+        self.root = tk.Tk()
+        self.root.withdraw()
 
         
     ##############################################################################################################################
@@ -59,7 +66,7 @@ class qpcrAnalyzer:
     ##############################################################################################################################
 
     def isblank(self, row:str):
-        '''If string is blank, return True; otherwise, return False'''
+        '''If string is blank, return True; otherwise, return False.'''
         return all(not field.strip() for field in row)
     
 
@@ -94,7 +101,7 @@ class qpcrAnalyzer:
     
 
     def summarize(self, df_dict:dict):
-        '''Combine multiple pandas dataframes into a single summary dataframe'''
+        '''Combine multiple pandas dataframes into a single summary dataframe.'''
         first_loop = True
 
         for fluor in df_dict:
@@ -121,7 +128,7 @@ class qpcrAnalyzer:
     
 
     def prepend(self):
-        '''Add a line or header to the beginning of a file'''
+        '''Add a line or header to the beginning of a file.'''
         with open(self.filepath, 'r+', newline='') as file:
             existing = file.read() #save file contents to 'existing'
             file.seek(0) #move pointer back to start of file
@@ -135,7 +142,17 @@ class qpcrAnalyzer:
 
 
     def extract_header(self, reader:csv.reader, flag: str=None, stop: str=None):
-        '''Extract header info from CSV reader object.'''
+        '''
+        Extract a header from a CSV reader object.
+
+        Args:
+            reader (csv.reader): CSV reader object.
+            flag (str): Flag to identify the start of the header section.
+            stop (str): Flag to identify the end of the header section.
+
+        Returns:
+            list: Extracted header as a list.
+        '''
         headbool = False if flag else True # if no flag is defined, start reading header from top of file
         head = []
 
@@ -195,6 +212,29 @@ class qpcrAnalyzer:
              return filepaths, ext
         else:
             return filepaths
+
+
+
+    def extract_results(self, df: pd.DataFrame):
+        '''Go through a dataframe row by row, eliminating non-data rows at the top of the dataframe.'''
+        # Mic results might not start at expected skiprow - remove any non-numerical data before results table
+        row_indices_to_drop = []
+        col_names = None
+
+        for row_index in list(df.index.values):
+            try:
+                int(df.iloc[row_index, 0]) #can we convert the value in the first column ("Well") into an integer? if not, must be text
+            except ValueError:
+                col_names = list(df.iloc[row_index, :]) #this must then be the header row - copy info to variable
+                row_indices_to_drop.append(row_index)
+
+        if col_names is not None:
+            for i in row_indices_to_drop:
+                df = df.drop(i)    #drop any saved rows
+                df.columns = col_names              #replace header
+            df.reset_index(inplace=True, drop=True) #fix any index numbering problems that may have occurred as result of row dropping
+                
+        return df
 
     
 
@@ -258,10 +298,7 @@ class qpcrAnalyzer:
             file_selected = False
             while not file_selected:
                 try:
-                    if self.machine_type == "QuantStudio 5":
-                        results_table = pd.read_excel(self.filepath, sheet_name = "Results", skiprows = 47)
-                    elif self.machine_type == "QuantStudio 3":
-                        results_table = pd.read_excel(self.filepath, sheet_name = "Results", skiprows = 43)
+                    results_table = pd.read_excel(self.filepath, sheet_name = "Results", skiprows = 43)
                 except:
                     proceed = tk.messagebox.askretrycancel(message='Incorrect file, or file is open in another program. Click Retry to analyze selected file again.',
                                                            icon = tk.messagebox.ERROR)
@@ -271,20 +308,7 @@ class qpcrAnalyzer:
                 if 'results_table' in locals():
                     file_selected = True
 
-            # QS results might not start at expected skiprow - remove any non-numerical data before results table
-            row_indices_to_drop = []
-            col_names = None
-            for row_index in list(results_table.index.values):
-                try:
-                    int(results_table.iloc[row_index, 0]) #can we convert the value in the first column ("Well") into an integer? if not, must be text
-                except ValueError:
-                    col_names = list(results_table.iloc[row_index, :]) #this must then be the header row - copy info to variable
-                    row_indices_to_drop.append(row_index)
-            if col_names is not None:
-                for i in row_indices_to_drop:
-                    results_table = results_table.drop(i)    #drop any saved rows
-                results_table.columns = col_names              #replace header
-                results_table.reset_index(inplace=True, drop=True) #fix any index numbering problems that may have occurred as result of row dropping
+            results_table = self.extract_results(results_table) #fix any skiprows issues
 
             # get header as list:
             with open(self.filepath, 'rb') as excel_file:
@@ -302,11 +326,9 @@ class qpcrAnalyzer:
             raise SystemExit()
         
         # make sure columns contain number values, not strings
-        results_table["CT"] = results_table["CT"].apply(pd.to_numeric)
-        results_table["Cq Conf"] = results_table["Cq Conf"].apply(pd.to_numeric)
-        results_table["Baseline End"] = results_table["Baseline End"].apply(pd.to_numeric)
+        for col in list('CT', 'Cq Conf', 'Baseline End'):
+            results_table[col] = results_table[col].apply(pd.to_numeric)
         
-
         # make sure file and fluor_names have the same fluorophores listed
         if sorted(list(results_table['Reporter'].unique())) != sorted(self.reporter_dict):
             tk.messagebox.showerror(message='Fluorophores in file do not match expected fluorophores. Check assay assignment.')
@@ -455,20 +477,7 @@ class qpcrAnalyzer:
             else:
                 results_dict[fluor] = pd.read_excel(self.filepath, sheet_name = tabs_to_use[fluor], skiprows = 32)
                 # Mic results might not start at expected skiprow - remove any non-numerical data before results table
-                row_indices_to_drop = []
-                col_names = None
-                for row_index in list(results_dict[fluor].index.values):
-                    try:
-                        int(results_dict[fluor].iloc[row_index, 0]) #can we convert the value in the first column ("Well") into an integer? if not, must be text
-                    except ValueError:
-                        col_names = list(results_dict[fluor].iloc[row_index, :]) #this must then be the header row - copy info to variable
-                        row_indices_to_drop.append(row_index)
-                if col_names is not None:
-                    for i in row_indices_to_drop:
-                        results_dict[fluor] = results_dict[fluor].drop(i)    #drop any saved rows
-                        results_dict[fluor].columns = col_names              #replace header
-                    results_dict[fluor].reset_index(inplace=True, drop=True) #fix any index numbering problems that may have occurred as result of row dropping
-
+                results_dict[fluor] = self.extract_results(results_dict[fluor])
 
             results_dict[fluor]["Cq"] = results_dict[fluor]["Cq"].fillna(self.cq_cutoff).apply(pd.to_numeric)
             results_dict[fluor] = results_dict[fluor].rename(columns={"Well": "Well Position", "Cq": f"{fluor} CT"})
@@ -476,16 +485,20 @@ class qpcrAnalyzer:
         self.results = self.summarize(results_dict)
 
 
+    ##############################################################################################################################
+    ### Analyze function - serves as 'main' function
+    ##############################################################################################################################
 
     def analyze(self):
         ''''''
         self.init_reporters()
-        self.parse_mic()
-
-
-
-
-
+        
+        if self.machine_type == 'Rotor-Gene':
+            self.parse_rgq()
+        elif self.machine_type == 'Mic':
+            self.parse_mic()
+        else:
+            self.parse_qs()
 
 
 if __name__ == '__main__':
