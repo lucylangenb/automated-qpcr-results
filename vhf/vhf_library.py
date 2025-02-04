@@ -591,7 +591,7 @@ class DataExporter:
             self.columns.insert(i+2, f'{self.reporter_dict[self.reporter_list[i]]} Cq') #insert columns starting at col index 2
             
             if self.machine_type == "QuantStudio 3" or self.machine_type == "QuantStudio 5":
-                summary_table = summary_table.rename(columns={f'{self.reporter_list[i]} Cq Conf': f'{self.reporter_dict[self.reporter_list[i]]} Cq Conf',
+                self.results = self.results.rename(columns={f'{self.reporter_list[i]} Cq Conf': f'{self.reporter_dict[self.reporter_list[i]]} Cq Conf',
                                                               f'{self.reporter_list[i]} dRn': f'{self.reporter_dict[self.reporter_list[i]]} dRn'})
 
 
