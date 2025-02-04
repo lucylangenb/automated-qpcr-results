@@ -34,13 +34,11 @@ pd.set_option('future.no_silent_downcasting', True)
 
 class DataImporter:
     '''Get qPCR data from text or Excel file, then parse into standardized dataframe.'''
-    def __init__(self, cq_cutoff=35, pos_cutoff=30, dRn_percent_cutoff=0.05,
+    def __init__(self, cq_cutoff=35,
                  machine_type: str=None, assay: str=None):
         ''''''
         # get user-provided parameters
         self.cq_cutoff = cq_cutoff
-        self.pos_cutoff = pos_cutoff
-        self.dRn_percent_cutoff = dRn_percent_cutoff
         self.machine_type = machine_type
         self.assay = assay
 
@@ -126,20 +124,6 @@ class DataImporter:
         
         return summary_table
     
-
-    def prepend(self):
-        '''Add a line or header to the beginning of a file.'''
-        with open(self.filepath, 'r+', newline='') as file:
-            existing = file.read() #save file contents to 'existing'
-            file.seek(0) #move pointer back to start of file
-            if isinstance(self.head, str): #if header is single line
-                file.write(self.head+'\n\n'+existing)
-            else:
-                # header is a list - need to make writer csv object, then write list to file item by item
-                writer = csv.writer(file)
-                writer.writerows(self.head)
-                file.write('\n\n'+existing)
-
 
     def extract_header(self, reader:csv.reader, flag: str=None, stop: str=None):
         '''
@@ -347,6 +331,7 @@ class DataImporter:
                 # close program
                 raise SystemExit()
             
+            # get max dRn, for use later
             if self.reporter_dict[fluor] == 'Internal Control':
                 baseline_end = 5
             else:
@@ -500,7 +485,154 @@ class DataImporter:
             self.parse_qs()
 
 
+class DataAnalyzer:
+    '''Given a parsed qPCR dataframe, generate qualitative results.'''
+    def __init__(self, data:DataImporter,
+                       pos_cutoff=30,
+                       dRn_percent_cutoff=0.05):
+        
+        self.df = data.results
+        self.machine_type = data.machine_type
+        self.reporter_dict = data.reporter_dict
+        self.reporter_list = data.reporter_list
+        self.ic = data.ic
+        self.max_dRn = data.max_dRn_dict
+        self.cq_cutoff = data.cq_cutoff
+
+        self.pos_cutoff = pos_cutoff
+        self.dRn_percent_cutoff = dRn_percent_cutoff
+
+
+    def vhf_result(self, row):
+        '''Determine the qualitative result for a given sample, based on qPCR data.
+        
+           This function is meant for the handling of viral hemorrhagic fever data, and does not accomodate HIV quantitative results.
+        '''
+        # first value - index 0 - in list corresponds to internal control
+        # therefore, fill this list index with high number
+        cq_vals = [98]
+
+        # iterate through all other (non-IC) fluorophores for the row
+        for i in range(1, len(self.reporter_list)):
+            # if a positive signal is observed (Cq below cutoff plus dRn is >5% of max on plate), add it to the list
+            if self.machine_type == 'QuantStudio 3' or self.machine_type == 'QuantStudio 5':
+                if (row[self.reporter_list[i] + " CT"] < self.pos_cutoff and
+                    row[self.reporter_list[i] + " dRn"]/self.max_dRn[self.reporter_list[i]] > self.dRn_percent_cutoff
+                    ):
+                    cq_vals.append(row[self.reporter_list[i] + " CT"])
+                # otherwise, add another high number
+                else:
+                    cq_vals.append(99)
+            else:
+                if row[self.reporter_list[i] + " CT"] < self.pos_cutoff: #RotorGene and Mic have internal dRn cutoff handling
+                    cq_vals.append(row[self.reporter_list[i] + " CT"])
+                else:
+                    cq_vals.append(99)
+
+        # find the minimum of the list of Cq values
+        fluor_min = cq_vals.index(min(cq_vals))
+        # if the minimum is not the artificial internal control / index-0 value, well was positive for something
+        # well tested positive for whatever the lowest observed Cq value was (if more than one fluorophore present)
+        if fluor_min != 0:
+            return f'{self.reporter_dict[self.reporter_list[fluor_min]]} Positive'
+        # otherwise, check IC amplification - was it successful? if so, this is a negative reaction
+        elif row[self.ic + " CT"] < self.pos_cutoff:
+            return "Negative"
+        # nothing amplified, including IC? result invalid
+        else:
+            return "Invalid Result"
+        
+
+    def vhf_analysis(self):
+        '''Perform analysis on all rows in dataframe.
+        
+           References `vhf_result`.
+        '''
+        self.df['Result'] = self.df.apply(self.vhf_result, axis=1)
+        #return self.df
+
+    
+class DataExporter:
+    '''Given an analyzed qPCR dataframe, clean up and export results.'''
+    def __init__(self, imported:DataImporter,
+                       analyzed:DataAnalyzer,
+                       columns=['Well Position', 'Sample Name', 'Result'],
+                       generate_pdf=True):
+        
+        self.header = imported.head
+        self.results = analyzed.df
+        self.machine_type = analyzed.machine_type
+        self.reporter_list = analyzed.reporter_list
+        self.reporter_dict = analyzed.reporter_dict
+        self.src_filepath = imported.filepath
+        self.dest_filepath = None
+        self.columns = columns
+    
+
+    def prepend(self):
+        '''Add a line or header to the beginning of a file.'''
+        with open(self.dest_filepath, 'r+', newline='', errors='replace') as file:
+            existing = file.read() #save file contents to 'existing'
+            file.seek(0) #move pointer back to start of file
+            if isinstance(self.header, str): #if header is single line
+                file.write(self.header+'\n\n'+existing)
+            else:
+                # header is a list - need to make writer csv object, then write list to file item by item
+                writer = csv.writer(file)
+                writer.writerows(self.header)
+                file.write('\n\n'+existing)
+
+
+    def get_column_list(self):
+        '''Create list of columns to export.'''
+        for i in range(len(self.reporter_list)):
+            
+            self.results = self.results.rename(columns={f'{self.reporter_list[i]} CT': f'{self.reporter_dict[self.reporter_list[i]]} Cq'})
+            self.columns.insert(i+2, f'{self.reporter_dict[self.reporter_list[i]]} Cq') #insert columns starting at col index 2
+            
+            if self.machine_type == "QuantStudio 3" or self.machine_type == "QuantStudio 5":
+                summary_table = summary_table.rename(columns={f'{self.reporter_list[i]} Cq Conf': f'{self.reporter_dict[self.reporter_list[i]]} Cq Conf',
+                                                              f'{self.reporter_list[i]} dRn': f'{self.reporter_dict[self.reporter_list[i]]} dRn'})
+
+
+    def to_csv(self):
+        '''Export analyzed qPCR dataframe to CSV.'''
+
+        self.dest_filepath = os.path.splitext(self.src_filepath)[0]+" - Summary.csv"
+
+        # results file can't be created/written if the user already has it open - catch possible PermissionErrors
+        file_saved = False
+        while not file_saved:
+            try:
+                self.results.to_csv(
+                    path_or_buf=self.dest_filepath,
+                    columns=self.columns,
+                    index=False
+                    )
+                self.prepend()
+                file_saved = True
+
+            # if file couldn't be saved, let the user know
+            except PermissionError:
+                proceed = tk.messagebox.askretrycancel(message='Unable to write results file. Make sure results file is closed, then click Retry to try again.', icon = tk.messagebox.ERROR)
+                if not proceed:
+                    raise SystemExit()
+                
+        tk.messagebox.showinfo(title="Success", message=f"Summary results saved in:\n\n{self.dest_filepath}")
+        #root.destroy()
+
+    
+    def export(self):
+        self.get_column_list()
+        self.to_csv()
+
+
 if __name__ == '__main__':
-    data = DataImporter(assay='PANDAA LASV', machine_type='Mic')
-    data.parse()
-    print(data.results)
+    importer = DataImporter(assay='PANDAA LASV', machine_type='Mic')
+    importer.parse()
+    analyzer = DataAnalyzer(data=importer)
+    analyzer.vhf_analysis()
+    exporter = DataExporter(importer, analyzer)
+    exporter.export()
+
+    print(analyzer.df)
