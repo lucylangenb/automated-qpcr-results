@@ -202,8 +202,8 @@ class PandaaMenu:
 
     def perform_analysis(self):
         '''After OK button is clicked, create instance of qpcrAnalyzer class to obtain and clean qPCR data.'''
-        self.analyzer = vhf.qpcrAnalyzer(assay=self.assay, machine_type=self.machine)
-        self.analyzer.analyze()
+        self.importer = vhf.DataImporter(assay=self.assay, machine_type=self.machine)
+        self.importer.parse()
             
     
     def start(self):

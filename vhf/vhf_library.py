@@ -32,8 +32,8 @@ pd.set_option('future.no_silent_downcasting', True)
 
 ##############################################################################################################################
 
-class qpcrAnalyzer:
-    ''''''
+class DataImporter:
+    '''Get qPCR data from text or Excel file, then parse into standardized dataframe.'''
     def __init__(self, cq_cutoff=35, pos_cutoff=30, dRn_percent_cutoff=0.05,
                  machine_type: str=None, assay: str=None):
         ''''''
@@ -489,7 +489,7 @@ class qpcrAnalyzer:
     ### Analyze function - serves as 'main' function
     ##############################################################################################################################
 
-    def analyze(self):
+    def parse(self):
         '''Initialize reporters, then run parsing function.'''
         self.init_reporters()
         
@@ -502,6 +502,6 @@ class qpcrAnalyzer:
 
 
 if __name__ == '__main__':
-    data = qpcrAnalyzer(assay='PANDAA LASV', machine_type='Mic')
-    data.analyze()
+    data = DataImporter(assay='PANDAA LASV', machine_type='Mic')
+    data.parse()
     print(data.results)
