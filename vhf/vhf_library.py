@@ -490,7 +490,7 @@ class qpcrAnalyzer:
     ##############################################################################################################################
 
     def analyze(self):
-        ''''''
+        '''Initialize reporters, then run parsing function.'''
         self.init_reporters()
         
         if self.machine_type == 'Rotor-Gene':

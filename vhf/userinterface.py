@@ -50,15 +50,18 @@ dRn_percent_cutoff = 0.05 #if (sample dRn / max dRn) is less than this value, sa
 
 class PandaaMenu:
     ''''''
-    def __init__(self):
+    def __init__(self, window_title='Aldatu Biosciences - qPCR Analysis',
+                       header_title='PANDAA qPCR Results Analysis',
+                       assay_choices=['PANDAA LASV', 'PANDAA CCHFV', 'PANDAA Ebola + Marburg'],
+                       machine_choices=['QuantStudio 3', 'QuantStudio 5', 'Rotor-Gene', 'Mic']):
         ''''''
         self.root = None
         self.menu_frame = None
 
-        self.window_title = 'Aldatu Biosciences - qPCR Analysis'
-        self.header_title = 'PANDAA qPCR Results Analysis'
-        self.assay_choices = ['PANDAA LASV', 'PANDAA CCHFV', 'PANDAA Ebola + Marburg']
-        self.machine_choices = ['QuantStudio 3', 'QuantStudio 5', 'Rotor-Gene', 'Mic']
+        self.window_title = window_title
+        self.header_title = header_title
+        self.assay_choices = assay_choices
+        self.machine_choices = machine_choices
 
         self.assay = None
         self.machine = None
@@ -195,6 +198,12 @@ class PandaaMenu:
                               text = 'Select results file...',
                               command = self.ok_click)
         ok_button.pack(side = 'bottom', pady = 30)
+
+
+    def perform_analysis(self):
+        '''After OK button is clicked, create instance of qpcrAnalyzer class to obtain and clean qPCR data.'''
+        self.analyzer = vhf.qpcrAnalyzer(assay=self.assay, machine_type=self.machine)
+        self.analyzer.analyze()
             
     
     def start(self):
@@ -205,7 +214,10 @@ class PandaaMenu:
         self.add_machine_choice()
         self.add_filebutton()
         self.root.mainloop()
-        print('Running')
+
+        self.perform_analysis()
+        
+        self.root.destroy()
 
 
 if __name__ == '__main__':
