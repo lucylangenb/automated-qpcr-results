@@ -49,7 +49,7 @@ dRn_percent_cutoff = 0.05 #if (sample dRn / max dRn) is less than this value, sa
 ##############################################################################################################################
 
 class PandaaMenu:
-    ''''''
+    '''GUI object that passes user selections to a DataImporter object.'''
     def __init__(self, window_title='Aldatu Biosciences - qPCR Analysis',
                        header_title='PANDAA qPCR Results Analysis',
                        assay_choices=['PANDAA LASV', 'PANDAA CCHFV', 'PANDAA Ebola + Marburg'],
@@ -187,10 +187,15 @@ class PandaaMenu:
 
 
     def ok_click(self):
+        '''When 'Select file' button is clicked, assign assay/machine variables,
+           then grab qPCR data.'''
         self.assay = self.assay_var.get()
         self.machine = self.machine_var.get()
-        self.close_program()
 
+        self.root.withdraw()
+        self.get_file()
+        self.close_program()
+        
 
     def add_filebutton(self):
         '''Add button for user to proceed to file selection.'''
@@ -200,7 +205,7 @@ class PandaaMenu:
         ok_button.pack(side = 'bottom', pady = 30)
 
 
-    def perform_analysis(self):
+    def get_file(self):
         '''After OK button is clicked, create instance of qpcrAnalyzer class to obtain and clean qPCR data.'''
         self.importer = vhf.DataImporter(assay=self.assay, machine_type=self.machine)
         self.importer.parse()
@@ -215,10 +220,6 @@ class PandaaMenu:
         self.add_filebutton()
         self.root.mainloop()
 
-        self.perform_analysis()
-        
-        self.root.destroy()
-
 
 if __name__ == '__main__':
     app = PandaaMenu()
@@ -228,28 +229,7 @@ if __name__ == '__main__':
 
 '''
 
-##############################################################################################################################
-### 1. Initialization
-##############################################################################################################################
 
-fluor_names, internal_control_fluor, unique_reporters = vhf.getfluors(assay)
-
-
-##############################################################################################################################
-### 2. Run analysis subprocess based on machine type
-##############################################################################################################################
-
-# tkinter needs root window - but, OK to hide this window immediately
-root = tk.Tk()
-root.withdraw() #hides root
-root.protocol('WM_DELETE_WINDOW', close_program) #when delete_window event occurs, run close_program function
-
-if machine_type == "QuantStudio 3" or machine_type == "QuantStudio 5":
-    summary_table, max_dRn, results_file, head = vhf.quantstudio(machine_type, fluor_names, cq_cutoff)
-elif machine_type == "Rotor-Gene":
-    summary_table, results_file, head = vhf.rotorgene(fluor_names, cq_cutoff)
-elif machine_type == "Mic":
-    summary_table, results_file, head = vhf.mic(fluor_names, cq_cutoff)
 
 
 ##############################################################################################################################

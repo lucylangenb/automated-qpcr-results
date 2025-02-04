@@ -10,15 +10,15 @@ print('Modules imported successfully...')
 ###
 
 def run_gui():
-    window = userinterface.PandaaMenu()
-    window.start()
+    
     print('GUI finished running.')
 
 
 if __name__ == '__main__':
     print('Running PandaaMenu...')
-    run_gui()
-    
+    window = userinterface.PandaaMenu()
+    window.start()
+    print(window.importer.results)
     print('Checking results...')
     #print(window.analyzer)
     #print(window.analyzer.results)

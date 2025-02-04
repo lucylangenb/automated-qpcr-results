@@ -214,7 +214,6 @@ class DataImporter:
             return filepaths
 
 
-
     def extract_results(self, df: pd.DataFrame):
         '''Go through a dataframe row by row, eliminating non-data rows at the top of the dataframe.'''
         # Mic results might not start at expected skiprow - remove any non-numerical data before results table
@@ -237,7 +236,6 @@ class DataImporter:
         return df
 
     
-
     ##############################################################################################################################
     ### Initialization - get fluors based on selected assay
     ##############################################################################################################################
@@ -272,6 +270,7 @@ class DataImporter:
     ##############################################################################################################################
     ### QuantStudio - file to dataframe
     ##############################################################################################################################
+
     def parse_qs(self):
         '''Parse QuantStudio 3/5 file into a standardized pandas dataframe.'''
         self.filepath, self.ext = self.select_file(filetypes = [("All Excel Files","*.xlsx"),
@@ -326,7 +325,7 @@ class DataImporter:
             raise SystemExit()
         
         # make sure columns contain number values, not strings
-        for col in list('CT', 'Cq Conf', 'Baseline End'):
+        for col in ['CT', 'Cq Conf', 'Baseline End']:
             results_table[col] = results_table[col].apply(pd.to_numeric)
         
         # make sure file and fluor_names have the same fluorophores listed
@@ -486,7 +485,7 @@ class DataImporter:
 
 
     ##############################################################################################################################
-    ### Analyze function - serves as 'main' function
+    ### Parse function - serves as 'main' function
     ##############################################################################################################################
 
     def parse(self):
