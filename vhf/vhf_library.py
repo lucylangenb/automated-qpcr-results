@@ -2,7 +2,7 @@
 ### About this code
 ##############################################################################################################################
 #
-#   This script contains functions accessed by the main 'PANDAA Results' script.
+#   This module contains classes to import, analyze, and export qPCR data.
 #
 #   Different qPCR machines have very different results outputs;
 #   because of this, files from different machines need to be handled differently.
@@ -11,7 +11,7 @@
 #   the program uses that information to choose which algorithm to use to create a usable results dataframe (pandas).
 #
 #   This dataframe - identical, regardless of the qPCR machine the results file originally came from -
-#   is then used by the main script to generate a results file.
+#   is then used to generate a results file.
 #
 #
 #

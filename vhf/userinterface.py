@@ -2,24 +2,9 @@
 ### About this code
 ##############################################################################################################################
 #
-#   This script prompts the user to select a results file from a QuantStudio, Rotor-Gene, or Mic run,
-#   then analyzes the data according to the user's chosen assay.
-#
-#   Results are saved as a csv file with the columns: Well, Sample Name, and Result.
+#   This script contains the class PandaaMenu, which is a tkinter-based GUI to handle PANDAA data analysis.
 #
 #
-
-
-##############################################################################################################################
-### EXE PACKAGING INSTRUCTIONS
-##############################################################################################################################
-
-# pyinstaller --onefile -w --add-data="*.gif;." --icon=aldatulogo_icon.ico --version-file=version.txt PANDAAResults.py
-
-# --add-data flag expects directory info in the format SOURCE;DESTINATION - use '.' as destination for "this directory"
-# --icon adds an icon
-# --version-file adds readable file properties
-
 
 
 ##############################################################################################################################
@@ -29,10 +14,8 @@
 import tkinter as tk #GUI handling
 from PIL import Image, ImageTk #image handling - allows for rescaling of Aldatu logo in main menu
 import os #filepath handling - allows for saving of results file in same directory location as user's original file is uploaded from
-import sys #executable packaging
+import sys #finds absolute image location - important for exe packaging
 
-# custom dependency - holds functions that handle parsing of xls to pandas dataframes
-import vhf_library as vhf
 
 
 ##############################################################################################################################
@@ -187,14 +170,15 @@ class PandaaMenu:
 
 
     def ok_click(self):
-        '''When 'Select file' button is clicked, assign assay/machine variables,
-           then grab qPCR data.'''
+        '''When 'Select file' button is clicked, assign assay/machine variables.'''
         self.assay = self.assay_var.get()
         self.machine = self.machine_var.get()
+        print(self.assay)
 
         self.root.withdraw()
-        self.get_file()
-        self.close_program()
+        self.root.quit()
+        # note: do NOT use self.close_program()!
+        # using root.quit() instead ensures that root.mainloop() is ended, without actually quitting Python / destroying the run process
         
 
     def add_filebutton(self):
@@ -204,13 +188,6 @@ class PandaaMenu:
                               command = self.ok_click)
         ok_button.pack(side = 'bottom', pady = 30)
 
-
-    def get_file(self):
-        '''After OK button is clicked, create instance of qpcrAnalyzer class to obtain and clean qPCR data.'''
-        self.importer = vhf.DataImporter(assay=self.assay, machine_type=self.machine)
-        self.importer.parse()
-        print('DEBUG: Importer assigned successfully')
-            
     
     def start(self):
         '''Run PandaaMenu.'''
@@ -225,4 +202,4 @@ class PandaaMenu:
 if __name__ == '__main__':
     app = PandaaMenu()
     app.start()
-    print('{0} {1}'.format(app.assay, app.machine))
+    print(app.assay)
