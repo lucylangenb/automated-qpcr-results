@@ -32,7 +32,7 @@ dRn_percent_cutoff = 0.05 #if (sample dRn / max dRn) is less than this value, sa
 ##############################################################################################################################
 
 class PandaaMenu:
-    '''GUI object that passes user selections to a DataImporter object.'''
+    '''GUI object that holds information about user selections.'''
     def __init__(self, window_title='Aldatu Biosciences - qPCR Analysis',
                        header_title='PANDAA qPCR Results Analysis',
                        assay_choices=['PANDAA LASV', 'PANDAA CCHFV', 'PANDAA Ebola + Marburg'],
