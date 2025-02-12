@@ -13,8 +13,6 @@ from reportlab.pdfbase.pdfmetrics import stringWidth
 version = '1.0.0'
 
 
-
-
 #################################################################################
 ### Make header and footer to be repeated on each page
 #################################################################################
@@ -75,7 +73,6 @@ def footer(canvas, doc):
     # right aligned part - 'Page x of y' - is covered by PageNumCanvas
 
 
-
 def header(canvas, doc):
     '''Draw header with right-aligned experiment name'''
     width, height = doc.pagesize
@@ -97,12 +94,10 @@ def header(canvas, doc):
     p.drawOn(canvas, width - doc.rightMargin - p_width - 5, height - doc.topMargin)
 
 
-
 def header_and_footer(canvas, doc):
     '''Draw header and footer on same page'''
     header(canvas, doc)
     footer(canvas, doc)
-
 
 
 #######################################################################################
@@ -254,7 +249,22 @@ class Report:
                 reader = csv.reader(csvfile, delimiter=',')
                 return process_data(reader, bold)
 
-    
+
+    def count_columns(self, input_data):
+        '''Count the number of columns present in data table.
+        
+           Returns the number of columns in the widest row, if applicable.
+        '''
+
+        # Handle input_data (file or list)
+        if isinstance(input_data, list):
+            return len(max(input_data, key=len))
+        else:
+            with open(input_data, newline='') as csvfile:
+                reader = csv.reader(csvfile, delimiter=',')
+                return len(max(reader, key=len))
+
+
     def create_header(self):
         '''Create Header object'''
         header = Header()
@@ -291,7 +301,12 @@ class Report:
         self.elements.append(Spacer(1, 0.2*inch))
 
         data = self.csv_to_table(self.results, bold='top')
-        colWidths = [0.5*inch, 3.625*inch, 2.75*inch]
+
+        numCols = self.count_columns(self.results) #get number of columns in dataset
+        dataWidth = 6.375*inch // (numCols-1)      #page width is allocated equally across data (non-index) columns
+        colWidths = [dataWidth]*(numCols-1)        #turn column widths into list
+        colWidths.insert(0, 0.5*inch)              #add index column width to beginning of list
+
         table_style = TableStyle([('INNERGRID', (0,0), (-1,-1), 0.25, colors.black),
                                   ('BOX', (0,0), (-1,-1), 0.25, colors.black),
                                   ('VALIGN',(0,0),(-1,-1),'MIDDLE')])
@@ -336,6 +351,8 @@ if __name__ == '__main__':
 ['Experiment Run End Time',	'2024-01-17 11:18:31 AM EST'],
 ['Experiment Type',	'Standard Curve'],
 ['Instrument Name',	'Aldatu-QS3'],
+['',''],
+[],
 ['Instrument Serial Number',	'272310002'],
 ['Instrument Type',	'QuantStudio™ 3 System'],
 ['Passive Reference',	'ROX'],
@@ -345,6 +362,7 @@ if __name__ == '__main__':
 ['Signal Smoothing On',	'TRUE'],
 ['Stage/ Cycle where Ct Analysis is performed',	'Stage3, Step2'],
 ['User Name',	'IJM']]
-    data_file = 'sample_results.csv'
+    data_file = r'C:\Users\lucy\OneDrive - Aldatu Biosciences\Desktop\PANDAA qPCR Results\reportlab\sample_results.csv'
     results = Report(pdf_file, header_file, data_file)
     results.create()
+    print('PDF generated successfully')
