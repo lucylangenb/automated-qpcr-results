@@ -173,7 +173,6 @@ class PandaaMenu:
         '''When 'Select file' button is clicked, assign assay/machine variables.'''
         self.assay = self.assay_var.get()
         self.machine = self.machine_var.get()
-        print(self.assay)
 
         self.root.withdraw()
         self.root.quit()
