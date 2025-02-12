@@ -594,6 +594,15 @@ class DataExporter:
                 self.results = self.results.rename(columns={f'{self.reporter_list[i]} Cq Conf': f'{self.reporter_dict[self.reporter_list[i]]} Cq Conf',
                                                               f'{self.reporter_list[i]} dRn': f'{self.reporter_dict[self.reporter_list[i]]} dRn'})
 
+    def cleanup(self):
+        '''Get rid of unwanted columns in analyzed qPCR dataframe.'''
+        rm_headers = list(self.results) #get list of headers to remove - begins with all headers in list
+
+        for header in self.columns:
+            rm_headers.remove(header) #for every header in list of columns to export, remove this from our list
+                                      #(leaving behind only the columns to get rid of)
+        self.results = self.results.drop(columns=rm_headers, axis=1)
+
 
     def to_csv(self):
         '''Export analyzed qPCR dataframe to CSV.'''
@@ -624,6 +633,7 @@ class DataExporter:
     
     def export(self):
         self.get_column_list()
+        self.cleanup()
         self.to_csv()
 
 
