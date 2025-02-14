@@ -1,3 +1,12 @@
+##############################################################################################################################
+### About this code
+##############################################################################################################################
+#
+#   This script uses ReportLab to generate a PDF report from input header and results data.
+#
+#
+
+
 from datetime import datetime
 import re, csv, os
 import pandas as pd
@@ -149,7 +158,10 @@ class Header(Flowable):
 
 
 class Report:
-    '''Report class'''
+    '''Report class.
+    
+       Experiment name is used in non-first-page headers. Pass the filepath to 'path_as_filename' to use the path as the experiment name.
+    '''
     def __init__(self, pdf_file, head, results, pagesize=letter, path_as_filename=None):
         ''''''
         self.doc = SimpleDocTemplate(pdf_file, pagesize=pagesize,
