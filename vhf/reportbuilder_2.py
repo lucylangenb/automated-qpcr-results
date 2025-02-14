@@ -150,7 +150,7 @@ class Header(Flowable):
 
 class Report:
     '''Report class'''
-    def __init__(self, pdf_file, head, results, pagesize=letter):
+    def __init__(self, pdf_file, head, results, pagesize=letter, path_as_filename=None):
         ''''''
         self.doc = SimpleDocTemplate(pdf_file, pagesize=pagesize,
                                      rightMargin=0.75*inch, leftMargin=0.75*inch,
@@ -160,6 +160,7 @@ class Report:
         self.width, self.height = pagesize
         self.head = head
         self.results = results
+        self.path_as_filename = path_as_filename
         self.doc.name = ''
 
 
@@ -198,7 +199,10 @@ class Report:
             return 'None'  # Default return value if nothing is found
 
         if use_path:  # Use filepath to get the file's name
-            return os.path.splitext(os.path.basename(input_data))[0]
+            if ' - Summary' in self.path_as_filename:
+                self.path_as_filename = self.path_as_filename.replace(' - Summary', '')
+            return os.path.splitext(os.path.basename(self.path_as_filename))[0]
+        
 
         # Handle input_data (file or list)
         if isinstance(input_data, list):  # If input is a list
@@ -302,7 +306,7 @@ class Report:
         self.elements.append(Spacer(1,0.2*inch))
 
         data = self.csv_to_table(self.head, bold='left')
-        self.doc.name = self.get_exp_name(self.head)
+        self.doc.name = self.get_exp_name(self.head, use_path=self.path_as_filename)
 
         colWidths = [1.125*inch, 5.7*inch] #original: 0.875*inch, 5.95*inch
         table_style = TableStyle([('INNERGRID', (0,0), (-1,-1), 0.25, colors.black),

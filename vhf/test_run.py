@@ -50,37 +50,17 @@ def main():
     exporter = vhf.DataExporter(importer, analyzer)
     exporter.export()
 
-    '''
-    headers_to_keep = ['Well Position', 'Sample Name']
-    rm_headers = list(exporter.results)
-    for header in headers_to_keep:
-        #if header in rm_headers:
-            rm_headers.remove(header)
-
-    for header in rm_headers:
-        exporter.results = exporter.results.drop(header, axis=1)
-        '''
-
-    '''
-    results_header = list(exporter.results)
-    print(results_header)
-    print(type(results_header))
-
-    results_csv = exporter.results.values.tolist()
-    results_csv.insert(0, results_header)
-    #to_csv(path_or_buf=None, columns=exporter.columns, index=False)
-    print(results_csv)
-    print(type(results_csv))
-    '''
-
     
     # Make the results into a PDF
     pdf_filepath = os.path.splitext(exporter.dest_filepath)[0] + '.pdf'
-    pdf = Report(pdf_filepath, exporter.header, exporter.results)
+    if 'QuantStudio' not in machine_selected:
+        pdf = Report(pdf_filepath, exporter.header, exporter.results, path_as_filename=exporter.dest_filepath)
+    else:
+        pdf = Report(pdf_filepath, exporter.header, exporter.results)
     pdf.create()
     
-
     print("Analysis complete. Results exported successfully.")
+
 
 if __name__ == '__main__':
     main()
