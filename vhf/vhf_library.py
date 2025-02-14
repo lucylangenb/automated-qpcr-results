@@ -104,7 +104,7 @@ class DataImporter:
 
         for fluor in df_dict:
 
-            columns = ["Well Position", "Sample Name", f"{fluor} CT"]
+            columns = ["Well", "Sample Name", f"{fluor} CT"]
             if self.machine_type == 'QuantStudio 5' or self.machine_type == 'QuantStudio 3':
                 columns.append(f"{fluor} Cq Conf")
                 columns.append(f"{fluor} dRn")
@@ -120,7 +120,7 @@ class DataImporter:
                     raise SystemExit()
                 first_loop = False
             else:
-                summary_table = pd.merge(summary_table, df_dict[fluor].loc[:, columns], on="Well Position")
+                summary_table = pd.merge(summary_table, df_dict[fluor].loc[:, columns], on="Well")
         
         return summary_table
     
@@ -314,6 +314,8 @@ class DataImporter:
         
         # make sure file and fluor_names have the same fluorophores listed
         if sorted(list(results_table['Reporter'].unique())) != sorted(self.reporter_dict):
+            print(f"Fluors in selected file: {sorted(list(results_table['Reporter'].unique()))}")
+            print(f'Expected fluors: {sorted(self.reporter_dict)}')
             tk.messagebox.showerror(message='Fluorophores in file do not match expected fluorophores. Check assay assignment.')
             # close program
             raise SystemExit()
@@ -323,9 +325,11 @@ class DataImporter:
             
             results_dict[fluor] = results_table.loc[results_table["Reporter"] == fluor]
             try:
-                results_dict[fluor] = results_dict[fluor].rename(columns={"CT": f"{fluor} CT",
-                                                                        "Cq Conf": f"{fluor} Cq Conf",
-                                                                        "Delta Rn (last cycle)": f"{fluor} dRn"})
+                results_dict[fluor] = results_dict[fluor].rename(columns={"Well": "Well No.",
+                                                                          "Well Position": "Well",
+                                                                          "CT": f"{fluor} CT",
+                                                                          "Cq Conf": f"{fluor} Cq Conf",
+                                                                          "Delta Rn (last cycle)": f"{fluor} dRn"})
             except:
                 tk.messagebox.showerror(message='Fluorophores in file do not match those entered by user. Check fluorophore assignment.')
                 # close program
@@ -373,7 +377,7 @@ class DataImporter:
             for fluor in self.reporter_dict:
                 if f"{fluor}.csv" in filepath or f"{self.reporter_dict[fluor]}.csv" in filepath:
                     used_filepaths.append(filepath)
-                    results_table = results_table.rename(columns={"No.": "Well Position",
+                    results_table = results_table.rename(columns={"No.": "Well",
                                                                 "Name": "Sample Name",
                                                                 "Ct": f"{fluor} CT",
                                                                 "Ct Comment": "Comments",
@@ -381,14 +385,14 @@ class DataImporter:
                     # first time loop is run:
                     if first_loop:
                         # initialize summary table
-                        self.results = results_table.loc[:, ["Well Position", "Sample Name", "Copies", "Comments", f"{fluor} CT"]]
+                        self.results = results_table.loc[:, ["Well", "Sample Name", "Copies", "Comments", f"{fluor} CT"]]
                         # and get header info
                         with open(filepath, 'r') as csv_file:        
                             sheet_reader = csv.reader(csv_file, delimiter=',')
                             self.head = self.extract_header(sheet_reader, stop='Quantitative')
                         first_loop = False
                     else:
-                        self.results = pd.merge(self.results, results_table.loc[:, ["Well Position", f"{fluor} CT"]], on="Well Position")
+                        self.results = pd.merge(self.results, results_table.loc[:, ["Well", f"{fluor} CT"]], on="Well")
 
         # number of files was determined to be correct, but did every file get used? if not, results are incomplete
         if sorted(results_filepaths) != sorted(used_filepaths):
@@ -464,7 +468,10 @@ class DataImporter:
                 results_dict[fluor] = self.extract_results(results_dict[fluor])
 
             results_dict[fluor]["Cq"] = results_dict[fluor]["Cq"].fillna(self.cq_cutoff).apply(pd.to_numeric)
-            results_dict[fluor] = results_dict[fluor].rename(columns={"Well": "Well Position", "Cq": f"{fluor} CT"})
+            results_dict[fluor] = results_dict[fluor].rename(columns={
+                                                                       #"Well": "Well Position",
+                                                                       "Cq": f"{fluor} CT"
+                                                                       })
 
         self.results = self.summarize(results_dict)
 
@@ -556,8 +563,7 @@ class DataExporter:
     '''Given an analyzed qPCR dataframe, clean up and export results.'''
     def __init__(self, imported:DataImporter,
                        analyzed:DataAnalyzer,
-                       columns=['Well Position', 'Sample Name', 'Result'],
-                       generate_pdf=True):
+                       columns=['Well', 'Sample Name', 'Result']):
         
         self.header = imported.head
         self.results = analyzed.df
@@ -638,7 +644,7 @@ class DataExporter:
 
 
 if __name__ == '__main__':
-    importer = DataImporter(assay='PANDAA LASV', machine_type='Mic')
+    importer = DataImporter(assay='PANDAA CCHFV', machine_type='QuantStudio 5')
     importer.parse()
     analyzer = DataAnalyzer(data=importer)
     analyzer.vhf_analysis()
