@@ -488,8 +488,10 @@ class DataImporter:
             self.parse_rgq()
         elif self.machine_type == 'Mic':
             self.parse_mic()
-        else:
+        elif 'QuantStudio' in self.machine_type:
             self.parse_qs()
+        else:
+            raise ValueError
 
 
 class DataAnalyzer:
