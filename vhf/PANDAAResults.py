@@ -18,9 +18,9 @@
 # --version-file adds readable file properties
 
 
-import vhf_library as vhf
+import data_analysis as vhf
 from userinterface import PandaaMenu
-from reportbuilder_2 import Report
+from reportbuilder import Report
 import os
 
 def main():
