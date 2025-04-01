@@ -1,0 +1,38 @@
+END USER LICENSE AGREEMENT (EULA)
+
+IMPORTANT – READ CAREFULLY: This End User License Agreement ("Agreement") is a legal agreement between you (either an individual or a legal entity) and Aldatu Biosciences, Inc. (“Aldatu”) governing the use of the ReFocus Assistant software application (“Software”).
+
+BY INSTALLING, COPYING, OR OTHERWISE USING THIS SOFTWARE, YOU AGREE TO BE BOUND BY THE TERMS OF THIS AGREEMENT. IF YOU DO NOT AGREE, DO NOT INSTALL OR USE THE SOFTWARE.
+
+1. GRANT OF LICENSE
+Aldatu hereby grants you a limited, non-exclusive, non-transferable license to install and use the Software solely for research purposes in conjunction with Aldatu’s viral hemorrhagic fever diagnostic products. The Software is provided free of charge and is intended to assist with result interpretation and workflow efficiency.
+
+2. RESEARCH USE ONLY
+This Software is provided for RESEARCH USE ONLY (RUO) and is NOT intended for use in clinical diagnosis, patient care, or any decision-making in a healthcare setting. You acknowledge that the Software is not a medical device and is not cleared or approved by any regulatory authority.
+
+3. LIMITATIONS
+You shall not:
+- Modify, reverse-engineer, decompile, or disassemble the Software;
+- Use the Software with third-party diagnostic products or unrelated datasets;
+- Distribute, sublicense, or commercialize the Software without Aldatu’s written permission.
+
+4. OWNERSHIP
+The Software is and remains the intellectual property of Aldatu. While portions of the Software’s source code may be available under the MIT License via public repositories (e.g., GitHub), this Agreement governs your use of the distributed executable and related assets.
+
+5. NO WARRANTY
+THE SOFTWARE IS PROVIDED “AS IS” WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED. ALDATU DISCLAIMS ALL WARRANTIES, INCLUDING BUT NOT LIMITED TO IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
+
+6. LIMITATION OF LIABILITY
+IN NO EVENT SHALL ALDATU BE LIABLE FOR ANY DAMAGES (INCLUDING, WITHOUT LIMITATION, LOSS OF DATA, LOSS OF PROFITS, OR INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES) ARISING OUT OF THE USE OR INABILITY TO USE THE SOFTWARE.
+
+7. TERMINATION
+This license will automatically terminate if you violate any of the terms of this Agreement. Upon termination, you must immediately cease all use of the Software and destroy any copies.
+
+8. GOVERNING LAW
+This Agreement shall be governed by and construed in accordance with the laws of the Commonwealth of Massachusetts, United States of America, without regard to its conflict of law provisions.
+
+---
+
+Aldatu Biosciences, Inc.
+313 Pleasant St, Watertown, MA 02474, USA
+info@aldatubio.com
