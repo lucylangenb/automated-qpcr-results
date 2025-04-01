@@ -5,7 +5,8 @@ a = Analysis(
     ['PANDAAResults.py'],
     pathex=[],
     binaries=[],
-    datas=[('*.gif', '.')],
+    datas=[('*.gif', '.'),
+           ('readme.txt', '.')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
@@ -16,13 +17,23 @@ a = Analysis(
 )
 pyz = PYZ(a.pure)
 
+splash = Splash('aldatulogo_opaque.png',
+                binaries=a.binaries,
+                datas=a.datas,
+                text_pos=(20,30),
+                text_size=9,
+                text_color='#204771',
+                text_font='Arial')
+
 exe = EXE(
     pyz,
     a.scripts,
+    splash,
+    splash.binaries,
     a.binaries,
     a.datas,
     [],
-    name='PANDAAResults',
+    name='ReFocusAssistant',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
