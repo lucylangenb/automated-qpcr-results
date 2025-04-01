@@ -8,7 +8,7 @@
 
 
 from datetime import datetime
-import re, csv, os
+import re, csv, os, sys
 import pandas as pd
 
 from reportlab.lib.pagesizes import letter
@@ -137,9 +137,14 @@ class Header(Flowable):
         x, y = x*unit, self.height - y*unit
         return x, y
     
+    def get_path(self, filename:str):
+        '''External dependency file path processor: make sure that, when script is packaged as exe, external file can be found.'''
+        path = os.path.join(sys._MEIPASS, filename) if hasattr(sys, '_MEIPASS') else filename
+        return path
+    
     def draw(self):
         '''Draw logo and minimal text'''
-        img_filepath = r"C:\Users\lucy\OneDrive - Aldatu Biosciences\Desktop\PANDAA qPCR Results\vhf\aldatulogo_icon.gif"
+        img_filepath = self.get_path(filename='aldatulogo_icon.gif')
         desired_width = 30
 
         img = utils.ImageReader(img_filepath) #ImageReader uses Pillow to get information about image, so that we can grab the image size
