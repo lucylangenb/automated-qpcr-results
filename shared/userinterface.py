@@ -31,10 +31,10 @@ dRn_percent_cutoff = 0.05 #if (sample dRn / max dRn) is less than this value, sa
 ### 0. Main menu
 ##############################################################################################################################
 
-def get_shared_path(filename):
+def get_shared_assets_path(filename):
     '''Helper function: gets file path for asset in "shared" folder.'''
     base_dir = os.path.dirname(__file__)
-    return os.path.join(base_dir, filename)
+    return os.path.join(base_dir, 'assets', filename)
 
 class PandaaMenu:
     '''GUI object that holds information about user selections.'''
@@ -77,7 +77,7 @@ class PandaaMenu:
 
     def get_image(self, filename:str, resize=None, aspect=None):
         '''Image processor: make sure that, when script is packaged as exe, logo image file can be found.'''
-        path = os.path.join(sys._MEIPASS, filename) if hasattr(sys, '_MEIPASS') else get_shared_path(filename)
+        path = os.path.join(sys._MEIPASS, filename) if hasattr(sys, '_MEIPASS') else get_shared_assets_path(filename)
         img = Image.open(path)
         if resize:
             if aspect:
