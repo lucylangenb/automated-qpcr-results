@@ -33,7 +33,7 @@ dRn_percent_cutoff = 0.05 #if (sample dRn / max dRn) is less than this value, sa
 
 class PandaaMenu:
     '''GUI object that holds information about user selections.'''
-    def __init__(self, window_title='Aldatu Biosciences - qPCR Analysis',
+    def __init__(self, window_title='ReFocus Assistant v1.0.0 (RUO)',
                        header_title='PANDAA qPCR Results Analysis',
                        assay_choices=['PANDAA LASV', 'PANDAA CCHFV', 'PANDAA Ebola + Marburg'],
                        machine_choices=['QuantStudio 3', 'QuantStudio 5', 'Rotor-Gene', 'Mic']):
