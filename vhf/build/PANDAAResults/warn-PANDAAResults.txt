@@ -23,7 +23,7 @@ missing module named _frozen_importlib_external - imported by importlib._bootstr
 missing module named pep517 - imported by importlib.metadata (delayed)
 excluded module named _frozen_importlib - imported by importlib (optional), importlib.abc (optional), zipimport (top-level)
 missing module named org - imported by pickle (optional)
-missing module named posix - imported by shutil (conditional), importlib._bootstrap_external (conditional), os (conditional, optional)
+missing module named posix - imported by os (conditional, optional), shutil (conditional), importlib._bootstrap_external (conditional)
 missing module named resource - imported by posix (top-level), IPython.utils.timing (optional)
 missing module named pyimod02_importers - imported by C:\Users\lucy\AppData\Local\Programs\Python\Python39\Lib\site-packages\PyInstaller\hooks\rthooks\pyi_rth_pkgutil.py (delayed), C:\Users\lucy\AppData\Local\Programs\Python\Python39\Lib\site-packages\PyInstaller\hooks\rthooks\pyi_rth_pkgres.py (delayed)
 missing module named _posixsubprocess - imported by subprocess (optional), multiprocessing.util (delayed)
