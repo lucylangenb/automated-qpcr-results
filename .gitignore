@@ -15,9 +15,10 @@
 #################
 /build/
 /dist/
+/reportlab/
 __pycache__/
 *.spec
-*.iss
+#*.iss
 
 # Certificates #
 ################
