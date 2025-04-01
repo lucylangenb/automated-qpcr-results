@@ -7,6 +7,25 @@
 *.o
 *.so
 *.pdf
+*.pyd
+*.pyz
+*.toc
+
+# Build outputs #
+#################
+/build/
+/dist/
+__pycache__/
+*.spec
+*.iss
+
+# Certificates #
+################
+*.cer
+*.crt
+*.key
+*.pem
+*.pfx
 
 # Packages #
 ############
