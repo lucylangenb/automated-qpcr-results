@@ -7,21 +7,12 @@
 #
 
 
-##############################################################################################################################
-### EXE PACKAGING INSTRUCTIONS
-##############################################################################################################################
-
-# pyinstaller --onefile -w --add-data="*.gif;." --icon=aldatulogo_icon.ico --version-file=version.txt PANDAAResults.py
-
-# --add-data flag expects directory info in the format SOURCE;DESTINATION - use '.' as destination for "this directory"
-# --icon adds an icon
-# --version-file adds readable file properties
-
+import sys, os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'shared'))) #look for custom dependencies in shared folder
 
 import data_analysis as vhf
 from userinterface import PandaaMenu
 from reportbuilder import Report
-import os
 from importlib import util
 
 def main():
