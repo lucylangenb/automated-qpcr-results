@@ -22,9 +22,17 @@ import data_analysis as vhf
 from userinterface import PandaaMenu
 from reportbuilder import Report
 import os
+from importlib import util
 
 def main():
-    '''Runs the full process of selecting an assay and machine, uploading a file, analyzing, and exporting results.'''
+    '''Runs the full process of selecting an assay and machine, uploading a file, analyzing, and exporting results.'''\
+    
+    # Handling pyinstaller splash screen, if it exists
+    if '_PYI_SPLASH_IPC' in os.environ and util.find_spec("pyi_splash"):
+        import pyi_splash
+        pyi_splash.update_text('UI Loaded ...')
+        pyi_splash.close()
+        print('Splash screen closed.')
     
     # Initialize GUI to get user selections
     app = PandaaMenu()
