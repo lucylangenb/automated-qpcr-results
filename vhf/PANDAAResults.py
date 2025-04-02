@@ -12,11 +12,17 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..',
 
 import data_analysis as vhf
 from userinterface import PandaaMenu
-from reportbuilder import Report
+from reportbuilder import Report, get_app_info
 from importlib import util
 
+with open(os.path.join(os.path.dirname(__file__), 'version_number.txt')) as f:
+    __version__ = f.read().strip()
+
+name = 'ReFocus Assistant'
+use = '(RUO)'
+
 def main():
-    '''Runs the full process of selecting an assay and machine, uploading a file, analyzing, and exporting results.'''\
+    '''Runs the full process of selecting an assay and machine, uploading a file, analyzing, and exporting results.'''
     
     # Handling pyinstaller splash screen, if it exists
     if '_PYI_SPLASH_IPC' in os.environ and util.find_spec("pyi_splash"):
@@ -26,7 +32,7 @@ def main():
         print('Splash screen closed.')
     
     # Initialize GUI to get user selections
-    app = PandaaMenu()
+    app = PandaaMenu(app_title=name, version=__version__, use=use)
     app.start()
 
     # Retrieve user's selections
@@ -52,6 +58,7 @@ def main():
     
     # Make the results into a PDF
     pdf_filepath = os.path.splitext(exporter.dest_filepath)[0] + '.pdf'
+    get_app_info(name, __version__, use)
     if 'QuantStudio' not in machine_selected:
         pdf = Report(pdf_filepath, exporter.header, exporter.results, path_as_filename=exporter.dest_filepath)
     else:

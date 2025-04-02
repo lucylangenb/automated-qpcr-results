@@ -2,10 +2,11 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "ReFocus Assistant"
-#define MyAppVersion "1.0.0"
+#define MyAppNameNoSpaces "ReFocusAssistant"
+#define MyAppVersion "{VERSION}"
 #define MyAppPublisher "Aldatu Biosciences, Inc."
 #define MyAppURL "http://www.aldatubio.com"
-#define MyAppExeName "ReFocusAssistant.exe"
+#define MyAppExeName "ReFocusAssistant_v{VERSION}.exe"
 
 [Setup]
 ; NOTE: The value of AppId uniquely identifies this application.
@@ -24,7 +25,7 @@ DefaultGroupName={#MyAppName}
 LicenseFile=C:\Users\lucy\OneDrive - Aldatu Biosciences\Desktop\PANDAA qPCR Results\vhf\eula.txt
 InfoBeforeFile=C:\Users\lucy\OneDrive - Aldatu Biosciences\Desktop\PANDAA qPCR Results\vhf\readme.txt
 InfoAfterFile=C:\Users\lucy\OneDrive - Aldatu Biosciences\Desktop\PANDAA qPCR Results\vhf\readme.txt
-OutputBaseFilename=setup
+OutputBaseFilename={#MyAppNameNoSpaces}_v{#MyAppVersion}_Installer
 Compression=lzma
 SolidCompression=yes
 

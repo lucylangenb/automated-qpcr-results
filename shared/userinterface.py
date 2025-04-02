@@ -38,7 +38,9 @@ def get_shared_assets_path(filename):
 
 class PandaaMenu:
     '''GUI object that holds information about user selections.'''
-    def __init__(self, window_title='ReFocus Assistant v1.0.0 (RUO)',
+    def __init__(self, app_title='ReFocus Assistant',
+                       version='0',
+                       use='(RUO)',
                        header_title='PANDAA qPCR Results Analysis',
                        assay_choices=['PANDAA LASV', 'PANDAA CCHFV', 'PANDAA Ebola + Marburg'],
                        machine_choices=['QuantStudio 3', 'QuantStudio 5', 'Rotor-Gene', 'Mic']):
@@ -46,7 +48,10 @@ class PandaaMenu:
         self.root = None
         self.menu_frame = None
 
-        self.window_title = window_title
+        self.app_title = app_title
+        self.version = version
+        self.use = use
+        self.window_title = self.app_title + ' v' + self.version + ' ' + self.use
         self.header_title = header_title
         self.assay_choices = assay_choices
         self.machine_choices = machine_choices

@@ -5,11 +5,14 @@
 *.dll
 *.exe
 *.o
+*.res
 *.so
 *.pdf
+*.pkg
 *.pyd
 *.pyz
 *.toc
+*.tcl
 
 # Build outputs #
 #################
