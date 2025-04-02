@@ -44,3 +44,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Installation and execution validated on Windows 10.
 - Splash screen, file loading, and report generation tested with example dataset.
 - Outputs matched expected values for example dataset.
+
+### Certificate Files Notice
+
+During early development of ReFocus Assistant, self-signed digital certificates (`.pfx` and `.cer` files) were created and committed for the purpose of testing code signing procedures using Microsoft's `signtool` utility. These certificates were:
+
+- Not issued by a trusted Certificate Authority (CA)
+- Not used to sign any distributed binaries or official releases
+- Created exclusively for local experimentation with signing workflows
+
+As of release version v1.0.0, all such test artifacts have been removed from the active repository and `.gitignore`d to prevent inclusion in future commits. No production or company-trusted certificate keys were stored, shared, or published at any point.
+
+These test files remain accessible in early commit history for reference but pose no security or regulatory risk to product releases. This has been reviewed and deemed acceptable under ISO 13485 software lifecycle documentation and does not affect validated outputs.
