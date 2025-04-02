@@ -16,8 +16,8 @@
 
 # Build outputs #
 #################
-/build/
-/dist/
+/vhf/build/
+/vhf/dist/
 /reportlab/
 __pycache__/
 *.spec
