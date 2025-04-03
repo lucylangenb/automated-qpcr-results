@@ -179,7 +179,8 @@ class PandaaMenu:
 
     def help_click(self):
         '''When "Help" is clicked in menu bar, show readme file.'''
-        print('Help was clicked')
+        path = os.path.join(sys._MEIPASS, 'readme.txt') if hasattr(sys, '_MEIPASS') else self.get_file_path('readme.txt')
+        os.startfile(path)
 
     def eula_click(self):
         '''Pull up EULA text file when button is clicked.'''
