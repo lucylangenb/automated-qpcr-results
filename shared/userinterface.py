@@ -22,9 +22,9 @@ import sys #finds absolute image location - important for exe packaging
 ### User-defined values
 ##############################################################################################################################
 
-cq_cutoff = 35
-pos_cutoff = 30
-dRn_percent_cutoff = 0.05 #if (sample dRn / max dRn) is less than this value, sample is considered No Amplification and marked negative
+#cq_cutoff = 35
+#pos_cutoff = 30
+#dRn_percent_cutoff = 0.05 #if (sample dRn / max dRn) is less than this value, sample is considered No Amplification and marked negative
 
 
 ##############################################################################################################################

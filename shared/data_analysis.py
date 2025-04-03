@@ -114,8 +114,8 @@ class DataImporter:
             if first_loop:
                 try:
                     summary_table = df_dict[fluor].loc[:, columns]
-                except:
-                    tk.messagebox.showerror(message='Incorrect file selected. Please try again.')
+                except Exception as e:
+                    tk.messagebox.showerror(message='Incorrect file selected. Please try again.\n\n{}'.format(e))
                     # close program
                     raise SystemExit()
                 first_loop = False
@@ -282,8 +282,8 @@ class DataImporter:
             while not file_selected:
                 try:
                     results_table = pd.read_excel(self.filepath, sheet_name = "Results", skiprows = 43)
-                except:
-                    proceed = tk.messagebox.askretrycancel(message='Incorrect file, or file is open in another program. Click Retry to analyze selected file again.',
+                except Exception as e:
+                    proceed = tk.messagebox.askretrycancel(message='Incorrect file, or file is open in another program. Click Retry to analyze selected file again.\n\n{}'.format(e),
                                                            icon = tk.messagebox.ERROR)
                     if not proceed:
                         raise SystemExit()
@@ -303,8 +303,8 @@ class DataImporter:
         try:
             # assign "Undetermined" wells a CT value - "CT" column will only exist in correctly formatted results files, so can be used for error checking
             results_table["CT"] = results_table["CT"].replace(to_replace = "Undetermined", value = self.cq_cutoff)
-        except:
-            tk.messagebox.showerror(message='Unexpected machine type. Check instrument input setting.')
+        except Exception as e:
+            tk.messagebox.showerror(message='Unexpected machine type. Check instrument input setting.\n\n{}'.format(e))
             # close program
             raise SystemExit()
         
@@ -330,8 +330,8 @@ class DataImporter:
                                                                           "CT": f"{fluor} CT",
                                                                           "Cq Conf": f"{fluor} Cq Conf",
                                                                           "Delta Rn (last cycle)": f"{fluor} dRn"})
-            except:
-                tk.messagebox.showerror(message='Fluorophores in file do not match those entered by user. Check fluorophore assignment.')
+            except Exception as e:
+                tk.messagebox.showerror(message='Fluorophores in file do not match those entered by user. Check fluorophore assignment.\n\n{}'.format(e))
                 # close program
                 raise SystemExit()
             
@@ -368,8 +368,8 @@ class DataImporter:
             # see if files chosen are correct - if the file is a valid results file, it will have a column called "Ct"
             try:
                 results_table["Ct"] = results_table["Ct"].fillna(self.cq_cutoff)
-            except:
-                tk.messagebox.showerror(message='Incorrect files selected. Please try again.')
+            except Exception as e:
+                tk.messagebox.showerror(message='Incorrect files selected. Please try again.\n\n{}'.format(e))
                 # close program
                 raise SystemExit()
 
@@ -630,13 +630,13 @@ class DataExporter:
                 file_saved = True
 
             # if file couldn't be saved, let the user know
-            except PermissionError:
-                proceed = tk.messagebox.askretrycancel(message='Unable to write results file. Make sure results file is closed, then click Retry to try again.', icon = tk.messagebox.ERROR)
+            except Exception as e:
+                proceed = tk.messagebox.askretrycancel(message='Unable to write results file. Make sure results file is closed, then click Retry to try again.\n\n{}'.format(e),
+                                                       icon = tk.messagebox.ERROR)
                 if not proceed:
                     raise SystemExit()
                 
         tk.messagebox.showinfo(title="Success", message=f"Summary results saved in:\n\n{self.dest_filepath}")
-        #root.destroy()
 
     
     def export(self):

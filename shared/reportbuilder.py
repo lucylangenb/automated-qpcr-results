@@ -10,6 +10,7 @@
 from datetime import datetime
 import re, csv, os, sys
 import pandas as pd
+import tkinter as tk
 
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.styles import getSampleStyleSheet
@@ -56,8 +57,13 @@ class PageNumCanvas(canvas.Canvas):
             self.__dict__.update(page)
             self.draw_page_number(page_count)
             canvas.Canvas.showPage(self)
+        
+        try:
+            canvas.Canvas.save(self)
+        except Exception as e:
+            tk.messagebox.showerror(message="PDF unable to be saved. Make sure file is not open in another program.\n\n{}".format(e))
+            raise SystemExit()
 
-        canvas.Canvas.save(self)
 
     def draw_page_number(self, page_count):
         '''Format 'Page x of y' text in bottom right corner of each page'''
