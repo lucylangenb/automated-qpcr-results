@@ -31,6 +31,8 @@ class PandaaMenu:
     def __init__(self, app_title='ReFocus Assistant',
                        version='0',
                        use='(RUO)',
+                       year='2025',
+                       division='vhf',
                        header_title='PANDAA qPCR Results Analysis',
                        assay_choices=['PANDAA LASV', 'PANDAA CCHFV', 'PANDAA Ebola + Marburg'],
                        machine_choices=['QuantStudio 3', 'QuantStudio 5', 'Rotor-Gene', 'Mic']):
@@ -41,6 +43,8 @@ class PandaaMenu:
         self.app_title = app_title
         self.version = version
         self.use = use
+        self.year = year
+        self.division = division
         self.window_title = self.app_title + ' v' + self.version + ' ' + self.use
         self.header_title = header_title
         self.assay_choices = assay_choices
@@ -50,14 +54,23 @@ class PandaaMenu:
         self.machine = None
 
 
-    def center_window(self):
-        '''Center window on user's screen.'''
-        self.root.update_idletasks()             #check for any changes to window size
-        width = self.root.winfo_width()          #get root's width and height
-        height = self.root.winfo_height()
-        x = (self.root.winfo_screenwidth() // 2) - (width // 2)  #x = half of screen width / half of window width
-        y = (self.root.winfo_screenheight() // 2) - (height // 2)
-        self.root.geometry(f'{width}x{height}+{x}+{y}')  #use previously calculated x, y as adjustments to horiz/vert window alignment on screen
+    def get_file_path(self, filename):
+        '''Helper function: gets file path for asset in vhf or hivdr folder.'''
+        base_dir = os.path.dirname(__file__)
+        return os.path.join(base_dir, '..', self.division, filename)
+
+
+    def center_window(self, win, xadj=0, yadj=0):
+        '''Center window on user's screen.
+        
+        Optionally, adjust window location further using xadj and yadj parameters.
+        '''
+        win.update_idletasks()             #check for any changes to window size
+        width = win.winfo_width()          #get root's width and height
+        height = win.winfo_height()
+        x = (win.winfo_screenwidth() // 2) - (width // 2)  #x = half of screen width / half of window width
+        y = (win.winfo_screenheight() // 2) - (height // 2)
+        win.geometry(f'{width}x{height}+{x+xadj}+{y+yadj}')  #use previously calculated x, y as adjustments to horiz/vert window alignment on screen
 
 
     def close_program(self):
@@ -88,16 +101,94 @@ class PandaaMenu:
 
         self.root = tk.Tk()
         self.root.title(self.window_title)
-        self.root.geometry('500x350')
+        self.root.geometry('500x360')
+        self.root.resizable(False, False)
 
         # when delete_window event occurs, run close_program function
         self.root.protocol('WM_DELETE_WINDOW', self.close_program)
-        # center root on user's screen
-        self.center_window()
 
         # change feather icon in upper corner to Aldatu logo
         ico = self.get_image('aldatulogo_icon.gif')
         self.root.wm_iconphoto(True, ico) #True bool here ensures that all subsequent windows also use this icon
+
+    
+    def add_menu(self):
+        '''Add menu bar to tkinter window.'''
+        menubar = tk.Menu()
+
+        file_menu = tk.Menu(menubar, tearoff=False)
+        file_menu.add_command(label='{} Help...'.format(self.app_title),
+                              accelerator='Ctrl+H',
+                              command=self.help_click)
+        file_menu.add_command(label='About {}...'.format(self.window_title),
+                              command=self.about_click)
+        
+        menubar.add_cascade(menu=file_menu, label='Help')
+        self.root.config(menu=menubar)
+
+
+    def about_click(self):
+        '''When "About" is clicked in menu bar, show info.'''
+        self.about_window = tk.Toplevel()
+        self.about_window.title('About {}'.format(self.window_title))
+        self.about_window.config(width=400, height=275,
+                            background='white',
+                            relief='groove')
+        self.about_window.overrideredirect(True) #make window borderless - splash-screen style
+        self.about_window.resizable(False, False)
+        self.about_window.focus() #make this the active/top window
+        self.about_window.grab_set() #modal window - can't do anything with main program until About window is closed
+        self.center_window(self.about_window, yadj=28)
+
+        border_color = '#525252'
+        frame = tk.Frame(self.about_window, background='white',highlightbackground=border_color, highlightthickness=2, bd=0)
+        frame.pack()
+
+        canvas = tk.Canvas(frame, background='white', width=400, height=100,
+                           highlightthickness=0) #removes border around canvas element
+        canvas.pack()
+        canvas.create_image(self.about_window.winfo_width()//2, 50, image=self.logo)
+
+        
+        text = tk.Label(frame,
+                          text='''\n{name}\nVersion {ver}\nCopyright © {year} Aldatu Biosciences, Inc.\n\nFor Research Use Only.\nNot for use in diagnostic procedures.
+                          '''.format(name=self.app_title, ver=self.version, year=self.year),
+                          font=('Arial', 10),
+                          background='white',
+                          anchor='w',
+                          justify='left'
+                          ).pack(side='top',
+                                 fill=tk.X,
+                                 padx=35)
+
+        close_button = tk.Button(frame,
+                                text='Close',
+                                command=self.closeabout_click)
+        close_button.pack(side='right',
+                         anchor=tk.SE,
+                         padx=5,
+                         pady=5)
+        
+        eula_button = tk.Button(frame,
+                                text='View license agreement',
+                                command=self.eula_click)
+        eula_button.pack(side='right',
+                         anchor=tk.SE,
+                         pady=5)
+
+
+    def help_click(self):
+        '''When "Help" is clicked in menu bar, show readme file.'''
+        print('Help was clicked')
+
+    def eula_click(self):
+        '''Pull up EULA text file when button is clicked.'''
+        path = os.path.join(sys._MEIPASS, 'eula.txt') if hasattr(sys, '_MEIPASS') else self.get_file_path('eula.txt')
+        os.startfile(path)
+
+    def closeabout_click(self):
+        '''Close the About window.'''
+        self.about_window.destroy()
 
 
     def add_header(self):
@@ -169,7 +260,7 @@ class PandaaMenu:
                                     ).pack(anchor = tk.W)
 
 
-    def ok_click(self):
+    def getfile_click(self):
         '''When 'Select file' button is clicked, assign assay/machine variables.'''
         self.assay = self.assay_var.get()
         self.machine = self.machine_var.get()
@@ -184,17 +275,19 @@ class PandaaMenu:
         '''Add button for user to proceed to file selection.'''
         ok_button = tk.Button(self.root,
                               text = 'Select results file...',
-                              command = self.ok_click)
+                              command = self.getfile_click)
         ok_button.pack(side = 'bottom', pady = 30)
 
     
     def start(self):
         '''Run PandaaMenu.'''
         self.init_root()
+        self.add_menu()
         self.add_header()
         self.add_assay_choice()
         self.add_machine_choice()
         self.add_filebutton()
+        self.center_window(self.root)
         self.root.mainloop()
 
 
