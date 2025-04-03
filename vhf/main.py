@@ -6,6 +6,10 @@
 #
 #
 
+name = 'ReFocus Assistant'
+use = '(RUO)'
+
+##############################################################################################################################
 
 import sys, os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'shared'))) #look for custom dependencies in shared folder
@@ -18,8 +22,6 @@ from importlib import util
 with open(os.path.join(os.path.dirname(__file__), 'version_number.txt')) as f:
     __version__ = f.read().strip()
 
-name = 'ReFocus Assistant'
-use = '(RUO)'
 
 def main():
     '''Runs the full process of selecting an assay and machine, uploading a file, analyzing, and exporting results.'''
