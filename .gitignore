@@ -20,7 +20,7 @@
 /vhf/dist/
 /reportlab/
 __pycache__/
-*.spec
+#*.spec
 #*.iss
 
 # Certificates #
