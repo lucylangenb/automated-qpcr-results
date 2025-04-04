@@ -8,6 +8,8 @@
 
 name = 'ReFocus Assistant'
 use = '(RUO)'
+year = '2025'
+division = 'vhf'
 
 ##############################################################################################################################
 
@@ -34,7 +36,13 @@ def main():
         print('Splash screen closed.')
     
     # Initialize GUI to get user selections
-    app = PandaaMenu(app_title=name, version=__version__, use=use)
+    app = PandaaMenu(app_title=name,
+                     version=__version__,
+                     use=use,
+                     year=year,
+                     division=division,
+                     assay_choices=['PANDAA LASV', 'PANDAA CCHFV', 'PANDAA Ebola + Marburg'],
+                     machine_choices=['QuantStudio 3', 'QuantStudio 5', 'Rotor-Gene', 'Mic'])
     app.start()
 
     # Retrieve user's selections
