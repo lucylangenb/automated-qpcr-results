@@ -64,7 +64,7 @@ def main():
 
     # Export the results
     time.sleep(0.3) #program runs extremely quickly - adding sleep step may improve perceived legitimacy
-    exporter = vhf.DataExporter(importer, analyzer)
+    exporter = vhf.DataExporter(importer, analyzer, columns=['Well', 'Sample Name', 'Result'])
     exporter.export()
 
     
