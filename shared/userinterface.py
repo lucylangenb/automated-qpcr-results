@@ -31,6 +31,7 @@ class PandaaMenu:
     def __init__(self, app_title='ReFocus Assistant',
                        version='0',
                        use='(RUO)',
+                       disclaimer='',
                        year='2025',
                        division='vhf',
                        header_title='PANDAA qPCR Results Analysis',
@@ -43,6 +44,7 @@ class PandaaMenu:
         self.app_title = app_title
         self.version = version
         self.use = use
+        self.disclaimer = disclaimer
         self.year = year
         self.division = division
         self.window_title = self.app_title + ' v' + self.version + ' ' + self.use
@@ -151,8 +153,8 @@ class PandaaMenu:
 
         
         text = tk.Label(frame,
-                          text='''\n{name}\nVersion {ver}\nCopyright © {year} Aldatu Biosciences, Inc.\n\nFor Research Use Only.\nNot for use in diagnostic procedures.
-                          '''.format(name=self.app_title, ver=self.version, year=self.year),
+                          text='''\n{name}\nVersion {ver}\nCopyright © {year} Aldatu Biosciences, Inc.\n\n{disc}
+                          '''.format(name=self.app_title, ver=self.version, year=self.year, disc=self.disclaimer),
                           font=('Arial', 10),
                           background='white',
                           anchor='w',

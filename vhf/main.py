@@ -8,6 +8,7 @@
 
 name = 'ReFocus Assistant'
 use = '(RUO)'
+disclaimer = 'For Research Use Only.\nNot for use in diagnostic procedures.'
 year = '2025'
 division = 'vhf'
 
@@ -40,6 +41,7 @@ def main():
     app = PandaaMenu(app_title=name,
                      version=__version__,
                      use=use,
+                     disclaimer=disclaimer,
                      year=year,
                      division=division,
                      assay_choices=['PANDAA LASV', 'PANDAA CCHFV', 'PANDAA Ebola + Marburg'],
