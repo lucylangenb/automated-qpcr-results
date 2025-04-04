@@ -636,7 +636,7 @@ class DataExporter:
                 if not proceed:
                     raise SystemExit()
                 
-        tk.messagebox.showinfo(title="Success", message=f"Summary results saved in:\n\n{self.dest_filepath}")
+        tk.messagebox.showinfo(title="Success", message=f"CSV summary saved:\n\n{self.dest_filepath}")
 
     
     def export(self):

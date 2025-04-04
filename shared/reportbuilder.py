@@ -11,6 +11,7 @@ from datetime import datetime
 import re, csv, os, sys
 import pandas as pd
 import tkinter as tk
+from tkinter import messagebox
 
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.styles import getSampleStyleSheet
@@ -193,10 +194,16 @@ class Report:
         self.elements = []
         self.styles = getSampleStyleSheet()
         self.width, self.height = pagesize
+
+        self.pdf_file = pdf_file
         self.head = head
         self.results = results
         self.path_as_filename = path_as_filename
         self.doc.name = ''
+
+        # initialize GUI, hide main window
+        self.root = tk.Tk()
+        self.root.withdraw()
 
 
     def coord(self, x, y, unit=1):
@@ -387,6 +394,7 @@ class Report:
         self.create_run_info()
         self.create_results()
         self.save()
+        tk.messagebox.showinfo(title="Success", message=f"PDF summary saved:\n\n{self.pdf_file}")
 
 
     def save(self):

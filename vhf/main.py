@@ -20,6 +20,7 @@ import data_analysis as vhf
 from userinterface import PandaaMenu
 from reportbuilder import Report, get_app_info
 from importlib import util
+import time
 
 with open(os.path.join(os.path.dirname(__file__), 'version_number.txt')) as f:
     __version__ = f.read().strip()
@@ -62,6 +63,7 @@ def main():
     analyzer.vhf_analysis()
 
     # Export the results
+    time.sleep(0.3) #program runs extremely quickly - adding sleep step may improve perceived legitimacy
     exporter = vhf.DataExporter(importer, analyzer)
     exporter.export()
 
