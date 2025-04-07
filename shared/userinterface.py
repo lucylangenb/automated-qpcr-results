@@ -36,6 +36,7 @@ class PandaaMenu:
                        division='vhf',
                        header_title='PANDAA qPCR Results Analysis',
                        assay_choices=['PANDAA LASV', 'PANDAA CCHFV', 'PANDAA Ebola + Marburg'],
+                       assay_format='radio',
                        machine_choices=['QuantStudio 3', 'QuantStudio 5', 'Rotor-Gene', 'Mic']):
         ''''''
         self.root = None
@@ -50,6 +51,7 @@ class PandaaMenu:
         self.window_title = self.app_title + ' v' + self.version + ' ' + self.use
         self.header_title = header_title
         self.assay_choices = assay_choices
+        self.assay_format = assay_format
         self.machine_choices = machine_choices
 
         self.assay = None
@@ -231,18 +233,28 @@ class PandaaMenu:
                                     fill = tk.X,
                                     pady = 2)
         
+        if self.assay_format == 'radio':
         # radio buttons - assay choice
-        self.assay_var = tk.StringVar()
-        self.assay_var.set(None) #initialize - forces radio buttons to be empty upon loading screen
+            self.assay_var = tk.StringVar()
+            self.assay_var.set(None) #initialize - forces radio buttons to be empty upon loading screen
 
-        for option in self.assay_choices:
-            tk.Radiobutton(assay_frame,
-                            text = option,
-                            padx = 20,
-                            variable = self.assay_var,
-                            command = self.assay_var.get(),
-                            value = option
-                            ).pack(anchor = tk.W) #center text vertically around reference point, left-justified - "W" refers to "West"
+            for option in self.assay_choices:
+                tk.Radiobutton(assay_frame,
+                                text = option,
+                                padx = 20,
+                                variable = self.assay_var,
+                                command = self.assay_var.get(),
+                                value = option
+                                ).pack(anchor = tk.W) #center text vertically around reference point, left-justified - "W" refers to "West"
+                
+        else:
+            # drop-down for assay choice
+            self.assay_var = tk.StringVar(value = self.assay_choices[0]) # includes initialization
+            assay_menu = tk.OptionMenu(assay_frame,
+                                        self.assay_var, #initial value in drop-down
+                                        *self.assay_choices,   #values to choose from
+                                        command = lambda x: self.assay_var.get()
+                                        ).pack(anchor = tk.W)
             
     
     def add_machine_choice(self):
@@ -259,7 +271,7 @@ class PandaaMenu:
                                             pady = 2)
 
         # drop-down for instrument choice
-        self.machine_var = tk.StringVar(value = 'QuantStudio 5') # includes initialization
+        self.machine_var = tk.StringVar(value = self.machine_choices[1]) # includes initialization
         machine_menu = tk.OptionMenu(machine_frame,
                                     self.machine_var, #initial value in drop-down
                                     *self.machine_choices,   #values to choose from

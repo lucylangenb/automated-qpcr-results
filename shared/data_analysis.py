@@ -35,12 +35,13 @@ pd.set_option('future.no_silent_downcasting', True)
 class DataImporter:
     '''Get qPCR data from text or Excel file, then parse into standardized dataframe.'''
     def __init__(self, cq_cutoff=35,
-                 machine_type: str=None, assay: str=None):
+                 machine_type: str=None, assay: str=None, division: str=None):
         ''''''
         # get user-provided parameters
         self.cq_cutoff = cq_cutoff
         self.machine_type = machine_type
         self.assay = assay
+        self.division = division
 
         # prepare for assay initialization
         self.reporter_dict = {}
@@ -226,27 +227,48 @@ class DataImporter:
 
     def init_reporters(self):
         '''Get reporters and targets, given assay name.'''
-        if self.assay == "PANDAA Ebola + Marburg":
-            self.reporter_dict = {  "CY5": "Internal Control",  
-                                    "FAM": "EBOV",              
-                                    "VIC": "MARV"               
-                                 }
-            self.ic = "CY5"
+        try:
+            if self.division == 'vhf':
+                if self.assay == "PANDAA Ebola + Marburg":
+                    self.reporter_dict = {  "CY5": "Internal Control",  
+                                            "FAM": "EBOV",              
+                                            "VIC": "MARV"               
+                                        }
+                    self.ic = "CY5"
 
-        elif self.assay == "PANDAA CCHFV":
-            self.reporter_dict = {  "CY5": "Internal Control",  
-                                    "FAM": "CCHFV"              
-                                 }
-            self.ic = "CY5"
+                elif self.assay == "PANDAA CCHFV":
+                    self.reporter_dict = {  "CY5": "Internal Control",  
+                                            "FAM": "CCHFV"              
+                                        }
+                    self.ic = "CY5"
 
-        elif self.assay == "PANDAA LASV":
-            self.reporter_dict = {  "CY5": "Internal Control",  
-                                    "FAM": "LASV"              
-                                 }
-            self.ic = "CY5"
+                elif self.assay == "PANDAA LASV":
+                    self.reporter_dict = {  "CY5": "Internal Control",  
+                                            "FAM": "LASV"              
+                                        }
+                    self.ic = "CY5"
+                
+                else:
+                    raise ValueError('Assay not defined: {}'.format(self.assay))
+            
+            elif self.division == 'hiv':
+                if self.assay == "PANDAA Ebola + Marburg":
+                    self.reporter_dict = {  "CY5": "Internal Control",  
+                                            "FAM": "EBOV",              
+                                            "VIC": "MARV"               
+                                        }
+                    self.ic = "CY5"
 
-        else:
-            raise ValueError('Invalid assay selected: {}'.format(self.assay))
+                else:
+                    raise ValueError('Assay not defined: {}'.format(self.assay))
+            
+            else:
+                raise ValueError('Assay not defined: {}'.format(self.assay))
+        
+        except Exception as e:
+            tk.messagebox.showerror(message='Invalid assay. Check assay input setting.\n\n{}'.format(e))
+            # close program
+            raise SystemExit()
         
         self.reporter_list = [key for key in self.reporter_dict]
 
@@ -646,7 +668,7 @@ class DataExporter:
 
 
 if __name__ == '__main__':
-    importer = DataImporter(assay='PANDAA CCHFV', machine_type='QuantStudio 5')
+    importer = DataImporter(assay='PANDAA CCHFV', machine_type='QuantStudio 5', division='vhf')
     importer.parse()
     analyzer = DataAnalyzer(data=importer)
     analyzer.vhf_analysis()
