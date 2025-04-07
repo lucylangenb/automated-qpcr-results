@@ -1,10 +1,18 @@
 # This script contains a number of small functions that prepare repo files for building.
-import os, markdown2, html2text
+import os, markdown2, html2text, glob
 
 def get_version(loc:str):
     '''Get version number from text file'''
     with open(os.path.join(os.path.dirname(__file__), '..', loc, 'version_number.txt')) as vf:
         return vf.read().strip()
+
+def remove_copies(loc:str):
+    '''Remove non-template installer and version files.'''
+    for filename in glob.glob(os.path.join(os.path.dirname(__file__), '..', loc, 'installer_v*')):
+        os.remove(filename)
+    for filename in glob.glob(os.path.join(os.path.dirname(__file__), '..', loc, 'version_v*')):
+        os.remove(filename)
+    print('Old copies of installer and version templates deleted.')
 
 def update_installer(loc:str, version:str):
     '''Find and replace in installer template to insert version number'''
@@ -55,6 +63,7 @@ def update_readme(loc:str):
 if __name__ == '__main__':
     loc = input('Folder with files to be updated (hivdr or vhf): ')
     version = get_version(loc)
+    remove_copies(loc)
     update_installer(loc, version)
     update_verfile(loc, version)
     update_readme(loc)
