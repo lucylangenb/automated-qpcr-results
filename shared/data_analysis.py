@@ -27,6 +27,7 @@ import tkinter as tk #error message GUI
 import csv #text file parsing
 import itertools #for mic csv parsing
 import os #for getting file extension
+import numpy as np #for least squares regression
 
 pd.set_option('future.no_silent_downcasting', True)
 
@@ -35,7 +36,7 @@ pd.set_option('future.no_silent_downcasting', True)
 class DataImporter:
     '''Get qPCR data from text or Excel file, then parse into standardized dataframe.'''
     def __init__(self, cq_cutoff=35,
-                 machine_type: str=None, assay: str=None, division: str=None):
+                 machine_type: str=None, assay: str=None, division='vhf'):
         ''''''
         # get user-provided parameters
         self.cq_cutoff = cq_cutoff
@@ -105,10 +106,10 @@ class DataImporter:
 
         for fluor in df_dict:
 
-            columns = ["Well", "Sample Name", f"{fluor} CT"]
+            columns = ['Well', 'Sample Name', f'{fluor} CT']
             if self.machine_type == 'QuantStudio 5' or self.machine_type == 'QuantStudio 3':
-                columns.append(f"{fluor} Cq Conf")
-                columns.append(f"{fluor} dRn")
+                columns.append(f'{fluor} Cq Conf')
+                columns.append(f'{fluor} dRn')
             if not first_loop:
                 columns.pop(1)
 
@@ -121,7 +122,7 @@ class DataImporter:
                     raise SystemExit()
                 first_loop = False
             else:
-                summary_table = pd.merge(summary_table, df_dict[fluor].loc[:, columns], on="Well")
+                summary_table = pd.merge(summary_table, df_dict[fluor].loc[:, columns], on='Well')
         
         return summary_table
     
@@ -190,7 +191,7 @@ class DataImporter:
             ext = os.path.splitext(filepaths)[1]
         
         if not filepaths:
-            tk.messagebox.showerror(message="No file selected. Make sure file is not open in another program.")
+            tk.messagebox.showerror(message='No file selected. Make sure file is not open in another program.')
             raise SystemExit()
         
         if extension:
@@ -207,7 +208,7 @@ class DataImporter:
 
         for row_index in list(df.index.values):
             try:
-                int(df.iloc[row_index, 0]) #can we convert the value in the first column ("Well") into an integer? if not, must be text
+                int(df.iloc[row_index, 0]) #can we convert the value in the first column ('Well') into an integer? if not, must be text
             except ValueError:
                 col_names = list(df.iloc[row_index, :]) #this must then be the header row - copy info to variable
                 row_indices_to_drop.append(row_index)
@@ -229,35 +230,42 @@ class DataImporter:
         '''Get reporters and targets, given assay name.'''
         try:
             if self.division == 'vhf':
-                if self.assay == "PANDAA Ebola + Marburg":
-                    self.reporter_dict = {  "CY5": "Internal Control",  
-                                            "FAM": "EBOV",              
-                                            "VIC": "MARV"               
+                if self.assay == 'PANDAA Ebola + Marburg':
+                    self.reporter_dict = {  'CY5': 'Internal Control',  
+                                            'FAM': 'EBOV',              
+                                            'VIC': 'MARV'               
                                         }
-                    self.ic = "CY5"
+                    self.ic = 'CY5'
 
-                elif self.assay == "PANDAA CCHFV":
-                    self.reporter_dict = {  "CY5": "Internal Control",  
-                                            "FAM": "CCHFV"              
+                elif self.assay == 'PANDAA CCHFV':
+                    self.reporter_dict = {  'CY5': 'Internal Control',  
+                                            'FAM': 'CCHFV'              
                                         }
-                    self.ic = "CY5"
+                    self.ic = 'CY5'
 
-                elif self.assay == "PANDAA LASV":
-                    self.reporter_dict = {  "CY5": "Internal Control",  
-                                            "FAM": "LASV"              
+                elif self.assay == 'PANDAA LASV':
+                    self.reporter_dict = {  'CY5': 'Internal Control',  
+                                            'FAM': 'LASV'              
                                         }
-                    self.ic = "CY5"
+                    self.ic = 'CY5'
                 
                 else:
                     raise ValueError('Assay not defined: {}'.format(self.assay))
             
             elif self.division == 'hiv':
-                if self.assay == "PANDAA Ebola + Marburg":
-                    self.reporter_dict = {  "CY5": "Internal Control",  
-                                            "FAM": "EBOV",              
-                                            "VIC": "MARV"               
-                                        }
-                    self.ic = "CY5"
+                if self.assay == '076V 184VI':
+                    self.reporter_dict = {'CY5': 'VQ',  
+                                          'FAM': '076V',              
+                                          'NED': '184VI'               
+                                          }
+                    self.ic = 'CY5'
+
+                elif self.assay == '082AFT 084V':
+                    self.reporter_dict = {'CY5': 'VQ',  
+                                          'FAM': '084V',              
+                                          'NED': '082AFT'               
+                                          }
+                    self.ic = 'CY5'
 
                 else:
                     raise ValueError('Assay not defined: {}'.format(self.assay))
@@ -279,9 +287,9 @@ class DataImporter:
 
     def parse_qs(self):
         '''Parse QuantStudio 3/5 file into a standardized pandas dataframe.'''
-        self.filepath, self.ext = self.select_file(filetypes = [("All Excel Files","*.xlsx"),
-                                                                ("All Excel Files","*.xls"),
-                                                                ("Text Files", "*.txt")])
+        self.filepath, self.ext = self.select_file(filetypes = [('All Excel Files','*.xlsx'),
+                                                                ('All Excel Files','*.xls'),
+                                                                ('Text Files', '*.txt')])
         
         
         if self.ext == '.txt': #file extension check - special handling for text files
@@ -295,7 +303,9 @@ class DataImporter:
                 sheet_reader = csv.reader(csvfile, delimiter=',')
                 self.head = self.extract_header(sheet_reader, 'Experiment')
                 # text files save values as strings - handle dRn values separated with commas/thousands separator:
-                results_table["Delta Rn (last cycle)"] = results_table["Delta Rn (last cycle)"].str.replace(',', '').astype(float)
+                results_table['Delta Rn (last cycle)'] = results_table['Delta Rn (last cycle)'].str.replace(',', '').astype(float)
+                if self.division == 'hiv':
+                    results_table['Quantity'] = pd.to_numeric(results_table['Quantity'].str.replace(',', ''), errors='coerce')
         
         else: #file is not a text file (so it's an excel file) - excel files cannot be selected if open in another program, so check for this
         
@@ -303,7 +313,7 @@ class DataImporter:
             file_selected = False
             while not file_selected:
                 try:
-                    results_table = pd.read_excel(self.filepath, sheet_name = "Results", skiprows = 43)
+                    results_table = pd.read_excel(self.filepath, sheet_name = 'Results', skiprows = 43)
                 except Exception as e:
                     proceed = tk.messagebox.askretrycancel(message='Incorrect file, or file is open in another program. Click Retry to analyze selected file again.\n\n{}'.format(e),
                                                            icon = tk.messagebox.ERROR)
@@ -323,8 +333,8 @@ class DataImporter:
 
 
         try:
-            # assign "Undetermined" wells a CT value - "CT" column will only exist in correctly formatted results files, so can be used for error checking
-            results_table["CT"] = results_table["CT"].replace(to_replace = "Undetermined", value = self.cq_cutoff)
+            # assign 'Undetermined' wells a CT value - 'CT' column will only exist in correctly formatted results files, so can be used for error checking
+            results_table['CT'] = results_table['CT'].replace(to_replace = 'Undetermined', value = self.cq_cutoff)
         except Exception as e:
             tk.messagebox.showerror(message='Unexpected machine type. Check instrument input setting.\n\n{}'.format(e))
             # close program
@@ -333,10 +343,12 @@ class DataImporter:
         # make sure columns contain number values, not strings
         for col in ['CT', 'Cq Conf', 'Baseline End']:
             results_table[col] = results_table[col].apply(pd.to_numeric)
+        if self.division == 'hiv':
+            results_table['Quantity'] = results_table['Quantity'].fillna(0)
         
         # make sure file and fluor_names have the same fluorophores listed
         if sorted(list(results_table['Reporter'].unique())) != sorted(self.reporter_dict):
-            print(f"Fluors in selected file: {sorted(list(results_table['Reporter'].unique()))}")
+            print(f'Fluors in selected file: {sorted(list(results_table["Reporter"].unique()))}')
             print(f'Expected fluors: {sorted(self.reporter_dict)}')
             tk.messagebox.showerror(message='Fluorophores in file do not match expected fluorophores. Check assay assignment.')
             # close program
@@ -345,13 +357,13 @@ class DataImporter:
         results_dict = {}
         for fluor in self.reporter_dict:
             
-            results_dict[fluor] = results_table.loc[results_table["Reporter"] == fluor]
+            results_dict[fluor] = results_table.loc[results_table['Reporter'] == fluor]
             try:
-                results_dict[fluor] = results_dict[fluor].rename(columns={"Well": "Well No.",
-                                                                          "Well Position": "Well",
-                                                                          "CT": f"{fluor} CT",
-                                                                          "Cq Conf": f"{fluor} Cq Conf",
-                                                                          "Delta Rn (last cycle)": f"{fluor} dRn"})
+                results_dict[fluor] = results_dict[fluor].rename(columns={'Well': 'Well No.',
+                                                                          'Well Position': 'Well',
+                                                                          'CT': f'{fluor} CT',
+                                                                          'Cq Conf': f'{fluor} Cq Conf',
+                                                                          'Delta Rn (last cycle)': f'{fluor} dRn'})
             except Exception as e:
                 tk.messagebox.showerror(message='Fluorophores in file do not match those entered by user. Check fluorophore assignment.\n\n{}'.format(e))
                 # close program
@@ -362,8 +374,8 @@ class DataImporter:
                 baseline_end = 5
             else:
                 baseline_end = 10
-            get_max = results_dict[fluor].loc[results_dict[fluor]['Baseline End'] >= baseline_end, [f"{fluor} dRn"]]
-            self.max_dRn_dict[fluor] = float(get_max[f"{fluor} dRn"].max())
+            get_max = results_dict[fluor].loc[results_dict[fluor]['Baseline End'] >= baseline_end, [f'{fluor} dRn']]
+            self.max_dRn_dict[fluor] = float(get_max[f'{fluor} dRn'].max())
         
         self.results = self.summarize(results_dict)
 
@@ -374,7 +386,7 @@ class DataImporter:
 
     def parse_rgq(self):
         '''Parse Rotor-Gene Q results files into a standardized pandas dataframe.'''
-        results_filepaths = self.select_file(filetypes = [("Text Files", "*.csv")],
+        results_filepaths = self.select_file(filetypes = [('Text Files', '*.csv')],
                                          num_files=len(self.reporter_dict),
                                          extension=False)
     
@@ -387,9 +399,9 @@ class DataImporter:
 
             results_table = pd.read_csv(filepath, skiprows = 27)
 
-            # see if files chosen are correct - if the file is a valid results file, it will have a column called "Ct"
+            # see if files chosen are correct - if the file is a valid results file, it will have a column called 'Ct'
             try:
-                results_table["Ct"] = results_table["Ct"].fillna(self.cq_cutoff)
+                results_table['Ct'] = results_table['Ct'].fillna(self.cq_cutoff)
             except Exception as e:
                 tk.messagebox.showerror(message='Incorrect files selected. Please try again.\n\n{}'.format(e))
                 # close program
@@ -397,24 +409,24 @@ class DataImporter:
 
             # cycle through all fluors needed for selected assay, match them to names of files selected
             for fluor in self.reporter_dict:
-                if f"{fluor}.csv" in filepath or f"{self.reporter_dict[fluor]}.csv" in filepath:
+                if f'{fluor}.csv' in filepath or f'{self.reporter_dict[fluor]}.csv' in filepath:
                     used_filepaths.append(filepath)
-                    results_table = results_table.rename(columns={"No.": "Well",
-                                                                "Name": "Sample Name",
-                                                                "Ct": f"{fluor} CT",
-                                                                "Ct Comment": "Comments",
-                                                                "Given Conc (copies/reaction)": "Copies"})
+                    results_table = results_table.rename(columns={'No.': 'Well',
+                                                                'Name': 'Sample Name',
+                                                                'Ct': f'{fluor} CT',
+                                                                'Ct Comment': 'Comments',
+                                                                'Given Conc (copies/reaction)': 'Copies'})
                     # first time loop is run:
                     if first_loop:
                         # initialize summary table
-                        self.results = results_table.loc[:, ["Well", "Sample Name", "Copies", "Comments", f"{fluor} CT"]]
+                        self.results = results_table.loc[:, ['Well', 'Sample Name', 'Copies', 'Comments', f'{fluor} CT']]
                         # and get header info
                         with open(filepath, 'r') as csv_file:        
                             sheet_reader = csv.reader(csv_file, delimiter=',')
                             self.head = self.extract_header(sheet_reader, stop='Quantitative')
                         first_loop = False
                     else:
-                        self.results = pd.merge(self.results, results_table.loc[:, ["Well", f"{fluor} CT"]], on="Well")
+                        self.results = pd.merge(self.results, results_table.loc[:, ['Well', f'{fluor} CT']], on='Well')
 
         # number of files was determined to be correct, but did every file get used? if not, results are incomplete
         if sorted(results_filepaths) != sorted(used_filepaths):
@@ -429,9 +441,9 @@ class DataImporter:
 
     def parse_mic(self):
         '''Parse Mic results file into a standardized pandas dataframe.'''
-        self.filepath, self.ext = self.select_file(filetypes = [("All Excel Files","*.xlsx"),
-                                                                ("All Excel Files","*.xls"),
-                                                                ("Text Files", "*.csv")])
+        self.filepath, self.ext = self.select_file(filetypes = [('All Excel Files','*.xlsx'),
+                                                                ('All Excel Files','*.xls'),
+                                                                ('Text Files', '*.csv')])
         tabs_to_use = {}
 
         if self.ext == '.csv': #file extension check - special handling for text files
@@ -449,7 +461,7 @@ class DataImporter:
                 self.head = self.extract_header(sheet_reader, stop='Log')
 
             # create 'chunks' list: break csv into groups, separated by blank lines
-            chunks = [list(group) for is_blank, group in itertools.groupby(csv_lines, lambda line: line.strip() == "") if not is_blank]
+            chunks = [list(group) for is_blank, group in itertools.groupby(csv_lines, lambda line: line.strip() == '') if not is_blank]
             results_csvs = {}
 
             for fluor in self.reporter_dict:
@@ -464,7 +476,7 @@ class DataImporter:
             sheetnames = pd.ExcelFile(self.filepath).sheet_names #get tabs in file
             for fluor in self.reporter_dict:
                 for tab in sheetnames: #cycle through fluorophores and tabs, assign tabs to fluorophores
-                    if self.reporter_dict[fluor] in tab and "Result" in tab and "Absolute" not in tab:
+                    if self.reporter_dict[fluor] in tab and 'Result' in tab and 'Absolute' not in tab:
                         tabs_to_use[fluor] = tab
                         break
             # get header info
@@ -489,10 +501,10 @@ class DataImporter:
                 # Mic results might not start at expected skiprow - remove any non-numerical data before results table
                 results_dict[fluor] = self.extract_results(results_dict[fluor])
 
-            results_dict[fluor]["Cq"] = results_dict[fluor]["Cq"].fillna(self.cq_cutoff).apply(pd.to_numeric)
+            results_dict[fluor]['Cq'] = results_dict[fluor]['Cq'].fillna(self.cq_cutoff).apply(pd.to_numeric)
             results_dict[fluor] = results_dict[fluor].rename(columns={
-                                                                       #"Well": "Well Position",
-                                                                       "Cq": f"{fluor} CT"
+                                                                       #'Well': 'Well Position',
+                                                                       'Cq': f'{fluor} CT'
                                                                        })
 
         self.results = self.summarize(results_dict)
@@ -547,16 +559,16 @@ class DataAnalyzer:
         for i in range(1, len(self.reporter_list)):
             # if a positive signal is observed (Cq below cutoff plus dRn is >5% of max on plate), add it to the list
             if self.machine_type == 'QuantStudio 3' or self.machine_type == 'QuantStudio 5':
-                if (row[self.reporter_list[i] + " CT"] < self.pos_cutoff and
-                    row[self.reporter_list[i] + " dRn"]/self.max_dRn[self.reporter_list[i]] > self.dRn_percent_cutoff
+                if (row[self.reporter_list[i] + ' CT'] < self.pos_cutoff and
+                    row[self.reporter_list[i] + ' dRn']/self.max_dRn[self.reporter_list[i]] > self.dRn_percent_cutoff
                     ):
-                    cq_vals.append(row[self.reporter_list[i] + " CT"])
+                    cq_vals.append(row[self.reporter_list[i] + ' CT'])
                 # otherwise, add another high number
                 else:
                     cq_vals.append(99)
             else:
-                if row[self.reporter_list[i] + " CT"] < self.pos_cutoff: #RotorGene and Mic have internal dRn cutoff handling
-                    cq_vals.append(row[self.reporter_list[i] + " CT"])
+                if row[self.reporter_list[i] + ' CT'] < self.pos_cutoff: #RotorGene and Mic have internal dRn cutoff handling
+                    cq_vals.append(row[self.reporter_list[i] + ' CT'])
                 else:
                     cq_vals.append(99)
 
@@ -567,11 +579,11 @@ class DataAnalyzer:
         if fluor_min != 0:
             return f'{self.reporter_dict[self.reporter_list[fluor_min]]} Positive'
         # otherwise, check IC amplification - was it successful? if so, this is a negative reaction
-        elif row[self.ic + " CT"] < self.pos_cutoff:
-            return "Negative"
+        elif row[self.ic + ' CT'] < self.pos_cutoff:
+            return 'Negative'
         # nothing amplified, including IC? result invalid
         else:
-            return "Invalid Result"
+            return 'Invalid Result'
         
 
     def vhf_analysis(self):
@@ -620,7 +632,7 @@ class DataExporter:
             self.results = self.results.rename(columns={f'{self.reporter_list[i]} CT': f'{self.reporter_dict[self.reporter_list[i]]} Cq'})
             self.columns.insert(i+2, f'{self.reporter_dict[self.reporter_list[i]]} Cq') #insert columns starting at col index 2
             
-            if self.machine_type == "QuantStudio 3" or self.machine_type == "QuantStudio 5":
+            if self.machine_type == 'QuantStudio 3' or self.machine_type == 'QuantStudio 5':
                 self.results = self.results.rename(columns={f'{self.reporter_list[i]} Cq Conf': f'{self.reporter_dict[self.reporter_list[i]]} Cq Conf',
                                                               f'{self.reporter_list[i]} dRn': f'{self.reporter_dict[self.reporter_list[i]]} dRn'})
 
@@ -637,7 +649,7 @@ class DataExporter:
     def to_csv(self):
         '''Export analyzed qPCR dataframe to CSV.'''
 
-        self.dest_filepath = os.path.splitext(self.src_filepath)[0]+" - Summary.csv"
+        self.dest_filepath = os.path.splitext(self.src_filepath)[0]+' - Summary.csv'
 
         # results file can't be created/written if the user already has it open - catch possible PermissionErrors
         file_saved = False
@@ -658,7 +670,7 @@ class DataExporter:
                 if not proceed:
                     raise SystemExit()
                 
-        tk.messagebox.showinfo(title="Success", message=f"CSV summary saved:\n\n{self.dest_filepath}")
+        tk.messagebox.showinfo(title='Success', message=f'CSV summary saved:\n\n{self.dest_filepath}')
 
     
     def export(self):
