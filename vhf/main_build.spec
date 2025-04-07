@@ -52,7 +52,7 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
-    name='ReFocusAssistant_v'+version,
+    name='EpiFocusAssistant_v'+version,
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,

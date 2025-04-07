@@ -1,6 +1,6 @@
 END USER LICENSE AGREEMENT (EULA)
 
-IMPORTANT – READ CAREFULLY: This End User License Agreement ("Agreement") is a legal agreement between you (either an individual or a legal entity) and Aldatu Biosciences, Inc. (“Aldatu”) governing the use of the ReFocus Assistant software application (“Software”).
+IMPORTANT – READ CAREFULLY: This End User License Agreement ("Agreement") is a legal agreement between you (either an individual or a legal entity) and Aldatu Biosciences, Inc. (“Aldatu”) governing the use of the EpiFocus Assistant software application (“Software”).
 
 BY INSTALLING, COPYING, OR OTHERWISE USING THIS SOFTWARE, YOU AGREE TO BE BOUND BY THE TERMS OF THIS AGREEMENT. IF YOU DO NOT AGREE, DO NOT INSTALL OR USE THE SOFTWARE.
 

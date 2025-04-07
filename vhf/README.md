@@ -1,7 +1,7 @@
-# ReFocus Assistant
+# EpiFocus Assistant
 
-**Version:** 1.0.0  
-**Release Date:** 2025-04-01  
+**Version:** 0.1.0  
+**Release Date:** 2025-04-07  
 **Developer:** Aldatu Biosciences, Inc.  
 **Status:** Research Use Only (RUO)
 
@@ -39,7 +39,7 @@ See the [CHANGELOG](./CHANGELOG.md) for version details and release history.
 
 ## Validation
 
-This version (1.0.0) has been tested on:
+This version (0.1.0) has been tested on:
 - Windows 10
 - Clean install with no dependencies
 - Valid and invalid input scenarios
