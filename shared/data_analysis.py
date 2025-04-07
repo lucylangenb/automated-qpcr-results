@@ -110,6 +110,8 @@ class DataImporter:
             if self.machine_type == 'QuantStudio 5' or self.machine_type == 'QuantStudio 3':
                 columns.append(f'{fluor} Cq Conf')
                 columns.append(f'{fluor} dRn')
+            if self.division == 'hiv':
+                columns.append(f'{fluor} Quantity')
             if not first_loop:
                 columns.pop(1)
 
@@ -364,6 +366,9 @@ class DataImporter:
                                                                           'CT': f'{fluor} CT',
                                                                           'Cq Conf': f'{fluor} Cq Conf',
                                                                           'Delta Rn (last cycle)': f'{fluor} dRn'})
+                if self.division == 'hiv':
+                    results_dict[fluor] = results_dict[fluor].rename(columns={'Quantity': f'{fluor} Quantity'})
+        
             except Exception as e:
                 tk.messagebox.showerror(message='Fluorophores in file do not match those entered by user. Check fluorophore assignment.\n\n{}'.format(e))
                 # close program
