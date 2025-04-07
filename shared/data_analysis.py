@@ -107,11 +107,14 @@ class DataImporter:
         for fluor in df_dict:
 
             columns = ['Well', 'Sample Name', f'{fluor} CT']
-            if self.machine_type == 'QuantStudio 5' or self.machine_type == 'QuantStudio 3':
+            if 'QuantStudio' in self.machine_type:
                 columns.append(f'{fluor} Cq Conf')
                 columns.append(f'{fluor} dRn')
             if self.division == 'hiv':
-                columns.append(f'{fluor} Quantity')
+                if 'QuantStudio' in self.machine_type:
+                    columns.append(f'{fluor} Quantity')
+                elif first_loop:
+                    columns.append('Assigned Quantity')
             if not first_loop:
                 columns.pop(1)
 
@@ -264,8 +267,8 @@ class DataImporter:
 
                 elif self.assay == '082AFT 084V':
                     self.reporter_dict = {'CY5': 'VQ',  
-                                          'FAM': '084V',              
-                                          'NED': '082AFT'               
+                                          'FAM': '84V',              
+                                          'NED': '82AFT'               
                                           }
                     self.ic = 'CY5'
 
@@ -476,6 +479,8 @@ class DataImporter:
                         results_csvs[fluor] = chunk
                         tabs_to_use[fluor] = title
                         break
+                    elif self.division == 'hiv' and 'Start Worksheet - Samples' in title: #get sample info (control vs unknown, concentration if available) while we're here
+                        info_csv = chunk
 
         else: #file is not a text file - must be Excel
             sheetnames = pd.ExcelFile(self.filepath).sheet_names #get tabs in file
@@ -489,28 +494,47 @@ class DataImporter:
                 sheet_csv = pd.read_excel(excel_file, sheet_name = 'General Information', usecols='A:B').to_csv(index=False)
                 sheet_reader = csv.reader(sheet_csv.splitlines(), delimiter=',')
                 self.head = self.extract_header(sheet_reader, stop='Log')
+            
+                # get sample task assignment (controls vs unknowns) and assigned copy numbers, if any
+                if self.division == 'hiv':
+                    info_df = pd.read_excel(excel_file, sheet_name = "Samples"
+                                        ).loc[:, ['Well', 'Type', 'Standards Concentration (Copies/µL)']
+                                        ].rename(columns={'Type': 'Task', 'Standards Concentration (Copies/µL)': 'Assigned Quantity'})
+
 
         if sorted(tabs_to_use) != sorted(self.reporter_dict): #check to make sure fluorophores with assigned tabs match the list of fluors known to be in assay
-            tk.messagebox.showerror(message='Fluorophores in file do not match expected fluorophores. Check fluorophore and assay assignment.')
+            tk.messagebox.showerror(message='''Fluorophores in file do not match expected fluorophores. Check fluorophore and assay assignment.\n\n
+                                    Expected: {e}\nGot: {g}'''.format(e=sorted(self.reporter_dict), g=sorted(tabs_to_use)))
             # close program
             raise SystemExit()
         
         results_dict = {}
+        first_loop = True
         for fluor in self.reporter_dict:
             
             if self.ext == '.csv':
                 results_dict[fluor] = self.csv_to_df(results_csvs[fluor], ',', 'Results')
+                if self.division == 'hiv' and first_loop:
+                    info_df = self.csv_to_df(info_csv, ','
+                                            ).loc[:, ['Well', 'Type', 'Standards Concentration (Copies/ÂµL)']
+                                            ].rename(columns={'Type': 'Task', 'Standards Concentration (Copies/ÂµL)': 'Assigned Quantity'})
+                    info_df['Assigned Quantity'] = info_df['Assigned Quantity'].apply(pd.to_numeric)
+                    info_df['Well'] = info_df['Well'].astype(int)
+                    first_loop = False
             
             else:
                 results_dict[fluor] = pd.read_excel(self.filepath, sheet_name = tabs_to_use[fluor], skiprows = 32)
                 # Mic results might not start at expected skiprow - remove any non-numerical data before results table
                 results_dict[fluor] = self.extract_results(results_dict[fluor])
 
-            results_dict[fluor]['Cq'] = results_dict[fluor]['Cq'].fillna(self.cq_cutoff).apply(pd.to_numeric)
-            results_dict[fluor] = results_dict[fluor].rename(columns={
-                                                                       #'Well': 'Well Position',
-                                                                       'Cq': f'{fluor} CT'
-                                                                       })
+            print(results_dict[fluor])
+            results_dict[fluor] = results_dict[fluor].rename(columns={'Cq', f'{fluor} CT'})
+            results_dict[fluor]['Well'] = results_dict[fluor]['Well'].astype(int)
+            results_dict[fluor][f'{fluor} CT'] = results_dict[fluor][f'{fluor} CT'].fillna(self.cq_cutoff).apply(pd.to_numeric)
+            
+            if self.division == 'hiv':
+                info_df['Well'] = info_df['Well'].astype(int)
+                results_dict[fluor] = pd.merge(results_dict[fluor], info_df, on='Well')
 
         self.results = self.summarize(results_dict)
 

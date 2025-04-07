@@ -60,6 +60,7 @@ def main():
     # Initialize the data importer and parse the file
     importer = hiv.DataImporter(assay=assay_selected, machine_type=machine_selected, division=division)
     importer.parse()
+    print(importer.results)
 
     # Analyze the data
     analyzer = hiv.DataAnalyzer(data=importer)
