@@ -8,11 +8,11 @@ def get_version(loc:str):
 
 def remove_copies(loc:str):
     '''Remove non-template installer and version files.'''
-    for filename in glob.glob(os.path.join(os.path.dirname(__file__), '..', loc, 'installer_v*')):
+    for filename in glob.iglob(os.path.join(os.path.dirname(__file__), '..', loc, 'installer_v*')):
         os.remove(filename)
-    for filename in glob.glob(os.path.join(os.path.dirname(__file__), '..', loc, 'version_v*')):
+    for filename in glob.iglob(os.path.join(os.path.dirname(__file__), '..', loc, 'version_v*')):
         os.remove(filename)
-    print('Old copies of installer and version templates deleted.')
+    print('Old copies of installer and version templates deleted')
 
 def update_installer(loc:str, version:str):
     '''Find and replace in installer template to insert version number'''
