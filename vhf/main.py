@@ -6,7 +6,7 @@
 #
 #
 
-name = 'ReFocus Assistant'
+name = 'EpiFocus Assistant'
 use = '(RUO)'
 disclaimer = 'For Research Use Only.\nNot for use in diagnostic procedures.'
 year = '2025'

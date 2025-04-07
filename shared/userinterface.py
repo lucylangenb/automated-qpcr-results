@@ -124,9 +124,13 @@ class PandaaMenu:
                               command=self.help_click)
         file_menu.add_command(label='About {}...'.format(self.window_title),
                               command=self.about_click)
+        file_menu.add_separator()
+        file_menu.add_command(label='Exit',
+                              command=self.close_program)
         
         menubar.add_cascade(menu=file_menu, label='Help')
         self.root.config(menu=menubar)
+        self.root.bind_all('<Control-h>', lambda event: self.help_click())
 
 
     def about_click(self):
