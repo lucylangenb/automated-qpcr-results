@@ -9,7 +9,7 @@
 
 ## Overview
 
-ReFocus Assistant is a companion software tool designed to assist users of Aldatu Biosciences’ viral hemorrhagic fever diagnostics. The application supports automated analysis of exported qPCR results.
+EpiFocus Assistant is a companion software tool designed to assist users of Aldatu Biosciences’ viral hemorrhagic fever diagnostics. The application supports automated analysis of exported qPCR results.
 
 > **Note:** This software is intended for **Research Use Only** and is **not** for clinical or diagnostic decision-making.
 
