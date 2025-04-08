@@ -156,7 +156,7 @@ class Header(Flowable):
     
     def get_path(self, filename:str):
         '''External dependency file path processor: make sure that, when script is packaged as exe, external file can be found.'''
-        shared_path = os.path.abspath(os.path.join(os.getcwd(), '..', 'shared'))
+        shared_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'shared'))
         shared_assets_path = (os.path.join(shared_path, 'assets'))
         path = os.path.join(sys._MEIPASS, filename) if hasattr(sys, '_MEIPASS') else os.path.join(shared_assets_path, filename)
         return path
