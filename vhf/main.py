@@ -66,7 +66,6 @@ def main():
     exporter = vhf.DataExporter(importer, analyzer,
                                 columns=extc['export_columns'])
     exporter.export()
-
     
     # Make the results into a PDF
     pdf_filepath = os.path.splitext(exporter.dest_filepath)[0] + '.pdf'

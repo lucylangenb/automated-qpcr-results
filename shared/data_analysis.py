@@ -353,9 +353,10 @@ class DataImporter:
         
         # make sure file and fluor_names have the same fluorophores listed
         if sorted(list(results_table['Reporter'].unique())) != sorted(self.reporter_dict):
-            print(f'Fluors in selected file: {sorted(list(results_table["Reporter"].unique()))}')
-            print(f'Expected fluors: {sorted(self.reporter_dict)}')
-            tk.messagebox.showerror(message='Fluorophores in file do not match expected fluorophores. Check assay assignment.')
+            tk.messagebox.showerror(message='''Fluorophores in file do not match expected fluorophores. Check assay assignment.\n
+Fluors in selected file: {}
+Expected fluors: {}'''.format(sorted(list(results_table["Reporter"].unique())),
+                              sorted(self.reporter_dict)))
             # close program
             raise SystemExit()
         
@@ -659,7 +660,6 @@ class DataExporter:
         for i in range(len(self.reporter_list)):
             
             self.results = self.results.rename(columns={f'{self.reporter_list[i]} CT': f'{self.reporter_dict[self.reporter_list[i]]} Cq'})
-            self.columns.insert(i+2, f'{self.reporter_dict[self.reporter_list[i]]} Cq') #insert columns starting at col index 2
             
             if self.machine_type == 'QuantStudio 3' or self.machine_type == 'QuantStudio 5':
                 self.results = self.results.rename(columns={f'{self.reporter_list[i]} Cq Conf': f'{self.reporter_dict[self.reporter_list[i]]} Cq Conf',
@@ -670,8 +670,16 @@ class DataExporter:
         rm_headers = list(self.results) #get list of headers to remove - begins with all headers in list
 
         for header in self.columns:
-            rm_headers.remove(header) #for every header in list of columns to export, remove this from our list
-                                      #(leaving behind only the columns to get rid of)
+            if 'Cq' in header and 'Cq Conf' not in header:
+                for key in self.reporter_dict:
+                    rm_headers.remove(f'{self.reporter_dict[key]} Cq')
+            elif 'dRn' in header:
+                for key in self.reporter_dict:
+                    rm_headers.remove(f'{self.reporter_dict[key]} dRn')
+            else:
+                rm_headers.remove(header) #for every header in list of columns to export, remove this from our list
+                                        #(leaving behind only the columns to get rid of)
+
         self.results = self.results.drop(columns=rm_headers, axis=1)
 
 
@@ -686,7 +694,7 @@ class DataExporter:
             try:
                 self.results.to_csv(
                     path_or_buf=self.dest_filepath,
-                    columns=self.columns,
+                    #columns=self.columns,
                     index=False
                     )
                 self.prepend()
