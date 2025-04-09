@@ -62,19 +62,21 @@ def main():
     analyzer.vhf_analysis()
 
     # Export the results
-    time.sleep(0.3) #program runs extremely quickly - adding sleep step may improve perceived legitimacy
+    if intc['wait']:
+        time.sleep(0.3) #program runs extremely quickly - adding sleep step may improve perceived legitimacy
     exporter = vhf.DataExporter(importer, analyzer,
                                 columns=extc['export_columns'])
     exporter.export()
     
     # Make the results into a PDF
-    pdf_filepath = os.path.splitext(exporter.dest_filepath)[0] + '.pdf'
-    get_app_info(info['name'], info['version'], info['use'])
-    if 'QuantStudio' not in machine_selected:
-        pdf = Report(pdf_filepath, exporter.header, exporter.results, path_as_filename=exporter.dest_filepath)
-    else:
-        pdf = Report(pdf_filepath, exporter.header, exporter.results)
-    pdf.create()
+    if extc['create_pdf']:
+        pdf_filepath = os.path.splitext(exporter.dest_filepath)[0] + '.pdf'
+        get_app_info(info['name'], info['version'], info['use'])
+        if 'QuantStudio' not in machine_selected:
+            pdf = Report(pdf_filepath, exporter.header, exporter.results, path_as_filename=exporter.dest_filepath)
+        else:
+            pdf = Report(pdf_filepath, exporter.header, exporter.results)
+        pdf.create()
     
     print("Analysis complete. Results exported successfully.")
 

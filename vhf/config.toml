@@ -20,6 +20,7 @@ assay_choice_format = "radio"
 assay_choices = ["PANDAA LASV", "PANDAA CCHFV", "PANDAA Ebola + Marburg"]
 machine_choices = ["QuantStudio 3", "QuantStudio 5", "Rotor-Gene", "Mic"]
 export_columns = ["Well", "Sample Name", "Result"]
+create_pdf = true
 
 #
 # Supported options:
@@ -39,6 +40,8 @@ export_columns = ["Well", "Sample Name", "Result"]
 #                                 (add'l QuantStudio cols): ["dRn"]
 #                       Columns supported for HIV analysis: 
 #
+# create_pdf:           If true, PDF is generated. A CSV with results will always be produced.
+#
 
 
 
@@ -47,6 +50,7 @@ export_columns = ["Well", "Sample Name", "Result"]
 #
 
 [int]
+wait = true
 division = "vhf"
 cq_cutoff = 35.0
 pos_cutoff = 30.0
@@ -54,6 +58,17 @@ dRn_percent_cutoff = 0.05
 
 #
 # Parameters explained:
+#
+# wait:                 If true, introduces a brief 0.3-second pause between file selection and CSV results generation.
+#                       This program executes very quickly, and in some cases, an instant response can seem suspiciously fast,
+#                       especially to users unfamiliar with how lightweight the analysis is. This may create the impression that
+#                       no real processing has occurred.
+#                       
+#                       Introducing a short delay can help reassure users that their input has been registered and thoughtfully
+#                       handled. There’s some anecdotal evidence that intentional pauses can increase perceived value and credibility.
+#                       See this article for more context:
+#                       https://90percentofeverything.com/2010/12/16/adding-delays-to-increase-perceived-value-does-it-work/
+#
 #
 # division:             "vhf" = positive or negative for one target per well based on Cq (i.e., Ebola or Marburg, but not both)
 #                       "hiv" = positive or negative for all targets in well based on copy number extrapolated from Cq; requires standard curve on plate
