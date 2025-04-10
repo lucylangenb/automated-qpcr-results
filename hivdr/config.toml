@@ -19,7 +19,7 @@ year = "2025" #for copyright purposes
 assay_choice_format = "list"
 assay_choices = ["076V 184VI", "082AFT 084V"]
 machine_choices = ["QuantStudio 3", "QuantStudio 5", "Rotor-Gene", "Mic"]
-export_columns = ["Well", "Sample Name", "Result"]
+export_columns = ["Well", "Sample Name", "Call", "DRM Percentage"]
 create_pdf = true
 
 #
@@ -38,7 +38,8 @@ create_pdf = true
 # export_columns:       Include a list of the columns you want to appear in summary CSV / PDF files. 
 #                       Columns supported for VHF analysis: ["Well", "Sample Name", "Cq", "Result"]
 #                                 (add'l QuantStudio cols): ["dRn"]
-#                       Columns supported for HIV analysis: 
+#                       Columns supported for HIV analysis: ["Well", "Sample Name", "Cq", "Call"]
+#                                 (add'l QuantStudio cols): ["dRn", "DRM Percentage"]
 #
 # create_pdf:           If true, PDF is generated. A CSV with results will always be produced.
 #
@@ -55,6 +56,8 @@ division = "hiv"
 cq_cutoff = 35.0
 pos_cutoff = 30.0
 dRn_percent_cutoff = 0.05
+min_drm_percent = 0.05
+max_drm_percent = 0.1
 
 #
 # Parameters explained:

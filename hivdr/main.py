@@ -58,7 +58,7 @@ def main():
 
     # Analyze the data
     analyzer = hiv.DataAnalyzer(data=importer,
-                                pos_cutoff=intc['pos_cutoff'], dRn_percent_cutoff=intc['dRn_percent_cutoff'])
+                                min_drm_percent=intc['min_drm_percent'], max_drm_percent=intc['max_drm_percent'])
     analyzer.hiv_analysis()
 
     # Export the results

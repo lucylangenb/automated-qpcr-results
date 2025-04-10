@@ -348,8 +348,12 @@ class DataImporter:
         # make sure columns contain number values, not strings
         for col in ['CT', 'Cq Conf', 'Baseline End']:
             results_table[col] = results_table[col].apply(pd.to_numeric)
+        # clean up HIV-specific columns in similar manner
         if self.division == 'hiv':
             results_table['Quantity'] = results_table['Quantity'].fillna(0)
+            results_table['Quantity'] = results_table['Quantity'].apply(pd.to_numeric)
+
+
         
         # make sure file and fluor_names have the same fluorophores listed
         if sorted(list(results_table['Reporter'].unique())) != sorted(self.reporter_dict):
@@ -562,7 +566,9 @@ class DataAnalyzer:
     '''Given a parsed qPCR dataframe, generate qualitative results.'''
     def __init__(self, data:DataImporter,
                        pos_cutoff=30,
-                       dRn_percent_cutoff=0.05):
+                       dRn_percent_cutoff=0.05,
+                       min_drm_percent=0.05,
+                       max_drm_percent=0.1):
         
         self.df = data.results
         self.machine_type = data.machine_type
@@ -572,8 +578,13 @@ class DataAnalyzer:
         self.max_dRn = data.max_dRn_dict
         self.cq_cutoff = data.cq_cutoff
 
+        #vhf only
         self.pos_cutoff = pos_cutoff
         self.dRn_percent_cutoff = dRn_percent_cutoff
+
+        #hiv only
+        self.min_drm_percent = min_drm_percent
+        self.max_drm_percent = max_drm_percent
 
 
     def vhf_result(self, row):
@@ -624,25 +635,48 @@ class DataAnalyzer:
         self.df['Result'] = self.df.apply(self.vhf_result, axis=1)
 
 
+
+    def hiv_result(self, row, col):
+        if row[col] < self.min_drm_percent or row[self.ic + ' Quantity'] < 50:
+            call = 'Negative'
+        elif row[col] >= self.max_drm_percent:
+            call = 'Positive'
+        else:
+            call = 'Indeterminate'
+        return call
+
+
     def hiv_analysis(self):
         '''Perform analysis on all rows in dataframe.
         
            References `hiv_result`.
         '''
-        self.vhf_analysis()
+        #iterate through all reporters except index 0, which holds the internal control reporter
+        for fluor in self.reporter_list[1:]:
+            
+            # create additional columns containing DRM percentages
+            kwargs = {f'{self.reporter_dict[fluor]} DRM Percentage': 
+                      lambda x: x[fluor + ' Quantity'] / x[self.ic + ' Quantity']}
+            self.df = self.df.assign(**kwargs).fillna(0)
+            
+            # based on DRM percentage columns, determine call for each reporter
+            self.df[f'{self.reporter_dict[fluor]} Call'] = self.df.apply(self.hiv_result, col=f'{self.reporter_dict[fluor]} DRM Percentage', axis=1)
 
     
+
 class DataExporter:
     '''Given an analyzed qPCR dataframe, clean up and export results.'''
     def __init__(self, imported:DataImporter,
                        analyzed:DataAnalyzer,
-                       columns=['Well', 'Sample Name', 'Result']):
+                       columns:list):
         
         self.header = imported.head
         self.results = analyzed.df
+        self.division = imported.division
         self.machine_type = analyzed.machine_type
         self.reporter_list = analyzed.reporter_list
         self.reporter_dict = analyzed.reporter_dict
+        self.ic = imported.ic
         self.src_filepath = imported.filepath
         self.dest_filepath = None
         self.columns = columns
@@ -662,13 +696,25 @@ class DataExporter:
                 file.write('\n\n'+existing)
 
 
+    def roundvals(self):
+        '''Round values for presentation purposes.'''
+        for key in self.reporter_dict:
+            self.results[f'{key} CT'] = self.results[f'{key} CT'].round(1)
+            if 'QuantStudio' in self.machine_type:
+                self.results[f'{key} Cq Conf'] = self.results[f'{key} Cq Conf'].round(3)
+                self.results[f'{key} dRn'] = self.results[f'{key} dRn'].round(1)
+            if self.division == 'hiv' and key != self.ic:
+                self.results[f'{self.reporter_dict[key]} DRM Percentage'] = self.results[f'{self.reporter_dict[key]} DRM Percentage'].map(
+                    lambda num: '{0:.1f}%'.format(round(num*100, 1) if num < 1 else 100))
+
+
     def get_column_list(self):
         '''Create list of columns to export.'''
         for i in range(len(self.reporter_list)):
             
             self.results = self.results.rename(columns={f'{self.reporter_list[i]} CT': f'{self.reporter_dict[self.reporter_list[i]]} Cq'})
             
-            if self.machine_type == 'QuantStudio 3' or self.machine_type == 'QuantStudio 5':
+            if 'QuantStudio' in self.machine_type:
                 self.results = self.results.rename(columns={f'{self.reporter_list[i]} Cq Conf': f'{self.reporter_dict[self.reporter_list[i]]} Cq Conf',
                                                               f'{self.reporter_list[i]} dRn': f'{self.reporter_dict[self.reporter_list[i]]} dRn'})
 
@@ -683,6 +729,12 @@ class DataExporter:
             elif 'dRn' in header:
                 for key in self.reporter_dict:
                     rm_headers.remove(f'{self.reporter_dict[key]} dRn')
+            elif 'Call' in header:
+                for key in self.reporter_list[1:]:
+                    rm_headers.remove(f'{self.reporter_dict[key]} Call')
+            elif 'DRM Percentage' in header:
+                for key in self.reporter_list[1:]:
+                    rm_headers.remove(f'{self.reporter_dict[key]} DRM Percentage')
             else:
                 rm_headers.remove(header) #for every header in list of columns to export, remove this from our list
                                         #(leaving behind only the columns to get rid of)
@@ -718,17 +770,19 @@ class DataExporter:
 
     
     def export(self):
+        self.roundvals()
         self.get_column_list()
         self.cleanup()
         self.to_csv()
 
 
 if __name__ == '__main__':
-    importer = DataImporter(assay='PANDAA CCHFV', machine_type='QuantStudio 5', division='vhf')
+    importer = DataImporter(assay="076V 184VI", machine_type="QuantStudio 5", division='hiv')
     importer.parse()
+    print(importer.results)
     analyzer = DataAnalyzer(data=importer)
-    analyzer.vhf_analysis()
-    exporter = DataExporter(importer, analyzer)
-    exporter.export()
-
+    analyzer.hiv_analysis()
     print(analyzer.df)
+    exporter = DataExporter(importer, analyzer, columns=["Well", "Sample Name", "Call", "DRM Percentage"])
+    exporter.export()
+    print(exporter.results)
