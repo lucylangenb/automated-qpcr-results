@@ -5,13 +5,6 @@
 #   This script contains a main() function that can be used to run PANDAA data analysis from a GUI.
 #
 #
-
-name = 'ReFocus Assistant'
-use = '(RUO)'
-disclaimer = 'For Research Use Only.\nNot for use in diagnostic procedures.'
-year = '2025'
-division = 'hiv'
-
 ##############################################################################################################################
 
 import sys, os
@@ -21,10 +14,11 @@ import data_analysis as hiv
 from userinterface import PandaaMenu
 from reportbuilder import Report, get_app_info
 from importlib import util
-import time
+import time, tomli
 
-with open(os.path.join(os.path.dirname(__file__), 'version_number.txt')) as f:
-    __version__ = f.read().strip()
+with open(os.path.join(os.path.dirname(__file__), 'config.toml'), mode='rb') as f: #get TOML configuration
+    config = tomli.load(f)
+    info, intc, extc = config['info'], config['int'], config['ext']
 
 
 def main():
@@ -38,15 +32,15 @@ def main():
         print('Splash screen closed.')
     
     # Initialize GUI to get user selections
-    app = PandaaMenu(app_title=name,
-                     version=__version__,
-                     use=use,
-                     disclaimer=disclaimer,
-                     year=year,
-                     division=division,
-                     assay_choices=['076V 184VI', '082AFT 084V', 'PANDAA Ebola + Marburg'],
-                     assay_format='list',
-                     machine_choices=['QuantStudio 3', 'QuantStudio 5', 'Rotor-Gene', 'Mic'])
+    app = PandaaMenu(app_title=info['name'],
+                     version=info['version'],
+                     use=info['use'],
+                     disclaimer=info['disclaimer'],
+                     year=info['year'],
+                     division=intc['division'],
+                     assay_choices=extc['assay_choices'],
+                     assay_format=extc['assay_choice_format'],
+                     machine_choices=extc['machine_choices'])
     app.start()
 
     # Retrieve user's selections
@@ -58,28 +52,31 @@ def main():
         return
 
     # Initialize the data importer and parse the file
-    importer = hiv.DataImporter(assay=assay_selected, machine_type=machine_selected, division=division)
+    importer = hiv.DataImporter(assay=assay_selected, machine_type=machine_selected,
+                                cq_cutoff=intc['cq_cutoff'], division=intc['division'])
     importer.parse()
-    print(importer.results)
 
     # Analyze the data
-    analyzer = hiv.DataAnalyzer(data=importer)
-    analyzer.vhf_analysis()
+    analyzer = hiv.DataAnalyzer(data=importer,
+                                pos_cutoff=intc['pos_cutoff'], dRn_percent_cutoff=intc['dRn_percent_cutoff'])
+    analyzer.hiv_analysis()
 
     # Export the results
-    time.sleep(0.3) #program runs extremely quickly - adding sleep step may improve perceived legitimacy
-    exporter = hiv.DataExporter(importer, analyzer, columns=['Well', 'Sample Name', 'Result'])
+    if intc['wait']:
+        time.sleep(0.3) #program runs extremely quickly - adding sleep step may improve perceived legitimacy
+    exporter = hiv.DataExporter(importer, analyzer,
+                                columns=extc['export_columns'])
     exporter.export()
-
     
     # Make the results into a PDF
-    pdf_filepath = os.path.splitext(exporter.dest_filepath)[0] + '.pdf'
-    get_app_info(name, __version__, use)
-    if 'QuantStudio' not in machine_selected:
-        pdf = Report(pdf_filepath, exporter.header, exporter.results, path_as_filename=exporter.dest_filepath)
-    else:
-        pdf = Report(pdf_filepath, exporter.header, exporter.results)
-    pdf.create()
+    if extc['create_pdf']:
+        pdf_filepath = os.path.splitext(exporter.dest_filepath)[0] + '.pdf'
+        get_app_info(info['name'], info['version'], info['use'])
+        if 'QuantStudio' not in machine_selected:
+            pdf = Report(pdf_filepath, exporter.header, exporter.results, path_as_filename=exporter.dest_filepath)
+        else:
+            pdf = Report(pdf_filepath, exporter.header, exporter.results)
+        pdf.create()
     
     print("Analysis complete. Results exported successfully.")
 

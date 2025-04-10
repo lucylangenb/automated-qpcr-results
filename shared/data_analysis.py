@@ -622,7 +622,14 @@ class DataAnalyzer:
            References `vhf_result`.
         '''
         self.df['Result'] = self.df.apply(self.vhf_result, axis=1)
-        #return self.df
+
+
+    def hiv_analysis(self):
+        '''Perform analysis on all rows in dataframe.
+        
+           References `hiv_result`.
+        '''
+        self.vhf_analysis()
 
     
 class DataExporter:

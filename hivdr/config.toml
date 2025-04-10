@@ -1,0 +1,84 @@
+#
+# General app info, for readme/EULA/headers
+#
+
+[info]
+name = "ReFocus Assistant"
+version = "0.1.0"
+use = "(RUO)"
+disclaimer = "For Research Use Only.\nNot for use in diagnostic procedures."
+year = "2025" #for copyright purposes
+
+
+
+#
+# Choose displayed analysis options
+#
+
+[ext]
+assay_choice_format = "list"
+assay_choices = ["076V 184VI", "082AFT 084V"]
+machine_choices = ["QuantStudio 3", "QuantStudio 5", "Rotor-Gene", "Mic"]
+export_columns = ["Well", "Sample Name", "Result"]
+create_pdf = true
+
+#
+# Supported options:
+#
+# assay_choice_format:  "radio" = assay options displayed as radio buttons (all options visible at once)
+#                       "list" = assay options displayed as drop-down list (click selected option to view list of all options)
+#
+# assay_choices:        Include a list of the assays you want to appear in the radio-button or drop-down list. List can contain as many or as few assays as you like.
+#                       VHF assays supported: ["PANDAA LASV", "PANDAA CCHFV", "PANDAA Ebola + Marburg"]
+#                       HIV assays supported: ["076V 184VI", "082AFT 084V"]
+#
+# machine_choices:      Include a list of the qPCR machines you want to appear in the drop-down list. List can contain as many or as few machines as you like.
+#                       qPCR machines supported: ["QuantStudio 3", "QuantStudio 5", "Rotor-Gene", "Mic"]
+#
+# export_columns:       Include a list of the columns you want to appear in summary CSV / PDF files. 
+#                       Columns supported for VHF analysis: ["Well", "Sample Name", "Cq", "Result"]
+#                                 (add'l QuantStudio cols): ["dRn"]
+#                       Columns supported for HIV analysis: 
+#
+# create_pdf:           If true, PDF is generated. A CSV with results will always be produced.
+#
+
+
+
+#
+# Choose internal analysis options
+#
+
+[int]
+wait = true
+division = "hiv"
+cq_cutoff = 35.0
+pos_cutoff = 30.0
+dRn_percent_cutoff = 0.05
+
+#
+# Parameters explained:
+#
+# wait:                 If true, introduces a brief 0.3-second pause between file selection and CSV results generation.
+#                       This program executes very quickly, and in some cases, an instant response can seem suspiciously fast,
+#                       especially to users unfamiliar with how lightweight the analysis is. This may create the impression that
+#                       no real processing has occurred.
+#                       
+#                       Introducing a short delay can help reassure users that their input has been registered and thoughtfully
+#                       handled. There’s some anecdotal evidence that intentional pauses can increase perceived value and credibility.
+#                       See this article for more context:
+#                       https://90percentofeverything.com/2010/12/16/adding-delays-to-increase-perceived-value-does-it-work/
+#
+#
+# division:             "vhf" = positive or negative for one target per well based on Cq (i.e., Ebola or Marburg, but not both)
+#                       "hiv" = positive or negative for all targets in well based on copy number extrapolated from Cq; requires standard curve on plate
+#
+# cq_cutoff:            If a well's cycle is "Undetermined," it will be assigned the value of cq_cutoff - the maximum possible Cq value.
+#
+# pos_cutoff:           Wells with a Cq above this value are considered negative for that target.
+#
+# dRn_percent_cutoff:   Regardless of Cq, if a well's dRn is below this fraction of the max dRn on the plate, it is considered negative.
+#                       Example: max FAM dRn of any well on the plate is 100,000. Well A1 has a FAM dRn of 4,500 and a FAM Cq of 28.
+#                                pos_cutoff = 30, dRn_percent_cutoff = 0.05
+#                                Despite a Cq below pos_cutoff, A1 is considered negative for FAM, because 4,500 is less than 5% of 100,000.
+#
