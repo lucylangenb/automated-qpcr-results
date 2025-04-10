@@ -356,8 +356,12 @@ class Report:
         table_style = TableStyle([('INNERGRID', (0,0), (-1,-1), 0.25, colors.black),
                                   ('BOX', (0,0), (-1,-1), 0.25, colors.black),
                                   ('VALIGN',(0,0),(-1,-1),'MIDDLE')])
+        try:
+            table = Table(data, colWidths=colWidths)
+        except Exception as e:
+            tk.messagebox.showerror(message="No header information found. Ensure that run information exists in raw results file.\n\n{}".format(e))
+            raise SystemExit()
 
-        table = Table(data, colWidths=colWidths)
         table.setStyle(table_style)
         table.hAlign = 'LEFT'
         self.elements.append(table)
