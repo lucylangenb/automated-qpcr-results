@@ -14,7 +14,8 @@ import tkinter as tk
 from tkinter import messagebox
 
 from reportlab.lib.pagesizes import letter
-from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.enums import TA_LEFT, TA_RIGHT, TA_CENTER, TA_JUSTIFY
 from reportlab.lib.units import inch
 from reportlab.lib import utils, colors
 from reportlab.pdfgen import canvas
@@ -195,6 +196,7 @@ class Report:
                                      topMargin=0.75*inch, bottomMargin=0.75*inch)
         self.elements = []
         self.styles = getSampleStyleSheet()
+        self.ralign_style = ParagraphStyle(name='RightAlign', parent=self.styles['Normal'], alignment=TA_RIGHT)
         self.width, self.height = pagesize
 
         self.pdf_file = pdf_file
@@ -214,13 +216,40 @@ class Report:
         return x, y
     
 
-    def create_text(self, text, size=10, bold=False):
+    def create_text(self, text, size=10, bold=False, align=True):
         '''Convert string to Paragraph object'''
-        if bold:
+
+        if bold and align:
+            try:
+                float(str(text).strip('%')) #is 'text' a num? if so, right align
+                return Paragraph('''<font size={size}><b>
+                {text}</b></font>
+                '''.format(size=size, text=text),
+                self.ralign_style)
+            except:
+                return Paragraph('''<font size={size}><b>
+                {text}</b></font>
+                '''.format(size=size, text=text),
+                self.styles['Normal']) #text is string, left align
+            
+        if bold: #and not align
             return Paragraph('''<font size={size}><b>
             {text}</b></font>
             '''.format(size=size, text=text),
-               self.styles['Normal'])
+            self.styles['Normal'])
+
+        if align:
+            try:
+                float(str(text).strip('%')) #is 'text' a num? if so, right align 
+                return Paragraph('''<font size={size}>
+                {text}</font>
+                '''.format(size=size, text=text),
+                self.ralign_style)
+            except:
+                return Paragraph('''<font size={size}>
+                {text}</font>
+                '''.format(size=size, text=text),
+                self.styles['Normal']) #text is string, left align
 
         return Paragraph('''<font size={size}>
         {text}</font>
@@ -257,7 +286,7 @@ class Report:
                 return process_reader(reader, kw)
     
     
-    def csv_to_table(self, input_data, bold='left'):
+    def csv_to_table(self, input_data, bold='left', align=True):
         """Convert CSV or list data to a list of Paragraph objects, for use in a ReportLab Table object."""
 
         def process_data(reader, bold):
@@ -271,10 +300,10 @@ class Report:
                         if item != '':
                             plain = strip_ascii(item)
                             if first:
-                                row_data.append(self.create_text(plain, bold=True))
+                                row_data.append(self.create_text(plain, bold=True, align=align))
                                 first = False
                             else:
-                                row_data.append(self.create_text(plain))
+                                row_data.append(self.create_text(plain, align=align))
                     if len(row_data) > 1: #if there's data in this row, add it to list
                         data.append(row_data)
 
@@ -287,9 +316,9 @@ class Report:
                         if item != '':
                             plain = strip_ascii(item)
                             if first:
-                                row_data.append(self.create_text(plain, bold=True))
+                                row_data.append(self.create_text(plain, bold=True, align=align))
                             else:
-                                row_data.append(self.create_text(plain))
+                                row_data.append(self.create_text(plain, align=align))
                     if len(row_data) > 1: #if there's data in this row, add it to list
                         data.append(row_data)
                     if first:
@@ -349,7 +378,7 @@ class Report:
         self.elements.append(p)
         self.elements.append(Spacer(1,0.2*inch))
 
-        data = self.csv_to_table(self.head, bold='left')
+        data = self.csv_to_table(self.head, bold='left', align=False)
         self.doc.name = self.get_exp_name(self.head, use_path=self.path_as_filename)
 
         colWidths = [1.125*inch, 5.7*inch] #original: 0.875*inch, 5.95*inch

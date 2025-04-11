@@ -19,7 +19,7 @@ year = "2025" #for copyright purposes
 assay_choice_format = "radio"
 assay_choices = ["PANDAA LASV", "PANDAA CCHFV", "PANDAA Ebola + Marburg"]
 machine_choices = ["QuantStudio 3", "QuantStudio 5", "Rotor-Gene", "Mic"]
-export_columns = ["Well", "Sample Name", "Result"]
+export_columns = ["Well", "Sample Name", "Cq", "Result"]
 create_pdf = true
 
 #
