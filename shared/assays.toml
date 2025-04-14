@@ -5,8 +5,9 @@
 #
 # ["Assay"]
 # ic = {internal control fluorophore for VHF assays, VQ fluorophore for HIV assays}
-# assay.{fluorophore 1} = "Target 1"
+# assay.{fluorophore 1} = "{Internal Control or VQ}"
 # assay.{fluorophore 2} = "Target 2"
+# assay.{fluorophore 3} = "Target 3"
 #
 # # # # # # # # # # # # # # # # # # # # # # # # #
 
