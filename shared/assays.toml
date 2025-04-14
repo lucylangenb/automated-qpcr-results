@@ -4,7 +4,7 @@
 # Format:
 #
 # ["Assay"]
-# ic = {internal control fluorophore}
+# ic = {internal control fluorophore for VHF assays, VQ fluorophore for HIV assays}
 # assay.{fluorophore 1} = "Target 1"
 # assay.{fluorophore 2} = "Target 2"
 #
