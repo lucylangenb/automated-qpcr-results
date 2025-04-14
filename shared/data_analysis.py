@@ -28,21 +28,26 @@ import csv #text file parsing
 import itertools #for mic csv parsing
 import os #for getting file extension
 import numpy as np #for least squares regression
+import tomli #for assay config
 
 pd.set_option('future.no_silent_downcasting', True)
+
+
 
 ##############################################################################################################################
 
 class DataImporter:
     '''Get qPCR data from text or Excel file, then parse into standardized dataframe.'''
     def __init__(self, cq_cutoff=35,
-                 machine_type: str=None, assay: str=None, division='vhf'):
+                 machine_type: str=None, assay: str=None, division='vhf',
+                 config='assays.toml'):
         ''''''
         # get user-provided parameters
         self.cq_cutoff = cq_cutoff
         self.machine_type = machine_type
         self.assay = assay
         self.division = division
+        self.configpath = config
 
         # prepare for assay initialization
         self.reporter_dict = {}
@@ -60,6 +65,9 @@ class DataImporter:
         self.root = tk.Tk()
         self.root.withdraw()
 
+        # get assay config
+        with open(os.path.join(os.path.dirname(__file__), self.configpath), mode='rb') as f: #get TOML configuration
+            self.config = tomli.load(f)
         
     ##############################################################################################################################
     ### Helper functions for data analysis - file to dataframe
@@ -234,52 +242,11 @@ class DataImporter:
     def init_reporters(self):
         '''Get reporters and targets, given assay name.'''
         try:
-            if self.division == 'vhf':
-                if self.assay == 'PANDAA Ebola + Marburg':
-                    self.reporter_dict = {  'CY5': 'Internal Control',  
-                                            'FAM': 'EBOV',              
-                                            'VIC': 'MARV'               
-                                        }
-                    self.ic = 'CY5'
-
-                elif self.assay == 'PANDAA CCHFV':
-                    self.reporter_dict = {  'CY5': 'Internal Control',  
-                                            'FAM': 'CCHFV'              
-                                        }
-                    self.ic = 'CY5'
-
-                elif self.assay == 'PANDAA LASV':
-                    self.reporter_dict = {  'CY5': 'Internal Control',  
-                                            'FAM': 'LASV'              
-                                        }
-                    self.ic = 'CY5'
-                
-                else:
-                    raise ValueError('Assay not defined: {}'.format(self.assay))
-            
-            elif self.division == 'hiv':
-                if self.assay == '076V 184VI':
-                    self.reporter_dict = {'CY5': 'VQ',  
-                                          'FAM': '076V',              
-                                          'NED': '184VI'               
-                                          }
-                    self.ic = 'CY5'
-
-                elif self.assay == '082AFT 084V':
-                    self.reporter_dict = {'CY5': 'VQ',  
-                                          'FAM': '84V',              
-                                          'NED': '82AFT'               
-                                          }
-                    self.ic = 'CY5'
-
-                else:
-                    raise ValueError('Assay not defined: {}'.format(self.assay))
-            
-            else:
-                raise ValueError('Assay not defined: {}'.format(self.assay))
+            self.reporter_dict = self.config[self.assay]["assay"]
+            self.ic = self.config[self.assay]["ic"]
         
         except Exception as e:
-            tk.messagebox.showerror(message='Invalid assay. Check assay input setting.\n\n{}'.format(e))
+            tk.messagebox.showerror(message='Invalid assay. Check assay input setting.\n\n{}: not defined'.format(e))
             # close program
             raise SystemExit()
         

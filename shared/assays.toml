@@ -1,0 +1,41 @@
+#
+# Define assays below.
+#
+# Format:
+#
+# ["Assay"]
+# ic = {internal control fluorophore}
+# assay.{fluorophore 1} = "Target 1"
+# assay.{fluorophore 2} = "Target 2"
+#
+# # # # # # # # # # # # # # # # # # # # # # # # #
+
+["PANDAA Ebola + Marburg"]
+ic = "CY5"
+assay.CY5 = "Internal Control"
+assay.FAM = "EBOV"
+assay.VIC = "MARV"
+
+["PANDAA CCHFV"]
+ic = "CY5"
+assay.CY5 = "Internal Control"
+assay.FAM = "CCHFV"
+
+["PANDAA LASV"]
+ic = "CY5"
+assay.CY5 = "Internal Control"
+assay.FAM = "LASV"
+
+# # # # # # # # # # # # # # # # # # # # # # # # #
+
+["076V 184VI"]
+ic = "CY5"
+assay.CY5 = "VQ"
+assay.FAM = "076V"
+assay.NED = "184VI"
+
+["082AFT 084V"]
+ic = "CY5"
+assay.CY5 = "VQ"
+assay.FAM = "84V"
+assay.NED = "82AFT"
