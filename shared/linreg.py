@@ -75,7 +75,7 @@ def linreg(df, fluor='CY5', percent_drm=0.2):
 # in regression, y=mx+b ==
 # (Cq) = m*(log10 copies) + b
 def quantify(y, m, b):
-    '''Given `y = mx + b` --> `(Cq) = m*(log10 copies) + b`, solve for `x` (log10 copies) using Cq.
+    '''Given `y = mx + b` --> `(Cq) = m*(log10 copies) + b`, solve for `10^x` (copies) using Cq.
     Args:
         y (float): Cq value
         m (float): slope to use

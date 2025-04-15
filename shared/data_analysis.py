@@ -29,6 +29,7 @@ import itertools #for mic csv parsing
 import os #for getting file extension
 import numpy as np #for least squares regression
 import tomli #for assay config
+import linreg
 
 pd.set_option('future.no_silent_downcasting', True)
 
@@ -39,7 +40,8 @@ pd.set_option('future.no_silent_downcasting', True)
 class DataImporter:
     '''Get qPCR data from text or Excel file, then parse into standardized dataframe.'''
     def __init__(self, cq_cutoff=35,
-                 machine_type: str=None, assay: str=None, division='vhf',
+                 machine_type: str=None, assay: str=None,
+                 division='vhf', drm_percentage=0.2,
                  config='assays.toml'):
         ''''''
         # get user-provided parameters
@@ -47,6 +49,7 @@ class DataImporter:
         self.machine_type = machine_type
         self.assay = assay
         self.division = division
+        self.drm_percentage = drm_percentage
         self.configpath = config
 
         # prepare for assay initialization
@@ -68,6 +71,7 @@ class DataImporter:
         # get assay config
         with open(os.path.join(os.path.dirname(__file__), self.configpath), mode='rb') as f: #get TOML configuration
             self.config = tomli.load(f)
+
         
     ##############################################################################################################################
     ### Helper functions for data analysis - file to dataframe
@@ -119,10 +123,7 @@ class DataImporter:
                 columns.append(f'{fluor} Cq Conf')
                 columns.append(f'{fluor} dRn')
             if self.division == 'hiv':
-                if 'QuantStudio' in self.machine_type:
-                    columns.append(f'{fluor} Quantity')
-                elif first_loop:
-                    columns.append('Assigned Quantity')
+                columns.append(f'{fluor} Quantity')
             if not first_loop:
                 columns.pop(1)
 
@@ -233,8 +234,8 @@ class DataImporter:
             df.reset_index(inplace=True, drop=True) #fix any index numbering problems that may have occurred as result of row dropping
                 
         return df
-
     
+
     ##############################################################################################################################
     ### Initialization - get fluors based on selected assay
     ##############################################################################################################################
@@ -499,8 +500,8 @@ Expected fluors: {}'''.format(sorted(list(results_table["Reporter"].unique())),
                 # Mic results might not start at expected skiprow - remove any non-numerical data before results table
                 results_dict[fluor] = self.extract_results(results_dict[fluor])
 
-            print(results_dict[fluor])
-            results_dict[fluor] = results_dict[fluor].rename(columns={'Cq', f'{fluor} CT'})
+            #print(results_dict[fluor])
+            results_dict[fluor] = results_dict[fluor].rename(columns={'Cq': f'{fluor} CT'})
             results_dict[fluor]['Well'] = results_dict[fluor]['Well'].astype(int)
             results_dict[fluor][f'{fluor} CT'] = results_dict[fluor][f'{fluor} CT'].fillna(self.cq_cutoff).apply(pd.to_numeric)
             
@@ -508,6 +509,10 @@ Expected fluors: {}'''.format(sorted(list(results_table["Reporter"].unique())),
                 info_df['Well'] = info_df['Well'].astype(int)
                 results_dict[fluor] = pd.merge(results_dict[fluor], info_df, on='Well')
 
+                m, b = linreg.linreg(df=results_dict[fluor], fluor=fluor, percent_drm=self.drm_percentage)
+                results_dict[fluor][f'{fluor} Quantity'] = results_dict[fluor][f'{fluor} CT'].apply(linreg.quantify, args=(m,b))
+                print(results_dict[fluor])
+        
         self.results = self.summarize(results_dict)
 
 
@@ -670,9 +675,12 @@ class DataExporter:
             if 'QuantStudio' in self.machine_type:
                 self.results[f'{key} Cq Conf'] = self.results[f'{key} Cq Conf'].round(3)
                 self.results[f'{key} dRn'] = self.results[f'{key} dRn'].round(1)
-            if self.division == 'hiv' and key != self.ic:
-                self.results[f'{self.reporter_dict[key]} DRM Percentage'] = self.results[f'{self.reporter_dict[key]} DRM Percentage'].map(
-                    lambda num: '{0:.1f}%'.format(round(num*100, 1) if num < 1 else 100))
+            if self.division == 'hiv':
+                self.results[f'{key} Quantity'] = self.results[f'{key} Quantity'].map(
+                    lambda num: '{0} copies'.format(int(num)))
+                if key != self.ic:
+                    self.results[f'{self.reporter_dict[key]} DRM Percentage'] = self.results[f'{self.reporter_dict[key]} DRM Percentage'].map(
+                        lambda num: '{0:.1f}%'.format(round(num*100, 1) if num < 1 else 100))
 
 
     def get_column_list(self):
@@ -684,6 +692,9 @@ class DataExporter:
             if 'QuantStudio' in self.machine_type:
                 self.results = self.results.rename(columns={f'{self.reporter_list[i]} Cq Conf': f'{self.reporter_dict[self.reporter_list[i]]} Cq Conf',
                                                               f'{self.reporter_list[i]} dRn': f'{self.reporter_dict[self.reporter_list[i]]} dRn'})
+            if self.division == 'hiv':
+                self.results = self.results.rename(columns={f'{self.reporter_list[i]} Quantity': f'{self.reporter_dict[self.reporter_list[i]]} Quantity'})
+
 
     def cleanup(self):
         '''Get rid of unwanted columns in analyzed qPCR dataframe.'''
@@ -704,7 +715,7 @@ class DataExporter:
                     rm_headers.remove(f'{self.reporter_dict[key]} DRM Percentage')
             else:
                 rm_headers.remove(header) #for every header in list of columns to export, remove this from our list
-                                        #(leaving behind only the columns to get rid of)
+                                          #(leaving behind only the columns to get rid of)
 
         self.results = self.results.drop(columns=rm_headers, axis=1)
 
@@ -720,7 +731,6 @@ class DataExporter:
             try:
                 self.results.to_csv(
                     path_or_buf=self.dest_filepath,
-                    #columns=self.columns,
                     index=False
                     )
                 self.prepend()
@@ -744,12 +754,15 @@ class DataExporter:
 
 
 if __name__ == '__main__':
-    importer = DataImporter(assay="076V 184VI", machine_type="QuantStudio 5", division='hiv')
+    importer = DataImporter(assay="082AFT 084V", machine_type="Mic", division='hiv')
     importer.parse()
+    print('Data imported')
     print(importer.results)
     analyzer = DataAnalyzer(data=importer)
     analyzer.hiv_analysis()
+    print('Data analyzed')
     print(analyzer.df)
-    exporter = DataExporter(importer, analyzer, columns=["Well", "Sample Name", "Call", "DRM Percentage"])
+    exporter = DataExporter(importer, analyzer, columns=["Well", "Sample Name", "Call", "DRM Percentage", "VQ Quantity"])
     exporter.export()
+    print('Data exported')
     print(exporter.results)
