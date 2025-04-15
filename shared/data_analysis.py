@@ -676,8 +676,7 @@ class DataExporter:
                 self.results[f'{key} Cq Conf'] = self.results[f'{key} Cq Conf'].round(3)
                 self.results[f'{key} dRn'] = self.results[f'{key} dRn'].round(1)
             if self.division == 'hiv':
-                self.results[f'{key} Quantity'] = self.results[f'{key} Quantity'].map(
-                    lambda num: '{0} copies'.format(int(num)))
+                self.results[f'{key} Quantity'] = self.results[f'{key} Quantity'].round(0).astype(int)
                 if key != self.ic:
                     self.results[f'{self.reporter_dict[key]} DRM Percentage'] = self.results[f'{self.reporter_dict[key]} DRM Percentage'].map(
                         lambda num: '{0:.1f}%'.format(round(num*100, 1) if num < 1 else 100))
@@ -693,7 +692,7 @@ class DataExporter:
                 self.results = self.results.rename(columns={f'{self.reporter_list[i]} Cq Conf': f'{self.reporter_dict[self.reporter_list[i]]} Cq Conf',
                                                               f'{self.reporter_list[i]} dRn': f'{self.reporter_dict[self.reporter_list[i]]} dRn'})
             if self.division == 'hiv':
-                self.results = self.results.rename(columns={f'{self.reporter_list[i]} Quantity': f'{self.reporter_dict[self.reporter_list[i]]} Quantity'})
+                self.results = self.results.rename(columns={f'{self.reporter_list[i]} Quantity': f'{self.reporter_dict[self.reporter_list[i]]} Copies'})
 
 
     def cleanup(self):
