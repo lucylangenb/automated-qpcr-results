@@ -500,7 +500,6 @@ Expected fluors: {}'''.format(sorted(list(results_table["Reporter"].unique())),
                 # Mic results might not start at expected skiprow - remove any non-numerical data before results table
                 results_dict[fluor] = self.extract_results(results_dict[fluor])
 
-            #print(results_dict[fluor])
             results_dict[fluor] = results_dict[fluor].rename(columns={'Cq': f'{fluor} CT'})
             results_dict[fluor]['Well'] = results_dict[fluor]['Well'].astype(int)
             results_dict[fluor][f'{fluor} CT'] = results_dict[fluor][f'{fluor} CT'].fillna(self.cq_cutoff).apply(pd.to_numeric)
@@ -511,7 +510,6 @@ Expected fluors: {}'''.format(sorted(list(results_table["Reporter"].unique())),
 
                 m, b = linreg.linreg(df=results_dict[fluor], fluor=fluor, percent_drm=self.drm_percentage)
                 results_dict[fluor][f'{fluor} Quantity'] = results_dict[fluor][f'{fluor} CT'].apply(linreg.quantify, args=(m,b))
-                print(results_dict[fluor])
         
         self.results = self.summarize(results_dict)
 
