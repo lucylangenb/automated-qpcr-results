@@ -61,7 +61,7 @@ def update_readme(loc:str):
 
 
 if __name__ == '__main__':
-    loc = input('Folder with files to be updated (hivdr or vhf): ')
+    loc = input('Folder with files to be updated (hiv or vhf): ')
     version = get_version(loc)
     remove_copies(loc)
     update_installer(loc, version)

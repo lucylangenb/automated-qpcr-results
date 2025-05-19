@@ -1,7 +1,7 @@
-# EpiFocus Assistant
+# ReFocus Assistant
 
 **Version:** 0.1.0  
-**Release Date:** 2025-04-07  
+**Release Date:** 2025-05-19 
 **Developer:** Aldatu Biosciences, Inc.  
 **Status:** Research Use Only (RUO)
 
@@ -9,7 +9,7 @@
 
 ## Overview
 
-EpiFocus Assistant is a companion software tool designed to assist users of Aldatu Biosciences’ viral hemorrhagic fever diagnostics. The application supports automated analysis of exported qPCR results.
+ReFocus Assistant is a companion software tool designed to assist users of Aldatu Biosciences’ HIV drug-resistant mutation diagnostics. The application supports automated analysis of exported qPCR results.
 
 > **Note:** This software is intended for **Research Use Only** and is **not** for clinical or diagnostic decision-making.
 
@@ -51,7 +51,7 @@ Validation summary is available upon request.
 ## License
 
 Source code is available on GitHub under the [MIT License](https://github.com/aldatubio/PANDAA-qPCR-Results/blob/main/LICENSE.txt).
-[https://github.com/aldatubio/PANDAA-qPCR-Results/tree/main/vhf](https://github.com/aldatubio/PANDAA-qPCR-Results/tree/main/vhf)
+[https://github.com/aldatubio/PANDAA-qPCR-Results/tree/main/hiv](https://github.com/aldatubio/PANDAA-qPCR-Results/tree/main/hiv)
 
 Use of the compiled software is subject to the [EULA](./EULA.txt) included with the installer.
 
