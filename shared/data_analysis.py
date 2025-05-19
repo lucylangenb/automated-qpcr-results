@@ -195,7 +195,7 @@ class DataImporter:
 
             if len(filepaths) != num_files:
                 tk.messagebox.showerror(message=f'''Incorrect number of files. Expected {num_files} files,
-                                            but {len(filepaths)} were selected. Make sure files are not open in other programs.''')
+but {len(filepaths)} were selected. Make sure files are not open in other programs.''')
                 # close program
                 raise SystemExit()
             
@@ -462,9 +462,17 @@ Expected fluors: {}'''.format(sorted(list(results_table["Reporter"].unique())),
                     if self.reporter_dict[fluor] in tab and 'Result' in tab and 'Absolute' not in tab:
                         tabs_to_use[fluor] = tab
                         break
+
             # get header info
             with open(self.filepath, 'rb') as excel_file:
-                sheet_csv = pd.read_excel(excel_file, sheet_name = 'General Information', usecols='A:B').to_csv(index=False)
+
+                try:
+                    sheet_csv = pd.read_excel(excel_file, sheet_name = 'General Information', usecols='A:B').to_csv(index=False)
+                except Exception as e:
+                    tk.messagebox.showerror(message='Incorrect file selected. Check instrument input.\n\n{}'.format(e))
+                    # close program
+                    raise SystemExit()
+                
                 sheet_reader = csv.reader(sheet_csv.splitlines(), delimiter=',')
                 self.head = self.extract_header(sheet_reader, stop='Log')
             
@@ -477,7 +485,7 @@ Expected fluors: {}'''.format(sorted(list(results_table["Reporter"].unique())),
 
         if sorted(tabs_to_use) != sorted(self.reporter_dict): #check to make sure fluorophores with assigned tabs match the list of fluors known to be in assay
             tk.messagebox.showerror(message='''Fluorophores in file do not match expected fluorophores. Check fluorophore and assay assignment.\n\n
-                                    Expected: {e}\nGot: {g}'''.format(e=sorted(self.reporter_dict), g=sorted(tabs_to_use)))
+Expected: {e}\nGot: {g}'''.format(e=sorted(self.reporter_dict), g=sorted(tabs_to_use)))
             # close program
             raise SystemExit()
         
