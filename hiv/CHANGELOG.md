@@ -36,10 +36,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### SHA256 Checksums
 - Application: `ReFocusAssistant_v0.1.0.exe
-  `xxx`
+  `DC85CD01965CB479B4DEF3655C631089BBFDFA07E3F5EC7C088992B5DA174526`
 
 - Installer: `ReFocusAssistant_Installer_v0.1.0.exe`  
-  `xxx`
+  `09996E25875B8817BBAC11BD9DA60D888C52F9A9FFD264AAD38E7404D098D552`
 
 ### Validation
 - Installation and execution validated on Windows 10.
