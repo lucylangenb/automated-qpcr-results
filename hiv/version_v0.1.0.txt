@@ -30,14 +30,14 @@ VSVersionInfo(
       StringTable(
         u'040904b0',
         [StringStruct(u'CompanyName', u'Aldatu Biosciences, Inc.'),
-        StringStruct(u'ProductName', u'EpiFocus Assistant'),
+        StringStruct(u'ProductName', u'ReFocus Assistant'),
         StringStruct(u'ProductVersion', u'0, 1, 0, 0'),
-        #StringStruct(u'InternalName', u'EpiFocus Assistant'),
-        #StringStruct(u'OriginalFilename', u'EpiFocus_Assistant_v0.1.0.exe'),
+        #StringStruct(u'InternalName', u'ReFocus Assistant'),
+        #StringStruct(u'OriginalFilename', u'ReFocus_Assistant_v0.1.0.exe'),
         StringStruct(u'FileVersion', u'0, 1, 0, 0'),
-        StringStruct(u'FileDescription', u'EpiFocus Assistant'),
+        StringStruct(u'FileDescription', u'ReFocus Assistant'),
         StringStruct(u'LegalCopyright', u'Copyright 2025 Aldatu Biosciences, Inc.'),
-        #StringStruct(u'LegalTrademarks', u'EpiFocus Assistant is a registered trademark of Aldatu Biosciences, Inc.'),
+        #StringStruct(u'LegalTrademarks', u'ReFocus Assistant is a registered trademark of Aldatu Biosciences, Inc.'),
 	])
       ]),
     VarFileInfo([VarStruct(u'Translation', [1033, 1200])])

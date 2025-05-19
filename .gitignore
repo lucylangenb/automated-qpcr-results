@@ -16,8 +16,14 @@
 
 # Build outputs #
 #################
+
 /vhf/build/
 /vhf/dist/
+/vhf/Output
+/hiv/build/
+/hiv/dist/
+/hiv/Output
+
 /reportlab/
 __pycache__/
 #*.spec

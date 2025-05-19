@@ -60,6 +60,6 @@ Use of the compiled software is subject to the EULA included with the installer.
 Contact
 
 Aldatu Biosciences, Inc.  
-313 Pleasant St, Watertown, MA 02474, USA  
+313 Pleasant St, Watertown, MA 02472, USA  
 📧 support@aldatubio.com  
 🌐 aldatubio.com
