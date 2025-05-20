@@ -1,6 +1,3 @@
-import sys, os
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))) #look for custom dependencies in shared folder
-
 import pytest
 import pandas as pd
 from io import StringIO
@@ -94,3 +91,43 @@ def test_hiv_result():
     row = {"Target1 DRM Percentage": 0.12, "HEX Quantity": 100}
     call = analyzer.hiv_result(row, "Target1 DRM Percentage")
     assert call in ["Negative", "Positive", "Indeterminate"]
+
+def test_init_reporters_valid(monkeypatch):
+    monkeypatch.setattr("tkinter.Tk", lambda: DummyTk())
+    monkeypatch.setattr("tomli.load", lambda f: {'assayX': {'assay': {'FAM': 'Target1', 'VIC': 'IC'}, 'ic': 'VIC'}})
+    importer = DataImporter(assay="assayX", machine_type="Mic", division="vhf")
+    importer.init_reporters()
+    assert importer.reporter_dict == {'FAM': 'Target1', 'VIC': 'IC'}
+    assert importer.ic == "VIC"
+
+def test_vhf_result_edge_cases():
+    class DummyData:
+        results = pd.DataFrame({'FAM CT': [28, 35], 'FAM dRn': [6, 3], 'VIC CT': [15, 35]})
+        machine_type = "QuantStudio 3"
+        reporter_dict = {"FAM": "Target1", "VIC": "IC"}
+        reporter_list = ["VIC", "FAM"]
+        ic = "VIC"
+        max_dRn_dict = {"FAM": 100}
+        cq_cutoff = 35
+
+    analyzer = DataAnalyzer(DummyData())
+    result_0 = analyzer.vhf_result(analyzer.df.iloc[0])
+    result_1 = analyzer.vhf_result(analyzer.df.iloc[1])
+    assert result_0 == "Target1 Positive"
+    assert result_1 == "Invalid Result"
+
+def test_hiv_result_all():
+    class DummyData:
+        results = pd.DataFrame({'Target1 DRM Percentage': [0.01, 0.06, 0.2], 'VIC Quantity': [100, 100, 100]})
+        machine_type = "Mic"
+        reporter_dict = {"FAM": "Target1", "VIC": "IC"}
+        reporter_list = ["VIC", "FAM"]
+        ic = "VIC"
+        max_dRn_dict = {"FAM": 100}
+        cq_cutoff = 35
+
+    analyzer = DataAnalyzer(DummyData())
+    df = analyzer.df
+    assert analyzer.hiv_result(df.iloc[0], "Target1 DRM Percentage") == "Negative"
+    assert analyzer.hiv_result(df.iloc[1], "Target1 DRM Percentage") == "Indeterminate"
+    assert analyzer.hiv_result(df.iloc[2], "Target1 DRM Percentage") == "Positive"
