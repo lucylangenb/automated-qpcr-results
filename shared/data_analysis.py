@@ -21,6 +21,9 @@
 ### Imports
 ##############################################################################################################################
 
+import os, sys
+sys.path.insert(0, os.path.dirname(__file__)) #look for custom dependencies in shared folder
+
 import pandas as pd #file and data handling
 from tkinter import filedialog #prompt user to select results file
 import tkinter as tk #error message GUI
@@ -29,7 +32,7 @@ import itertools #for mic csv parsing
 import os #for getting file extension
 import numpy as np #for least squares regression
 import tomli #for assay config
-import linreg
+from . import linreg #to run this script natively, instead of in package context: remove "from . " from this line
 
 pd.set_option('future.no_silent_downcasting', True)
 
@@ -719,8 +722,11 @@ class DataExporter:
                 for key in self.reporter_list[1:]:
                     rm_headers.remove(f'{self.reporter_dict[key]} DRM Percentage')
             else:
-                rm_headers.remove(header) #for every header in list of columns to export, remove this from our list
+                try:
+                    rm_headers.remove(header) #for every header in list of columns to export, remove this from our list
                                           #(leaving behind only the columns to get rid of)
+                except:
+                    pass
 
         self.results = self.results.drop(columns=rm_headers, axis=1)
 
