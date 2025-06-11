@@ -2,7 +2,7 @@ To release a new version of this application, as a compiled binary:
 
 - Change the version number in version_number.txt
 - Run build_installer.py to update build-related files (change dates in README.md and/or filepaths in .iss file prior to this step, as necessary)
-- Run pyinstaller from command-line using the preexisting spec file; use this command:
+- Run pyinstaller from command-line using the preexisting spec file; use this command while cwd is project folder (hiv/ or vhf/):
 	pyinstaller main_build.spec
 - Sign the executable (Windows SignTool is easy to use: https://gist.github.com/PaulCreusy/7fade8d5a8026f2228a97d31343b335e || https://learn.microsoft.com/en-us/dotnet/framework/tools/signtool-exe)
 	signtool sign /f <path_of_certificate> /p <password> /fd SHA256 /tr http://timestamp.digicert.com /td SHA256 <YourApp.exe>
