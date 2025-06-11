@@ -32,7 +32,7 @@ import itertools #for mic csv parsing
 import os #for getting file extension
 import numpy as np #for least squares regression
 import tomli #for assay config
-from . import linreg #to run this script natively, instead of in package context: remove "from . " from this line
+import linreg #to run this script natively, instead of in package context: remove "from . " from this line
 
 pd.set_option('future.no_silent_downcasting', True)
 

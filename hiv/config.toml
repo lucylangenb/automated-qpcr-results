@@ -4,7 +4,7 @@
 
 [info]
 name = "ReFocus Assistant"
-version = "0.1.0"
+version = "0.1.1"
 use = "(RUO)"
 disclaimer = "For Research Use Only.\nNot for use in diagnostic procedures."
 year = "2025" #for copyright purposes

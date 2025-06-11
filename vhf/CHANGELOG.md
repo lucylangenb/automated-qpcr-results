@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 > ⚠️ This software is for **Research Use Only (RUO)**. Not for diagnostic or clinical decision-making.
 
 ---
+## [0.1.1] – 2025-06-11
+### Added
+- Minor bug fix: corrected build spec file to accomodate TOML files
 
 ## [0.1.0] – 2025-04-07
 ### Added
