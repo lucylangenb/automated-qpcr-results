@@ -8,6 +8,8 @@ To release a new version of this application, as a compiled binary:
 	signtool sign /f <path_of_certificate> /p <password> /fd SHA256 /tr http://timestamp.digicert.com /td SHA256 <YourApp.exe>
   You can verify that signing worked (whether via self-signing or a code signing certificate):
 	signtool verify /v <YourApp.exe>
+  If you'd like to copy the SHA256 hash to your clipboard:
+	Get-FileHash -Path <YourApp.exe> | clip
 - Run Inno Setup, either in-app or command-line, using the pre-generated .iss file:
 	iscc <path-to-iss-file>
 - Sign the installer (same method as signing the executable)
