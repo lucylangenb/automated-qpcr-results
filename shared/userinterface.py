@@ -112,8 +112,12 @@ class PandaaMenu:
         self.root.protocol('WM_DELETE_WINDOW', self.close_program)
 
         # change feather icon in upper corner to Aldatu logo
-        ico = self.get_image('aldatulogo_icon.gif')
-        self.root.wm_iconphoto(True, ico) #True bool here ensures that all subsequent windows also use this icon
+        # ico = self.get_image('aldatulogo_icon.gif')
+        # self.root.wm_iconphoto(True, ico) #True bool here ensures that all subsequent windows also use this icon
+
+        icon_path = os.path.join(sys._MEIPASS, 'aldatulogo_icon.ico') if hasattr(sys, '_MEIPASS') else get_shared_assets_path('aldatulogo_icon.ico')
+        self.root.iconbitmap(icon_path)
+
 
     
     def add_menu(self):
