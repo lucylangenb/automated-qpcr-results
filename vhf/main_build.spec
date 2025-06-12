@@ -22,11 +22,10 @@ a = Analysis(
     binaries=[],
     datas=[(os.path.join(shared_assets_path, 'aldatulogo_icon.gif'), '.'),
            (os.path.join(shared_assets_path, 'aldatulogo.gif'), '.'),
+           (os.path.join(shared_assets_path, 'aldatulogo_icon.ico'), '.'),
            ('version_number.txt', '.'),
            ('eula.txt', '.'),
-           ('readme.txt', '.'),
-           ('config.toml', '.'),
-           (os.path.join(shared_path, 'assays.toml'), '.')],
+           ('readme.txt', '.')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
@@ -45,7 +44,6 @@ splash = Splash(splash_image_path,
                 text_color='#204771',
                 text_font='Arial')
 
-
 exe = EXE(
     pyz,
     a.scripts,
@@ -54,13 +52,12 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
+    exclude_binaries=True,
     name='EpiFocusAssistant_v'+version,
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
     upx=True,
-    upx_exclude=[],
-    runtime_tmpdir=None,
     console=False,
     disable_windowed_traceback=False,
     argv_emulation=False,
@@ -68,5 +65,14 @@ exe = EXE(
     codesign_identity=None,
     entitlements_file=None,
     version='version_v{}.txt'.format(version),
-    icon=[ico_path],
+    icon=[ico_path]
+)
+coll = COLLECT(
+    exe,
+    a.binaries,
+    a.datas,
+    strip=False,
+    upx=True,
+    upx_exclude=[],
+    name='EpiFocusAssistant_v'+version
 )
