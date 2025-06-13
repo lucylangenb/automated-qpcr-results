@@ -15,12 +15,13 @@ def remove_copies(loc:str):
     print('Old copies of installer and version templates deleted')
 
 def update_installer(loc:str, version:str):
-    '''Find and replace in installer template to insert version number'''
+    '''Find and replace in installer template to insert version number and current file location'''   
+    filepath = os.path.join(os.path.normpath(os.path.dirname(__file__)))
+    dir = os.path.dirname(filepath)
     with (open(os.path.join(os.path.dirname(__file__), '..', loc, 'installer_template.iss')) as src,
           open(os.path.join(os.path.dirname(__file__), '..', loc, 'installer_v{}.iss'.format(version)), 'w') as dst):
-        content = src.read().replace('{VERSION}', version)
+        content = src.read().replace('{VERSION}', version).replace('{PATH}', dir)
         dst.write(content)
-
     print('Installer script generated with version {}'.format(version))
 
 def update_verfile(loc:str, version:str):
