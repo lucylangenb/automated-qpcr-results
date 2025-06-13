@@ -22,9 +22,9 @@ AppSupportURL={#MyAppURL}
 AppUpdatesURL={#MyAppURL}
 DefaultDirName={pf}\{#MyAppName}
 DefaultGroupName={#MyAppName}
-LicenseFile=C:\Users\lucy\OneDrive - Aldatu Biosciences\Desktop\PANDAA qPCR Results\hiv\eula.txt
-InfoBeforeFile=C:\Users\lucy\OneDrive - Aldatu Biosciences\Desktop\PANDAA qPCR Results\hiv\readme.txt
-InfoAfterFile=C:\Users\lucy\OneDrive - Aldatu Biosciences\Desktop\PANDAA qPCR Results\hiv\readme.txt
+LicenseFile={PATH}\hiv\eula.txt
+InfoBeforeFile={PATH}\hiv\readme.txt
+InfoAfterFile={PATH}\hiv\readme.txt
 OutputBaseFilename={#MyAppNameNoSpaces}_Installer_v{#MyAppVersion}
 Compression=lzma
 SolidCompression=yes
@@ -37,7 +37,7 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 Name: "quicklaunchicon"; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked; OnlyBelowVersion: 0,6.1
 
 [Files]
-Source: "C:\Users\lucy\OneDrive - Aldatu Biosciences\Desktop\PANDAA qPCR Results\hiv\dist\ReFocusAssistant_v{VERSION}.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{PATH}\hiv\dist\ReFocusAssistant_v{VERSION}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
@@ -46,3 +46,6 @@ Name: "{group}\{cm:ProgramOnTheWeb,{#MyAppName}}"; Filename: "{#MyAppURL}"
 Name: "{group}\{cm:UninstallProgram,{#MyAppName}}"; Filename: "{uninstallexe}"
 Name: "{commondesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
 Name: "{userappdata}\Microsoft\Internet Explorer\Quick Launch\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: quicklaunchicon
+
+[Run]
+Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
