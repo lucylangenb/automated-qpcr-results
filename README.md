@@ -15,3 +15,6 @@ This repository contains two companion tools: ReFocus Assistant, for use with HI
 Note that executable files are static - to use updated TOML files, the application can be run via command-line or source code editor (with either method, run `main.py`); alternatively, the executable can be re-compiled using the directions in the `dev.txt` file in this repository as a guide.
 
 **What to read next:** For more information, see the [full guide].
+
+## Contributions
+**Note:** All contributions prior to July 2025 were authored by Lucy Langenberg during her employment at Aldatu Biosciences (2022 - 2025).
