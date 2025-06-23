@@ -10,10 +10,13 @@ To release a new version of this application, as a compiled binary:
 	signtool verify /v <YourApp.exe>
   If you'd like to copy the SHA256 hash to your clipboard:
 	Get-FileHash -Path <YourApp.exe> | clip
+- Copy and paste TOML files to _internal folder of pyinstaller output
 - Run Inno Setup, either in-app or command-line, using the pre-generated .iss file:
 	iscc <path-to-iss-file>
 - Sign the installer (same method as signing the executable)
 - Update changelog with notes, new checksums, etc.
 - Commit any necessary changes, then add a Git tag: https://git-scm.com/book/en/v2/Git-Basics-Tagging
 	git tag -a vhf-0.0.0-alpha -m "First public pre-release of EpiFocus Assistant"
+  Git commits don't automatically push tags to remote, so this must be done explicitly:
+	git push origin --tags
 - Create a new release, using the new tag; add initial release notes as text and installer as an available download

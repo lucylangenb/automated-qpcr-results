@@ -12,6 +12,9 @@ This repository contains two companion tools: ReFocus Assistant, for use with HI
 - A `config.toml` file is available in each Assistant tool's sub-folder (`/vhf/` or `/hiv/`). Here, tool-specific options can be configured, such as display name, qPCR machines included in the selection menu, and Cq cutoffs used.
 - The `/shared/` folder contains the `assays.toml` file. Here, PANDAA assays can be defined. Because this is a shared file, these assays can be used in either tool (whether they are visible in selection menus can be configured in the `config.toml` file).
 
-Note that executable files are static - to use updated TOML files, the application can be run via command-line or source code editor (with either method, run `main.py`); alternatively, the executable can be re-compiled using the directions in the `dev.txt` file in this repository as a guide.
+TOML files are runtime-editable and can be used to configure existing executables.
 
 **What to read next:** For more information, see the [full guide].
+
+## Contributions
+**Note:** All contributions prior to July 2025 were authored by Lucy Langenberg during her employment at Aldatu Biosciences (2022 - 2025).
