@@ -1,7 +1,6 @@
 ReFocus Assistant
 
-Version: 0.1.1  
-Release Date: 2025-06-11 Developer: Aldatu Biosciences, Inc.  
+Version: 1.0.0 Release Date: 2025-06-23 Developer: Aldatu Biosciences, Inc.  
 Status: Research Use Only (RUO)
 
 * * *
@@ -42,7 +41,7 @@ See the CHANGELOG for version details and release history.
 
 Validation
 
-This version (0.1.1) has been tested on: \- Windows 10 \- Clean install with no dependencies \- Valid and invalid input scenarios
+This version (1.0.0) has been tested on: \- Windows 10 \- Clean install with no dependencies \- Valid and invalid input scenarios
 
 Validation summary is available upon request.
 

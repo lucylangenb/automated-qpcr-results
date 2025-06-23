@@ -3,10 +3,10 @@
 
 #define MyAppName "EpiFocus Assistant"
 #define MyAppNameNoSpaces "EpiFocusAssistant"
-#define MyAppVersion "0.1.1"
+#define MyAppVersion "1.0.0"
 #define MyAppPublisher "Aldatu Biosciences, Inc."
 #define MyAppURL "http://www.aldatubio.com"
-#define MyAppExeName "EpiFocusAssistant_v0.1.1.exe"
+#define MyAppExeName "EpiFocusAssistant_v1.0.0.exe"
 
 [Setup]
 ; NOTE: The value of AppId uniquely identifies this application.
@@ -37,7 +37,7 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 Name: "quicklaunchicon"; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked; OnlyBelowVersion: 0,6.1
 
 [Files]
-Source: "C:\Users\lucy\OneDrive - Aldatu Biosciences\Desktop\PANDAA qPCR Results\vhf\dist\EpiFocusAssistant_v0.1.1\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "C:\Users\lucy\OneDrive - Aldatu Biosciences\Desktop\PANDAA qPCR Results\vhf\dist\EpiFocusAssistant_v1.0.0\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]

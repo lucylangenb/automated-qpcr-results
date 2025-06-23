@@ -6,8 +6,8 @@ VSVersionInfo(
   ffi=FixedFileInfo(
     # filevers and prodvers should be always a tuple with four items: (1, 2, 3, 4)
     # Set not needed items to zero 0.
-    filevers=(0, 1, 1, 0),
-    prodvers=(0, 1, 1, 0),
+    filevers=(1, 0, 0, 0),
+    prodvers=(1, 0, 0, 0),
     # Contains a bitmask that specifies the valid bits 'flags'
     mask=0x3f,
     # Contains a bitmask that specifies the Boolean attributes of the file.
@@ -30,14 +30,14 @@ VSVersionInfo(
       StringTable(
         u'040904b0',
         [StringStruct(u'CompanyName', u'Aldatu Biosciences, Inc.'),
-        StringStruct(u'ProductName', u'EpiFocus Assistant'),
-        StringStruct(u'ProductVersion', u'0, 1, 1, 0'),
-        #StringStruct(u'InternalName', u'EpiFocus Assistant'),
-        #StringStruct(u'OriginalFilename', u'EpiFocus_Assistant_v0.1.1.exe'),
-        StringStruct(u'FileVersion', u'0, 1, 1, 0'),
-        StringStruct(u'FileDescription', u'EpiFocus Assistant'),
+        StringStruct(u'ProductName', u'ReFocus Assistant'),
+        StringStruct(u'ProductVersion', u'1, 0, 0, 0'),
+        #StringStruct(u'InternalName', u'ReFocus Assistant'),
+        #StringStruct(u'OriginalFilename', u'ReFocus_Assistant_v1.0.0.exe'),
+        StringStruct(u'FileVersion', u'1, 0, 0, 0'),
+        StringStruct(u'FileDescription', u'ReFocus Assistant'),
         StringStruct(u'LegalCopyright', u'Copyright 2025 Aldatu Biosciences, Inc.'),
-        #StringStruct(u'LegalTrademarks', u'EpiFocus Assistant is a registered trademark of Aldatu Biosciences, Inc.'),
+        #StringStruct(u'LegalTrademarks', u'ReFocus Assistant is a registered trademark of Aldatu Biosciences, Inc.'),
 	])
       ]),
     VarFileInfo([VarStruct(u'Translation', [1033, 1200])])

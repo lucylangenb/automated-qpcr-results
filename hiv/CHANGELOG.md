@@ -8,6 +8,62 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 > ⚠️ This software is for **Research Use Only (RUO)**. Not for diagnostic or clinical decision-making.
 
 ---
+## [1.0.0] – 2025-06-23
+### Added
+- First stable release of ReFocus Assistant for Aldatu's HIV drug resistance product line.
+- Reorganized code and packaging to support modular configuration via editable TOML files.
+- External configuration files (`config.toml`) can be modified post-installation for assay-specific parameters without requiring rebuild.
+- Onedir-based executable structure preserves performance and allows advanced users to inspect or modify internal assets as needed.
+
+### Improved
+- Updated `.spec` and build pipeline to support runtime-accessible data (TOML, EULA, README).
+- Replaced all relative imports with absolute imports to ensure compatibility with PyInstaller builds.
+- Dynamic loading of GUI assets and support files using `sys._MEIPASS` where applicable.
+- GUI window icon now loads correctly in both development and executable contexts.
+- Application startup errors are now surfaced when run from command-line to support debugging.
+- Windows installer built using Inno Setup for clean deployment: user-friendly, self-contained, and runtime-ready.
+
+### Removed
+- Removed unnecessary bundling of static configuration files (e.g., TOML) in compiled binary, allowing user-level overrides and editability.
+
+### Build Environment
+- Windows: 10.0.19043-SP0
+- Python: 3.9.5
+- PyInstaller: 6.11.0
+- Inno Setup: 6.4.1
+- OS tested: Windows 10
+- Installer: `ReFocusAssistant_Installer_v1.0.0.exe`
+- Certificate: self-signed for internal use (SmartScreen warning expected)
+
+### Dependencies
+- pandas 2.2.3
+- numpy 1.24.1
+- pillow 11.0.0
+- reportlab 4.2.5 _(local wheel)_
+- pyinstaller-hooks-contrib 2024.9
+- pywin32 308
+- python-dateutil 2.9.0.post0
+
+### SHA256 Checksums
+- Application: `ReFocusAssistant_v1.0.0.exe`  
+  `ADB4309F7A7D65F6F15CF8C8570623AD05069970EEE65ADA326F3C7DB6619E3B`
+
+- Installer: `ReFocusAssistant_Installer_v1.0.0.exe`  
+  `217D7C2AA1A7F25F2185E7558F35EEAA4205C61EDD3D1C8B1B2277957801817D`
+
+### Validation
+- Installer tested on clean Windows 10 machine (non-dev environment).
+- Double-click-to-launch functionality confirmed.
+- TOML editing validated with new assay parameters.
+- GUI asset loading, splash screen, result processing all function as expected.
+- Help menu, About dialog, and embedded documentation tested and verified.
+
+### Notes
+- This release is **Research Use Only (RUO)**. Not for clinical decision-making.
+- Application is unsigned and self-signed only for internal testing. Certificate trust warnings are expected unless signed by a recognized Certificate Authority.
+- Installer can be redistributed via Aldatu’s website or internal support tools.
+
+
 ## [0.1.1] – 2025-06-11
 ### Added
 - Minor bug fix: corrected build spec file to accomodate TOML files

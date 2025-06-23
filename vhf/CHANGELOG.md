@@ -8,9 +8,66 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 > ⚠️ This software is for **Research Use Only (RUO)**. Not for diagnostic or clinical decision-making.
 
 ---
+## [1.0.0] – 2025-06-23
+### Added
+- First stable release of EpiFocus Assistant for Aldatu's viral hemorrhagic fever (VHF) product line.
+- Reorganized code and packaging to support modular configuration via editable TOML files.
+- External configuration files (`config.toml`) can be modified post-installation for assay-specific parameters without requiring rebuild.
+- Onedir-based executable structure preserves performance and allows advanced users to inspect or modify internal assets as needed.
+
+### Improved
+- Updated `.spec` and build pipeline to support runtime-accessible data (TOML, EULA, README).
+- Replaced all relative imports with absolute imports to ensure compatibility with PyInstaller builds.
+- Dynamic loading of GUI assets and support files using `sys._MEIPASS` where applicable.
+- GUI window icon now loads correctly in both development and executable contexts.
+- Application startup errors are now surfaced when run from command-line to support debugging.
+- Windows installer built using Inno Setup for clean deployment: user-friendly, self-contained, and runtime-ready.
+
+### Removed
+- Removed unnecessary bundling of static configuration files (e.g., TOML) in compiled binary, allowing user-level overrides and editability.
+
+### Build Environment
+- Windows: 10.0.19043-SP0
+- Python: 3.9.5
+- PyInstaller: 6.11.0
+- Inno Setup: 6.4.1
+- OS tested: Windows 10
+- Installer: `EpiFocusAssistant_Installer_v1.0.0.exe`
+- Certificate: self-signed for internal use (SmartScreen warning expected)
+
+### Dependencies
+- pandas 2.2.3
+- numpy 1.24.1
+- pillow 11.0.0
+- reportlab 4.2.5 _(local wheel)_
+- pyinstaller-hooks-contrib 2024.9
+- pywin32 308
+- python-dateutil 2.9.0.post0
+
+### SHA256 Checksums
+- Application: `EpiFocusAssistant_v1.0.0.exe`  
+  `79535812C19BDE3A10762998F57D998E6A59ACC6B78EA2BBF118D503B1DCEF69`
+
+- Installer: `EpiFocusAssistant_Installer_v1.0.0.exe`  
+  `EC6F0005EDFEDFD595CE42BB6A180C7760519F0C5FA1AEEC85F7CE2E5111215D`
+
+### Validation
+- Installer tested on clean Windows 10 machine (non-dev environment).
+- Double-click-to-launch functionality confirmed.
+- TOML editing validated with new assay parameters.
+- GUI asset loading, splash screen, result processing all function as expected.
+- Help menu, About dialog, and embedded documentation tested and verified.
+
+### Notes
+- This release is **Research Use Only (RUO)**. Not for clinical decision-making.
+- Application is unsigned and self-signed only for internal testing. Certificate trust warnings are expected unless signed by a recognized Certificate Authority.
+- Installer can be redistributed via Aldatu’s website or internal support tools.
+
+
 ## [0.1.1] – 2025-06-11
 ### Added
 - Minor bug fix: corrected build spec file to accomodate TOML files
+
 
 ## [0.1.0] – 2025-04-07
 ### Added
