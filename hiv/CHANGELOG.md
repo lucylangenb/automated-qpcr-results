@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - GUI window icon now loads correctly in both development and executable contexts.
 - Application startup errors are now surfaced when run from command-line to support debugging.
 - Windows installer built using Inno Setup for clean deployment: user-friendly, self-contained, and runtime-ready.
+- Installer re-uploaded on June 24, 2025 to fix a folder conflict issue when installing both PANDAA tools on the same machine. Core executable unchanged.
 
 ### Removed
 - Removed unnecessary bundling of static configuration files (e.g., TOML) in compiled binary, allowing user-level overrides and editability.
@@ -49,7 +50,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   `ADB4309F7A7D65F6F15CF8C8570623AD05069970EEE65ADA326F3C7DB6619E3B`
 
 - Installer: `ReFocusAssistant_Installer_v1.0.0.exe`  
-  `217D7C2AA1A7F25F2185E7558F35EEAA4205C61EDD3D1C8B1B2277957801817D`
+  `68E95CAE5CF068917A25BA35002E518F5640E06DCFD1F3BD1EA41A1611E553F8`
 
 ### Validation
 - Installer tested on clean Windows 10 machine (non-dev environment).

@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - GUI window icon now loads correctly in both development and executable contexts.
 - Application startup errors are now surfaced when run from command-line to support debugging.
 - Windows installer built using Inno Setup for clean deployment: user-friendly, self-contained, and runtime-ready.
+- Installer re-uploaded on June 24, 2025 to fix a folder conflict issue when installing both PANDAA tools on the same machine. Core executable unchanged.
 
 ### Removed
 - Removed unnecessary bundling of static configuration files (e.g., TOML) in compiled binary, allowing user-level overrides and editability.
@@ -49,7 +50,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   `79535812C19BDE3A10762998F57D998E6A59ACC6B78EA2BBF118D503B1DCEF69`
 
 - Installer: `EpiFocusAssistant_Installer_v1.0.0.exe`  
-  `EC6F0005EDFEDFD595CE42BB6A180C7760519F0C5FA1AEEC85F7CE2E5111215D`
+  `F7A5C958FCA922CD34036D6E4337D23F29B51BE3E5FE302DF40104A13C721C3F`
 
 ### Validation
 - Installer tested on clean Windows 10 machine (non-dev environment).
