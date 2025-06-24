@@ -1,7 +1,6 @@
 EpiFocus Assistant
 
-Version: 1.0.0 
-Release Date: 2025-06-23 Developer: Aldatu Biosciences, Inc.  
+Version: 1.0.0 Release Date: 2025-06-23 Developer: Aldatu Biosciences, Inc.  
 Status: Research Use Only (RUO)
 
 * * *

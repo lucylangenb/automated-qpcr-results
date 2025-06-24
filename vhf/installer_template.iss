@@ -28,6 +28,9 @@ InfoAfterFile={PATH}\vhf\readme.txt
 OutputBaseFilename={#MyAppNameNoSpaces}_Installer_v{#MyAppVersion}
 Compression=lzma
 SolidCompression=yes
+; prevent innosetup recalling the last used installation groupname and folder
+UsePreviousGroup=no
+UsePreviousAppDir=no
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
