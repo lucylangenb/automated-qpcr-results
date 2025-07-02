@@ -1,3 +1,12 @@
+This is a **fork** of the original [aldatubio/automated-qpcr-results](https://github.com/aldatubio/automated-qpcr-results).
+
+This repository showcases work I completed as the sole software developer at Aldatu Biosciences (2022 - 2025). 
+I designed and built the **ReFocus Assistant** and **EpiFocus Assistant** tools, which are Python-based desktop applications for automated analysis of PANDAA qPCR results. The tools feature TOML-based runtime configuration, GUI-based use, PDF/CSV outputs, and installer packaging for non-technical users.
+
+This fork is for portfolio purposes only. All IP remains the property of Aldatu Biosciences.
+
+-------
+
 # PANDAA Automated Analysis Software
 
 This repository contains two companion tools: ReFocus Assistant, for use with HIVDR kits and experiments, and EpiFocus Assistant, for use with viral hemorrhagic fever (VHF) kits and experiments.
