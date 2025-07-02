@@ -14,7 +14,7 @@ This repository contains two companion tools: ReFocus Assistant, for use with HI
 
 TOML files are runtime-editable and can be used to configure existing executables.
 
-**What to read next:** For more information, see the [full guide].
+**What to read next:** For more information, see the [full guide](https://github.com/aldatubio/automated-qpcr-results/blob/main/docs/Software_User_Guide.pdf).
 
 ## Contributions
 **Note:** All contributions prior to July 2025 were authored by Lucy Langenberg during her employment at Aldatu Biosciences (2022 - 2025).
