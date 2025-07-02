@@ -20,3 +20,6 @@ To release a new version of this application, as a compiled binary:
   Git commits don't automatically push tags to remote, so this must be done explicitly:
 	git push origin --tags
 - Create a new release, using the new tag; add initial release notes as text and installer as an available download
+
+
+To continue configuration of PDF output, refer to Michael Driscoll's book on ReportLab: "ReportLab: PDF Processing with Python", ISBN: 1983154547
